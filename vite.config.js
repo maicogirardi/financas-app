@@ -2,6 +2,12 @@ import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 
 export default defineConfig({
-	base: '/financas-app/',
 	plugins: [vue()],
+
+	base: '/financas-app/',
+
+	build: {
+		assetsDir: 'assets',
+		sourcemap: false
+	}
 })

@@ -1,4 +1,9 @@
-import { signInWithPopup, signOut } from "firebase/auth"
+import {
+	signInWithPopup,
+	signOut,
+	onAuthStateChanged
+} from "firebase/auth"
+
 import { auth, provider } from "../firebase"
 
 export async function loginWithGoogle() {
@@ -8,4 +13,8 @@ export async function loginWithGoogle() {
 
 export async function logout() {
 	await signOut(auth)
+}
+
+export function onUserChanged(callback) {
+	onAuthStateChanged(auth, callback)
 }
