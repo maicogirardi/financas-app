@@ -26,12 +26,15 @@ UI:
 - Initial balance is setup data, not a second displayed balance
 - Wallet card must include adjust balance action
 - Wallet card must include delete action
+- Wallets must have a dedicated page/list
+- Dashboard must show wallet balances only
 
 Current wallet actions:
 
 - create wallet with name and initial balance
 - adjust balance via modal
 - delete wallet via confirmation modal
+- wallet can be selected in manual transaction modal
 
 Rules:
 
@@ -41,6 +44,9 @@ Rules:
 - Balance adjustment must create adjustment transaction
 - Balance adjustment modal must ask new balance and description
 - Wallet delete must ask confirmation before removal
+- Wallet balance must consider only paid transactions
+- Wallet balance adjustment must use hidden category "Ajuste de Saldo"
+- Wallet balance per page must use the opening balance of the selected period
 
 Balance must be computed from transactions
 Never store computed balance in Firestore

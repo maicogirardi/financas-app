@@ -6,12 +6,14 @@ type:
 - expense
 - transfer
 - adjustment
+periodId?: string
 amount: number
 
 walletFrom?: string
 walletTo?: string
 
 category?: string
+categoryId?: string
 tag?: string
 description?: string
 
@@ -19,6 +21,41 @@ date: timestamp
 paid: boolean
 
 createdAt: timestamp
+
+Transaction list rules:
+
+- all transactions must appear in a single transaction list
+- transaction list must be grouped by category sections
+- each category creates a visible section title
+- adjustment transactions must be saved in "Ajuste de Saldo" section
+- transfer transactions must appear in "Transferências" section by default
+- each transaction row must support edit and delete actions
+- transaction list must support year and month filtering
+- each transaction row must include paid checkbox
+- paid rows should be highlighted in green
+- only paid transactions must affect balances and totals
+- wallet balance adjustments must use hidden category "Ajuste de Saldo"
+- each transaction must belong to a monthly period
+
+Manual entry modal:
+
+- description
+- type
+- category
+- wallet
+- value
+- destination wallet when type is transfer
+- date
+
+Edit transaction rules:
+
+- transactions must be editable from the main transaction list
+- transactions must be removable from the main transaction list
+- editing transaction type must update source/destination wallet fields correctly
+- new manual entries should start with paid = false
+- toggling paid must update transaction online in Firebase
+- manual entry date must stay inside the selected monthly period
+- transfer transactions must be created as paid = true so wallet balances update immediately
 
 Adjustment transaction rules:
 
@@ -28,4 +65,5 @@ Adjustment transaction rules:
 - if new balance is lower, use walletFrom
 - description should explain reason for manual correction
 - date should be current date/time when adjustment is created
-- paid should be true for manual balance adjustment
+- adjustment entries should also start with paid = false
+- adjustment category must be hidden from category management UI

@@ -13,6 +13,16 @@ Phase 2
 - income
 - expense
 - adjustment history UI
+- categories
+- grouped transaction sections
+- manual entry modal
+- transaction edit
+- transaction delete
+- year/month filter
+- separate pages for wallets and categories
+- monthly period pages
+- next month carry-over
+- custom create/remove period flow
 
 Phase 3
 - Transfers

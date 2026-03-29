@@ -67,9 +67,15 @@ export function useWalletStore() {
 	}
 
 	return {
-		wallets: state.wallets,
-		isLoaded: state.isLoaded,
-		error: state.error,
+		get wallets() {
+			return state.wallets
+		},
+		get isLoaded() {
+			return state.isLoaded
+		},
+		get error() {
+			return state.error
+		},
 		startWalletsSync,
 		clearWallets,
 		createWallet,

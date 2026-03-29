@@ -16,5 +16,5 @@ export async function logout() {
 }
 
 export function onUserChanged(callback) {
-	onAuthStateChanged(auth, callback)
+	return onAuthStateChanged(auth, callback)
 }
