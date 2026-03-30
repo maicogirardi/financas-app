@@ -2433,25 +2433,58 @@ button:disabled {
 		flex: 1 1 auto;
 	}
 
+	/* FILTER MOBILE */
 	.filter-row {
-		flex-wrap: wrap;
+		flex-wrap: nowrap;
+		gap: 6px;
 	}
 
 	.filter-spacer {
 		display: none;
 	}
 
-	.filter-actions {
-		width: 100%;
-		justify-content: flex-end;
-	}
-
 	.filter-selects {
-		width: 100%;
+		display: flex;
+		gap: 6px;
+		flex: 1;
+		min-width: 0;
 	}
 
-	.filter-selects select {
-		flex: 1 1 0;
+	/* ANO menor */
+	.filter-selects select.year-filter {
+		flex: 0 0 72px;
+		width: 72px;
+		min-width: 72px;
+		height: 32px;
+		font-size: 12px;
+		padding: 4px 6px;
+	}
+
+	/* MÊS ocupa tudo */
+	.filter-selects select:not(.year-filter) {
+		flex: 1;
+		min-width: 0;
+		height: 32px;
+		font-size: 12px;
+		padding: 4px 6px;
+	}
+
+	/* BOTÕES redondos */
+	.filter-actions {
+		display: flex;
+		gap: 6px;
+		flex: 0 0 auto;
+	}
+
+	.filter-row button {
+		width: 32px !important;
+		height: 32px !important;
+		min-width: 32px !important;
+		flex: 0 0 32px !important;
+
+		padding: 0;
+		border-radius: 50%;
+		font-size: 13px;
 	}
 }
 
