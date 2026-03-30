@@ -1,5 +1,8 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue"
+import BottomTabs from "@/components/navigation/BottomTabs.vue"
+import ConfiguracoesView from "@/views/ConfiguracoesView.vue"
+import ResumoView from "@/views/ResumoView.vue"
 import {
 	BALANCE_ADJUSTMENT_CATEGORY_ID,
 	BALANCE_ADJUSTMENT_CATEGORY_NAME,
@@ -13,6 +16,7 @@ import { usePeriodStore } from "@/stores/periodStore"
 import { useTransactionStore } from "@/stores/transactionStore"
 import { useWalletStore } from "@/stores/walletStore"
 import { loginWithGoogle, logout, onUserChanged } from "@/services/auth"
+import { saveThemePreference, subscribeThemePreference } from "@/services/themePreferences"
 
 const walletStore = useWalletStore()
 const transactionStore = useTransactionStore()
@@ -23,6 +27,7 @@ const user = ref(null)
 const authReady = ref(false)
 const isSubmitting = ref(false)
 const currentPage = ref("dashboard")
+const theme = ref("light")
 
 const selectedYear = ref(new Date().getFullYear())
 const selectedMonth = ref(new Date().getMonth() + 1)
@@ -169,15 +174,37 @@ const dashboardWallets = computed(() =>
 )
 
 let stopAuthListener = null
+let unsubscribeThemePreference = null
+
+const navigationTabs = [
+	{ value: "dashboard", label: "Resumo" },
+	{ value: "wallets", label: "Carteiras" },
+	{ value: "categories", label: "Categorias" },
+	{ value: "settings", label: "Configurações" }
+]
 
 onMounted(() => {
+	applyTheme("light")
 	window.addEventListener("keydown", handleModalKeydown)
 
 	stopAuthListener = onUserChanged(currentUser => {
 		user.value = currentUser
 		authReady.value = true
 
+		if (unsubscribeThemePreference) {
+			unsubscribeThemePreference()
+			unsubscribeThemePreference = null
+		}
+
 		if (currentUser) {
+			unsubscribeThemePreference = subscribeThemePreference(
+				nextTheme => {
+					applyTheme(nextTheme)
+				},
+				() => {
+					applyTheme("light")
+				}
+			)
 			walletStore.startWalletsSync()
 			transactionStore.startTransactionsSync()
 			categoryStore.startCategoriesSync()
@@ -185,6 +212,7 @@ onMounted(() => {
 			return
 		}
 
+		applyTheme("light")
 		walletStore.clearWallets()
 		transactionStore.clearTransactions()
 		categoryStore.clearCategories()
@@ -195,6 +223,10 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
 	window.removeEventListener("keydown", handleModalKeydown)
+
+	if (unsubscribeThemePreference) {
+		unsubscribeThemePreference()
+	}
 
 	if (stopAuthListener) {
 		stopAuthListener()
@@ -286,6 +318,29 @@ function formatDateDisplay(date) {
 	const month = `${current.getMonth() + 1}`.padStart(2, "0")
 	const year = current.getFullYear()
 	return `${day}/${month}/${year}`
+}
+
+function applyTheme(nextTheme) {
+	theme.value = nextTheme
+	document.documentElement.setAttribute("data-theme", nextTheme)
+}
+
+async function updateTheme(nextTheme) {
+	applyTheme(nextTheme)
+
+	if (!user.value) return
+
+	try {
+		await saveThemePreference(nextTheme)
+	} catch (error) {
+		console.error("Failed to save theme preference", error)
+	}
+}
+
+function handleFabClick() {
+	if (currentPage.value !== "dashboard" || !selectedPeriod.value || isSubmitting.value) return
+
+	openCreateEntryModal()
 }
 
 function formatDateValue(date) {
@@ -1292,9 +1347,13 @@ async function toggleTransactionPaid(transaction) {
 	</div>
 
 	<template v-else-if="!user">
-		<button :disabled="isSubmitting" @click="handleLogin">
-			Entrar com Google
-		</button>
+		<ConfiguracoesView
+			:theme="theme"
+			:is-authenticated="false"
+			:is-submitting="isSubmitting"
+			@update-theme="updateTheme"
+			@login="handleLogin"
+		/>
 	</template>
 
 	<template v-else-if="!isDataReady">
@@ -1302,9 +1361,7 @@ async function toggleTransactionPaid(transaction) {
 	</template>
 
 	<template v-else>
-		<div class="topbar">
-			<div>Logado: {{ user.email }}</div>
-
+		<div v-if="currentPage === 'dashboard'" class="topbar">
 			<div class="toolbar">
 				<select v-model.number="selectedYear">
 					<option v-for="year in availableYears" :key="year" :value="year">
@@ -1325,47 +1382,24 @@ async function toggleTransactionPaid(transaction) {
 				<button :disabled="isSubmitting || !selectedPeriod" @click="openDeletePeriodModal">
 					Remover mes
 				</button>
-
-				<button :disabled="isSubmitting" @click="handleLogout">
-					Sair
-				</button>
 			</div>
 		</div>
 
-		<div class="tabs">
-			<button
-				:class="{ active: currentPage === 'dashboard' }"
-				@click="currentPage = 'dashboard'"
-			>
-				Principal
-			</button>
-
-			<button
-				:class="{ active: currentPage === 'wallets' }"
-				@click="currentPage = 'wallets'"
-			>
-				Carteiras
-			</button>
-
-			<button
-				:class="{ active: currentPage === 'categories' }"
-				@click="currentPage = 'categories'"
-			>
-				Categorias
-			</button>
-		</div>
+		<BottomTabs
+			:tabs="navigationTabs"
+			:current-tab="currentPage"
+			@select="currentPage = $event"
+		/>
 
 		<div v-if="appError" class="error-box">
 			{{ appError }}
 		</div>
 
-		<section v-if="currentPage === 'dashboard'" class="page-section">
-			<div class="toolbar">
-				<button :disabled="isSubmitting || !selectedPeriod" @click="openCreateEntryModal">
-					Nova entrada
-				</button>
-			</div>
-
+		<ResumoView
+			v-if="currentPage === 'dashboard'"
+			:show-fab="true"
+			@fab-click="handleFabClick"
+		>
 			<div class="wallet-summary-list">
 				<div
 					v-for="wallet in dashboardWallets"
@@ -1454,7 +1488,7 @@ async function toggleTransactionPaid(transaction) {
 					</div>
 				</div>
 			</div>
-		</section>
+		</ResumoView>
 
 		<section v-if="currentPage === 'wallets'" class="page-section">
 			<div class="toolbar">
@@ -1528,6 +1562,17 @@ async function toggleTransactionPaid(transaction) {
 				</div>
 			</div>
 		</section>
+
+		<ConfiguracoesView
+			v-if="currentPage === 'settings'"
+			:theme="theme"
+			:user-email="user?.email || ''"
+			:is-authenticated="Boolean(user)"
+			:is-submitting="isSubmitting"
+			@update-theme="updateTheme"
+			@login="handleLogin"
+			@logout="handleLogout"
+		/>
 	</template>
 
 	<div v-if="isWalletModalOpen" class="modal-backdrop">
@@ -1856,7 +1901,7 @@ async function toggleTransactionPaid(transaction) {
 .app-page {
 	display: grid;
 	gap: 16px;
-	padding: 24px;
+	padding: 24px 24px 120px;
 	max-width: 1180px;
 	margin: 0 auto;
 	text-align: left;

@@ -119,3 +119,18 @@ Page structure:
 - dashboard page with wallet balances and total entry list
 - wallets page for wallet management
 - categories page for category management
+- settings page with light/dark mode toggle
+
+UI structure:
+
+- FloatingActionButton.vue must exist as a reusable UI component
+- ResumoView.vue must host the FAB
+- BottomTabs navigation must include Configurações
+- login/logout controls and "Logado como" status must live inside Configurações
+- month/year filters must appear only on Resumo
+- the FAB `+` on Resumo must open the new entry modal and replace any redundant "Nova entrada" button
+- theme variables must include `--color-primary`, `--color-text`, and `--color-bg`
+- theme must be saved in Firebase user preferences
+- theme restore must apply `data-theme` on `document.documentElement`
+- light/dark mode must affect the whole app UI, not only isolated components
+- the active bottom tab must have stronger visual emphasis than inactive tabs
