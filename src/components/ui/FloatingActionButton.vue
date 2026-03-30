@@ -11,32 +11,53 @@ defineEmits(["click"])
 <style scoped>
 .fab {
 	position: fixed;
-	right: 16px;
-	bottom: 72px;
-	width: 56px;
-	height: 56px;
-	border: 0;
-	border-radius: 50%;
+	right: 20px;
+	bottom: calc(88px + env(safe-area-inset-bottom, 0px));
+	width: 60px;
+	height: 60px;
+	border: 1px solid var(--glass-border-strong);
+	border-radius: 22px;
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-	background: var(--color-primary);
-	color: var(--color-text-on-primary, #ffffff);
-	box-shadow: 0 14px 28px rgba(0, 0, 0, 0.22);
+	background:
+		linear-gradient(180deg, var(--glass-highlight) 0%, rgba(255, 255, 255, 0) 100%),
+		var(--glass-surface-strong);
+	color: var(--text-h);
+	box-shadow:
+		0 18px 36px rgba(15, 17, 21, 0.12),
+		inset 0 1px 0 rgba(255, 255, 255, 0.18);
 	cursor: pointer;
-	z-index: 30;
+	backdrop-filter: blur(18px);
+	z-index: 40;
+	transition:
+		transform 0.18s ease,
+		box-shadow 0.18s ease,
+		background 0.18s ease,
+		border-color 0.18s ease;
+}
+
+.fab:hover {
+	transform: translateY(-2px);
+	background:
+		linear-gradient(180deg, rgba(255, 255, 255, 0.16) 0%, rgba(255, 255, 255, 0) 100%),
+		var(--glass-surface);
+	box-shadow:
+		0 22px 42px rgba(15, 17, 21, 0.16),
+		inset 0 1px 0 rgba(255, 255, 255, 0.24);
 }
 
 .fab-icon {
-	font-size: 30px;
+	font-size: 32px;
 	line-height: 1;
-	font-weight: 500;
+	font-weight: 400;
 	transform: translateY(-1px);
 }
 
-@media (min-width: 768px) {
+@media (max-width: 640px) {
 	.fab {
-		right: 24px;
+		right: 16px;
+		bottom: calc(84px + env(safe-area-inset-bottom, 0px));
 	}
 }
 </style>

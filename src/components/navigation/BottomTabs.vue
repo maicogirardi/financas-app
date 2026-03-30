@@ -37,10 +37,10 @@ defineEmits(["select"])
 	bottom: 0;
 	display: flex;
 	gap: 8px;
-	padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px));
-	background: color-mix(in srgb, var(--surface-elevated) 88%, transparent);
+	padding: 10px 16px calc(10px + env(safe-area-inset-bottom, 0px));
+	background: color-mix(in srgb, var(--surface-elevated) 84%, transparent);
 	border-top: 1px solid var(--glass-border);
-	backdrop-filter: blur(18px);
+	backdrop-filter: blur(22px);
 	z-index: 20;
 	box-sizing: border-box;
 	justify-content: center;
@@ -48,19 +48,20 @@ defineEmits(["select"])
 
 .tab-button {
 	min-width: 102px;
-	display: inline-flex;
-	align-items: center;
+	display: inline-grid;
+	justify-items: center;
+	align-content: center;
 	justify-content: center;
-	gap: 10px;
-	padding: 12px 16px;
-	border: 1px solid var(--glass-border);
-	border-radius: 18px;
+	gap: 6px;
+	padding: 10px 14px;
+	border: 1px solid transparent;
+	border-radius: 22px;
 	background: var(--button-muted-bg);
 	color: var(--text-soft);
 	font: inherit;
-	font-weight: 600;
+	font-weight: 500;
 	cursor: pointer;
-	box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+	box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
 	transition:
 		transform 0.18s ease,
 		border-color 0.18s ease,
@@ -71,20 +72,25 @@ defineEmits(["select"])
 
 .tab-button:hover {
 	transform: translateY(-1px);
-	border-color: var(--accent-border);
+	border-color: var(--glass-border-strong);
 	color: var(--text-h);
 }
 
 .tab-button.active {
 	border-color: var(--glass-border-strong);
-	background: var(--button-bg);
-	color: var(--button-text);
-	box-shadow: var(--button-shadow-hover);
+	background:
+		linear-gradient(180deg, var(--glass-highlight) 0%, rgba(255, 255, 255, 0) 100%),
+		var(--glass-surface-strong);
+	color: var(--text-h);
+	box-shadow:
+		0 10px 22px rgba(15, 17, 21, 0.1),
+		inset 0 1px 0 rgba(255, 255, 255, 0.16);
 	transform: translateY(-1px);
 }
 
 .tab-label {
 	line-height: 1;
+	font-size: 0.72rem;
 }
 
 .tab-icon {

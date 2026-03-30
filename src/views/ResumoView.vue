@@ -14,8 +14,10 @@ defineEmits(["fab-click"])
 <template>
 	<section class="page-section resumo-view">
 		<slot />
-		<FloatingActionButton v-if="showFab" @click="$emit('fab-click')" />
 	</section>
+	<Teleport to="body">
+		<FloatingActionButton v-if="showFab" @click="$emit('fab-click')" />
+	</Teleport>
 </template>
 
 <style scoped>

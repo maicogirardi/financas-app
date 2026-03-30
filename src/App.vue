@@ -184,7 +184,7 @@ let stopAuthListener = null
 let unsubscribeThemePreference = null
 
 const navigationTabs = [
-	{ value: "dashboard", label: "Resumo", icon: "home" },
+	{ value: "dashboard", label: "Home", icon: "home" },
 	{ value: "wallets", label: "Carteiras", icon: "wallet" },
 	{ value: "categories", label: "Categorias", icon: "grid" },
 	{ value: "settings", label: "Configurações", icon: "settings" }
@@ -323,8 +323,7 @@ function formatDateDisplay(date) {
 	const current = new Date(date)
 	const day = `${current.getDate()}`.padStart(2, "0")
 	const month = `${current.getMonth() + 1}`.padStart(2, "0")
-	const year = current.getFullYear()
-	return `${day}/${month}/${year}`
+	return `${day}/${month}`
 }
 
 function applyTheme(nextTheme) {
@@ -846,20 +845,28 @@ function getWalletName(walletId) {
 	return walletStore.getWallet(walletId)?.name ?? "-"
 }
 
-function getTransactionWalletLabel(transaction) {
+function getWalletColor(walletId) {
+	return walletStore.getWallet(walletId)?.color || "var(--color-primary)"
+}
+
+function getTransactionWallets(transaction) {
 	if (transaction.type === "income") {
-		return getWalletName(transaction.walletTo)
+		return [{ id: transaction.walletTo, name: getWalletName(transaction.walletTo), color: getWalletColor(transaction.walletTo) }]
 	}
 
 	if (transaction.type === "expense") {
-		return getWalletName(transaction.walletFrom)
+		return [{ id: transaction.walletFrom, name: getWalletName(transaction.walletFrom), color: getWalletColor(transaction.walletFrom) }]
 	}
 
 	if (transaction.type === "transfer") {
-		return `${getWalletName(transaction.walletFrom)} -> ${getWalletName(transaction.walletTo)}`
+		return [
+			{ id: transaction.walletFrom, name: getWalletName(transaction.walletFrom), color: getWalletColor(transaction.walletFrom) },
+			{ id: transaction.walletTo, name: getWalletName(transaction.walletTo), color: getWalletColor(transaction.walletTo) }
+		]
 	}
 
-	return getWalletName(transaction.walletTo || transaction.walletFrom)
+	const fallbackWalletId = transaction.walletTo || transaction.walletFrom
+	return [{ id: fallbackWalletId, name: getWalletName(fallbackWalletId), color: getWalletColor(fallbackWalletId) }]
 }
 
 function handleCategoryDragStart(categoryId, event) {
@@ -1485,7 +1492,6 @@ async function toggleTransactionPaid(transaction) {
 					<div class="entry-list">
 						<div class="entry-list-head">
 							<span>Descrição</span>
-							<span>Tipo</span>
 							<span>Carteira</span>
 							<span>Data</span>
 							<span>Valor</span>
@@ -1504,8 +1510,23 @@ async function toggleTransactionPaid(transaction) {
 							:class="{ 'paid-row': transaction.paid }"
 						>
 							<span>{{ transaction.description || transaction.type }}</span>
-							<span>{{ transaction.type }}</span>
-							<span>{{ getTransactionWalletLabel(transaction) }}</span>
+							<span class="entry-wallets">
+								<template
+									v-for="(wallet, index) in getTransactionWallets(transaction)"
+									:key="`${transaction.id}-${wallet.id || index}`"
+								>
+									<span class="wallet-summary-meta entry-wallet-meta">
+										<span class="wallet-summary-dot" :style="{ background: wallet.color }" />
+										<span>{{ wallet.name }}</span>
+									</span>
+									<span
+										v-if="transaction.type === 'transfer' && index === 0"
+										class="entry-wallet-arrow"
+									>
+										→
+									</span>
+								</template>
+							</span>
 							<span>{{ formatDateDisplay(transaction.date) }}</span>
 							<span>{{ formatCurrency(transaction.amount) }}</span>
 							<span>
@@ -2004,7 +2025,7 @@ async function toggleTransactionPaid(transaction) {
 .entry-list-head,
 .entry-row {
 	display: grid;
-	grid-template-columns: minmax(140px, 2fr) minmax(100px, 1fr) minmax(130px, 1.2fr) minmax(110px, 1fr) minmax(100px, 1fr) 80px minmax(140px, 1.4fr);
+	grid-template-columns: minmax(180px, 2.2fr) minmax(150px, 1.35fr) minmax(110px, 1fr) minmax(100px, 1fr) 80px minmax(140px, 1.4fr);
 	gap: 12px;
 	align-items: center;
 }
@@ -2081,6 +2102,22 @@ async function toggleTransactionPaid(transaction) {
 	border-radius: 999px;
 	background: linear-gradient(135deg, var(--color-primary), var(--color-primary-soft));
 	box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-primary) 14%, transparent);
+}
+
+.entry-wallets {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	flex-wrap: wrap;
+}
+
+.entry-wallet-meta {
+	color: var(--text);
+}
+
+.entry-wallet-arrow {
+	color: var(--text-soft);
+	font-weight: 700;
 }
 
 .entry-list {
@@ -2248,12 +2285,12 @@ async function toggleTransactionPaid(transaction) {
 }
 
 .icon-button {
-	width: 32px;
-	height: 32px;
+	width: 38px;
+	height: 38px;
 	padding: 0;
 	display: inline-grid;
 	place-items: center;
-	border-radius: 999px;
+	border-radius: 14px;
 }
 
 .row-actions {
@@ -2297,12 +2334,14 @@ button {
 	justify-content: center;
 	gap: 10px;
 	padding: 11px 16px;
-	border: 1px solid transparent;
-	border-radius: 16px;
-	background: var(--button-bg);
-	color: var(--button-text);
+	border: 1px solid var(--button-muted-border);
+	border-radius: 18px;
+	background:
+		linear-gradient(180deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0) 100%),
+		var(--button-muted-bg);
+	color: var(--text-h);
 	cursor: pointer;
-	box-shadow: var(--button-shadow);
+	box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
 	transition:
 		transform 0.18s ease,
 		box-shadow 0.18s ease,
@@ -2313,8 +2352,13 @@ button {
 
 button:hover {
 	transform: translateY(-1px);
-	background: var(--button-hover);
-	box-shadow: var(--button-shadow-hover);
+	border-color: var(--accent-border);
+	background:
+		linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0) 100%),
+		var(--button-muted-hover);
+	box-shadow:
+		0 12px 24px rgba(15, 17, 21, 0.08),
+		inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
 button.active {
@@ -2327,8 +2371,22 @@ button:disabled {
 }
 
 .danger-button {
-	background: linear-gradient(135deg, #fb7185 0%, #e11d48 100%);
-	color: #fff;
+	border-color: var(--danger-border);
+	background:
+		linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0) 100%),
+		var(--danger-bg);
+	color: var(--danger-text);
+	box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.danger-button:hover {
+	border-color: var(--danger-border-strong);
+	background:
+		linear-gradient(180deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0) 100%),
+		var(--danger-hover);
+	box-shadow:
+		0 12px 24px rgba(244, 63, 94, 0.14),
+		inset 0 1px 0 rgba(255, 255, 255, 0.12);
 }
 
 .error-text {
