@@ -14,6 +14,7 @@ Wallet model (Firestore):
 
 id: string
 name: string
+color?: string
 initialBalance: number
 createdAt: timestamp
 order?: number
@@ -24,13 +25,16 @@ UI:
 - Show only current balance in wallet card
 - Initial balance is setup data, not a second displayed balance
 - Wallet card must include adjust balance action
+- Wallet card must include edit action
 - Wallet card must include delete action
 - Wallets must have a dedicated page/list
 - Dashboard must show wallet balances only
+- Dashboard total-balance card must show each wallet with its own color indicator
 
 Current wallet actions:
 
-- create wallet with name and initial balance
+- create wallet with name, color, and initial balance
+- edit wallet name and color via modal
 - adjust balance via modal
 - delete wallet via confirmation modal
 - wallet can be selected in manual transaction modal
@@ -39,6 +43,7 @@ Current wallet actions:
 - wallet creation must happen in a dedicated modal
 - wallet creation modal must use the same required-field validation behavior as category creation
 - wallet creation modal must support Enter to confirm and Esc to cancel
+- wallet edit modal must not allow direct balance editing
 
 Rules:
 

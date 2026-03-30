@@ -55,6 +55,7 @@ export function subscribeWallets(callback, onError) {
 				return {
 					id: walletDoc.id,
 					name: data.name ?? "",
+					color: data.color ?? "#aa3bff",
 					initialBalance: Number(data.initialBalance ?? 0),
 					order: data.order,
 					archived: data.archived ?? false,

@@ -13,6 +13,7 @@ Tabs:
 
 The bottom tabs must always be visible.
 The current tab must have stronger visual emphasis than the others.
+Each tab should also include a small icon paired with the label.
 
 Resumo-specific top controls:
 
@@ -25,8 +26,16 @@ Resumo-specific top controls:
 * an empty flexible spacer should occupy the middle of the row so the card fills 100% width
 * `+` button must appear on the same row after the month filter
 * month removal action must use a red `-` button on the same row
+* the first summary card below the filters must highlight the total balance of all wallets in large centered text
+* the same summary card must list each wallet below the total using smaller text
 
 Mobile-first layout.
+
+Visual direction:
+
+* cards should follow a frosted glass / glassmorphism style
+* action buttons should use the same premium gradient style across the app
+* the active bottom tab should have the strongest visual emphasis
 
 ## Floating Action Button (FAB)
 

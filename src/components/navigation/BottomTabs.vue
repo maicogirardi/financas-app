@@ -23,7 +23,8 @@ defineEmits(["select"])
 			type="button"
 			@click="$emit('select', tab.value)"
 		>
-			{{ tab.label }}
+			<span class="tab-icon" :class="`tab-icon-${tab.icon || 'home'}`" aria-hidden="true" />
+			<span class="tab-label">{{ tab.label }}</span>
 		</button>
 	</nav>
 </template>
@@ -37,24 +38,29 @@ defineEmits(["select"])
 	display: flex;
 	gap: 8px;
 	padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px));
-	background: var(--surface-elevated);
-	border-top: 1px solid var(--border);
-	backdrop-filter: blur(12px);
+	background: color-mix(in srgb, var(--surface-elevated) 88%, transparent);
+	border-top: 1px solid var(--glass-border);
+	backdrop-filter: blur(18px);
 	z-index: 20;
 	box-sizing: border-box;
 	justify-content: center;
 }
 
 .tab-button {
-	min-width: 96px;
-	padding: 10px 14px;
-	border: 1px solid var(--button-muted-border);
-	border-radius: 14px;
+	min-width: 102px;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 10px;
+	padding: 12px 16px;
+	border: 1px solid var(--glass-border);
+	border-radius: 18px;
 	background: var(--button-muted-bg);
-	color: var(--text-h);
+	color: var(--text-soft);
 	font: inherit;
 	font-weight: 600;
 	cursor: pointer;
+	box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
 	transition:
 		transform 0.18s ease,
 		border-color 0.18s ease,
@@ -66,13 +72,107 @@ defineEmits(["select"])
 .tab-button:hover {
 	transform: translateY(-1px);
 	border-color: var(--accent-border);
+	color: var(--text-h);
 }
 
 .tab-button.active {
-	border-color: transparent;
+	border-color: var(--glass-border-strong);
 	background: var(--button-bg);
 	color: var(--button-text);
-	box-shadow: var(--shadow);
+	box-shadow: var(--button-shadow-hover);
 	transform: translateY(-1px);
+}
+
+.tab-label {
+	line-height: 1;
+}
+
+.tab-icon {
+	position: relative;
+	width: 18px;
+	height: 18px;
+	display: inline-block;
+	flex: 0 0 18px;
+}
+
+.tab-icon::before,
+.tab-icon::after {
+	content: "";
+	position: absolute;
+	inset: 0;
+	margin: auto;
+}
+
+.tab-icon-home::before {
+	width: 12px;
+	height: 9px;
+	border: 2px solid currentColor;
+	border-top: 0;
+	border-radius: 0 0 3px 3px;
+	transform: translateY(3px);
+}
+
+.tab-icon-home::after {
+	width: 10px;
+	height: 10px;
+	border-top: 2px solid currentColor;
+	border-left: 2px solid currentColor;
+	transform: translateY(-2px) rotate(45deg);
+}
+
+.tab-icon-wallet::before {
+	width: 14px;
+	height: 10px;
+	border: 2px solid currentColor;
+	border-radius: 4px;
+}
+
+.tab-icon-wallet::after {
+	width: 4px;
+	height: 4px;
+	border-radius: 999px;
+	background: currentColor;
+	transform: translateX(4px);
+}
+
+.tab-icon-grid::before {
+	width: 14px;
+	height: 14px;
+	background:
+		linear-gradient(currentColor, currentColor) 0 0 / 5px 5px no-repeat,
+		linear-gradient(currentColor, currentColor) 100% 0 / 5px 5px no-repeat,
+		linear-gradient(currentColor, currentColor) 0 100% / 5px 5px no-repeat,
+		linear-gradient(currentColor, currentColor) 100% 100% / 5px 5px no-repeat;
+}
+
+.tab-icon-settings::before {
+	width: 14px;
+	height: 14px;
+	border-radius: 999px;
+	border: 2px solid currentColor;
+}
+
+.tab-icon-settings::after {
+	width: 4px;
+	height: 4px;
+	border-radius: 999px;
+	background: currentColor;
+}
+
+@media (max-width: 640px) {
+	.bottom-tabs {
+		gap: 6px;
+		padding-inline: 12px;
+	}
+
+	.tab-button {
+		min-width: 0;
+		flex: 1 1 0;
+		padding: 12px 10px;
+	}
+
+	.tab-label {
+		font-size: 0.82rem;
+	}
 }
 </style>

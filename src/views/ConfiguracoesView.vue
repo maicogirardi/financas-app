@@ -91,10 +91,11 @@ function handleThemeToggle(event) {
 	display: grid;
 	gap: 16px;
 	padding: 16px;
-	border: 1px solid var(--border);
-	border-radius: 12px;
-	background: var(--bg);
+	border: 1px solid var(--glass-border);
+	border-radius: 24px;
+	background: var(--glass-surface);
 	box-shadow: var(--shadow);
+	backdrop-filter: blur(22px);
 }
 
 .settings-header h2 {
@@ -105,9 +106,10 @@ function handleThemeToggle(event) {
 	display: grid;
 	gap: 12px;
 	padding: 16px;
-	border: 1px solid var(--border);
-	border-radius: 12px;
-	background: var(--bg);
+	border: 1px solid var(--glass-border);
+	border-radius: 20px;
+	background: var(--glass-surface-strong);
+	backdrop-filter: blur(22px);
 }
 
 .settings-row {
@@ -130,19 +132,24 @@ function handleThemeToggle(event) {
 .settings-actions button {
 	padding: 10px 14px;
 	border: 1px solid transparent;
-	border-radius: 12px;
+	border-radius: 16px;
 	background: var(--button-bg);
 	color: var(--button-text);
 	font: inherit;
 	font-weight: 600;
 	cursor: pointer;
-	box-shadow: var(--shadow);
-	transition: transform 0.18s ease, background 0.18s ease, opacity 0.18s ease;
+	box-shadow: var(--button-shadow);
+	transition:
+		transform 0.18s ease,
+		background 0.18s ease,
+		box-shadow 0.18s ease,
+		opacity 0.18s ease;
 }
 
 .settings-actions button:hover {
 	transform: translateY(-1px);
 	background: var(--button-hover);
+	box-shadow: var(--button-shadow-hover);
 }
 
 .settings-actions button:disabled {

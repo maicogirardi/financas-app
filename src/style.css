@@ -32,6 +32,9 @@ body {
 }
 
 body {
+  background:
+    radial-gradient(circle at top center, color-mix(in srgb, var(--color-primary) 12%, transparent) 0%, transparent 42%),
+    linear-gradient(180deg, color-mix(in srgb, var(--color-bg) 92%, white) 0%, var(--color-bg) 100%);
   transition: background-color 0.2s ease, color 0.2s ease;
 }
 
@@ -110,10 +113,10 @@ code {
   max-width: 100%;
   margin: 0 auto;
   text-align: center;
-  border-inline: 1px solid var(--border);
+  border-inline: 1px solid var(--glass-border);
   min-height: 100svh;
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
-  background: var(--bg);
+  background: transparent;
 }

@@ -45,16 +45,17 @@ export function useWalletStore() {
 		)
 	}
 
-	async function createWallet(name: string, initialBalance: number) {
+	async function createWallet(name: string, initialBalance: number, color: string) {
 		await createWalletDoc({
 			name,
+			color,
 			initialBalance,
 			order: state.wallets.length,
 			archived: false
 		})
 	}
 
-	async function updateWallet(id: string, data: Partial<Pick<Wallet, "name" | "order" | "archived">>) {
+	async function updateWallet(id: string, data: Partial<Pick<Wallet, "name" | "color" | "order" | "archived">>) {
 		await updateWalletDoc(id, data)
 	}
 

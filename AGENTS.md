@@ -38,6 +38,8 @@ Current implementation may use local store state until Firestore listeners are c
 
 Wallet creation must use a dedicated modal with the same validation and keyboard shortcut behavior used by the category modal
 
+Wallets may store a color used in the dashboard balance summary and the wallet edit/create modal must allow choosing that color
+
 ## Transactions And Categories
 
 All new transaction features must be implemented with Firebase first
@@ -117,6 +119,8 @@ Monthly period requirements:
 Page structure:
 
 - dashboard page with wallet balances and total entry list
+- the first dashboard summary card should show the total of all wallet balances in large centered text and list each wallet balance below in smaller text
+- each wallet line in the dashboard summary should use the wallet's chosen color in its indicator dot
 - wallets page for wallet management
 - categories page for category management
 - settings page with light/dark mode toggle
@@ -136,3 +140,6 @@ UI structure:
 - theme restore must apply `data-theme` on `document.documentElement`
 - light/dark mode must affect the whole app UI, not only isolated components
 - the active bottom tab must have stronger visual emphasis than inactive tabs
+- bottom tabs should include icons
+- cards and modals should follow a frosted glass visual style
+- primary action buttons should use the same polished gradient style across the app

@@ -23,6 +23,19 @@ Base variables:
 * `--color-bg`
 * `--color-text`
 
+Extended UI variables:
+
+* `--color-primary-soft`
+* `--glass-surface`
+* `--glass-surface-strong`
+* `--glass-border`
+* `--glass-border-strong`
+* `--glass-divider`
+* `--input-surface`
+* `--button-shadow`
+* `--button-shadow-hover`
+* `--text-soft`
+
 Theme support files:
 
 * `src/styles/variables.css`
@@ -41,6 +54,7 @@ Behavior:
 * restore from Firebase on mount/auth restore
 * login/logout controls are also hosted in `ConfiguracoesView.vue`
 * theme must apply across the whole app, not only bottom navigation
+* glass cards, inputs, buttons, and bottom navigation must all respond to the active theme
 
 Firebase location:
 

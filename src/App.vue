@@ -33,9 +33,11 @@ const selectedYear = ref(new Date().getFullYear())
 const selectedMonth = ref(new Date().getMonth() + 1)
 
 const walletName = ref("")
+const walletColor = ref("#aa3bff")
 const walletBalance = ref(0)
 const walletBalanceInput = ref("")
 const isWalletModalOpen = ref(false)
+const editingWalletId = ref("")
 
 const adjustingWalletId = ref("")
 const adjustmentBalance = ref(0)
@@ -119,6 +121,7 @@ const availableMonths = computed(() => {
 
 const selectedPeriodId = computed(() => buildPeriodId(selectedYear.value, selectedMonth.value))
 const selectedPeriod = computed(() => periodStore.getPeriodById(selectedPeriodId.value))
+const isEditingWallet = computed(() => Boolean(editingWalletId.value))
 
 const currencyFormatter = new Intl.NumberFormat("pt-BR", {
 	style: "currency",
@@ -173,14 +176,18 @@ const dashboardWallets = computed(() =>
 	}))
 )
 
+const totalWalletBalance = computed(() =>
+	dashboardWallets.value.reduce((sum, wallet) => sum + Number(wallet.balance || 0), 0)
+)
+
 let stopAuthListener = null
 let unsubscribeThemePreference = null
 
 const navigationTabs = [
-	{ value: "dashboard", label: "Resumo" },
-	{ value: "wallets", label: "Carteiras" },
-	{ value: "categories", label: "Categorias" },
-	{ value: "settings", label: "Configurações" }
+	{ value: "dashboard", label: "Resumo", icon: "home" },
+	{ value: "wallets", label: "Carteiras", icon: "wallet" },
+	{ value: "categories", label: "Categorias", icon: "grid" },
+	{ value: "settings", label: "Configurações", icon: "settings" }
 ]
 
 onMounted(() => {
@@ -647,6 +654,10 @@ function isWalletNameMissing() {
 	return !hasText(walletName.value)
 }
 
+function isWalletColorMissing() {
+	return !/^#[\da-fA-F]{6}$/.test(walletColor.value)
+}
+
 function isWalletBalanceMissing() {
 	return walletBalance.value <= 0
 }
@@ -1040,26 +1051,40 @@ async function addWallet() {
 	const trimmedName = walletName.value.trim()
 
 	if (!trimmedName) return
+	if (isWalletColorMissing()) return
+	if (!isEditingWallet.value && isWalletBalanceMissing()) return
 
 	isSubmitting.value = true
 
 	try {
-		await walletStore.createWallet(trimmedName, walletBalance.value)
+		if (isEditingWallet.value) {
+			await walletStore.updateWallet(editingWalletId.value, {
+				name: trimmedName,
+				color: walletColor.value
+			})
+		} else {
+			await walletStore.createWallet(trimmedName, walletBalance.value, walletColor.value)
+		}
+
 		closeWalletModal()
 	} finally {
 		isSubmitting.value = false
 	}
 }
 
-function openWalletModal() {
+function openWalletModal(wallet = null) {
 	isWalletModalOpen.value = true
-	walletName.value = ""
-	setCurrencyInput(walletBalance, walletBalanceInput, 0)
+	editingWalletId.value = wallet?.id ?? ""
+	walletName.value = wallet?.name ?? ""
+	walletColor.value = wallet?.color ?? "#aa3bff"
+	setCurrencyInput(walletBalance, walletBalanceInput, wallet?.initialBalance ?? 0)
 }
 
 function closeWalletModal() {
 	isWalletModalOpen.value = false
+	editingWalletId.value = ""
 	walletName.value = ""
+	walletColor.value = "#aa3bff"
 	setCurrencyInput(walletBalance, walletBalanceInput, 0)
 }
 
@@ -1410,14 +1435,24 @@ async function toggleTransactionPaid(transaction) {
 			:show-fab="true"
 			@fab-click="handleFabClick"
 		>
-			<div class="wallet-summary-list">
-				<div
-					v-for="wallet in dashboardWallets"
-					:key="wallet.id"
-					class="wallet-summary-row"
-				>
-					<span>{{ wallet.name }}</span>
-					<strong>{{ formatCurrency(wallet.balance) }}</strong>
+			<div class="wallet-summary-card">
+				<div class="wallet-summary-hero">
+					<span class="summary-eyebrow">Saldo total</span>
+					<strong class="wallet-summary-total">{{ formatCurrency(totalWalletBalance) }}</strong>
+				</div>
+
+				<div class="wallet-summary-list">
+					<div
+						v-for="wallet in dashboardWallets"
+						:key="wallet.id"
+						class="wallet-summary-row"
+					>
+						<div class="wallet-summary-meta">
+							<span class="wallet-summary-dot" :style="{ background: wallet.color || 'var(--color-primary)' }" />
+							<span>{{ wallet.name }}</span>
+						</div>
+						<strong>{{ formatCurrency(wallet.balance) }}</strong>
+					</div>
 				</div>
 			</div>
 
@@ -1483,7 +1518,8 @@ async function toggleTransactionPaid(transaction) {
 							</span>
 							<span class="row-actions">
 								<button :disabled="isSubmitting" @click="openEditEntryModal(transaction)">
-									Editar
+									<span class="button-icon button-icon-edit" aria-hidden="true" />
+									<span>Editar</span>
 								</button>
 
 								<button
@@ -1491,7 +1527,8 @@ async function toggleTransactionPaid(transaction) {
 									:disabled="isSubmitting"
 									@click="openDeleteTransactionModal(transaction)"
 								>
-									Excluir
+									<span class="button-icon button-icon-delete" aria-hidden="true" />
+									<span>Excluir</span>
 								</button>
 							</span>
 						</div>
@@ -1503,7 +1540,8 @@ async function toggleTransactionPaid(transaction) {
 		<section v-if="currentPage === 'wallets'" class="page-section">
 			<div class="toolbar">
 				<button :disabled="isSubmitting" @click="openWalletModal">
-					Criar carteira
+					<span class="button-icon button-icon-plus" aria-hidden="true" />
+					<span>Criar carteira</span>
 				</button>
 			</div>
 
@@ -1512,8 +1550,14 @@ async function toggleTransactionPaid(transaction) {
 					<span>{{ wallet.name }}</span>
 					<span>{{ formatCurrency(getWalletBalanceForPeriod(wallet)) }}</span>
 					<span class="row-actions">
+						<button :disabled="isSubmitting" @click="openWalletModal(wallet)">
+							<span class="button-icon button-icon-edit" aria-hidden="true" />
+							<span>Editar</span>
+						</button>
+
 						<button :disabled="isSubmitting" @click="openAdjustmentModal(wallet)">
-							Ajustar saldo
+							<span class="button-icon button-icon-adjust" aria-hidden="true" />
+							<span>Ajustar saldo</span>
 						</button>
 
 						<button
@@ -1521,7 +1565,8 @@ async function toggleTransactionPaid(transaction) {
 							:disabled="isSubmitting"
 							@click="openDeleteWalletModal(wallet)"
 						>
-							Excluir
+							<span class="button-icon button-icon-delete" aria-hidden="true" />
+							<span>Excluir</span>
 						</button>
 					</span>
 				</div>
@@ -1531,7 +1576,8 @@ async function toggleTransactionPaid(transaction) {
 		<section v-if="currentPage === 'categories'" class="page-section">
 			<div class="toolbar">
 				<button :disabled="isSubmitting" @click="openCategoryModal()">
-					Criar categoria
+					<span class="button-icon button-icon-plus" aria-hidden="true" />
+					<span>Criar categoria</span>
 				</button>
 			</div>
 
@@ -1558,7 +1604,8 @@ async function toggleTransactionPaid(transaction) {
 						</button>
 
 						<button :disabled="isSubmitting" @click="openCategoryModal(category)">
-							Editar
+							<span class="button-icon button-icon-edit" aria-hidden="true" />
+							<span>Editar</span>
 						</button>
 
 						<button
@@ -1566,7 +1613,8 @@ async function toggleTransactionPaid(transaction) {
 							:disabled="isSubmitting"
 							@click="openDeleteCategoryModal(category)"
 						>
-							Excluir
+							<span class="button-icon button-icon-delete" aria-hidden="true" />
+							<span>Excluir</span>
 						</button>
 					</span>
 				</div>
@@ -1587,15 +1635,23 @@ async function toggleTransactionPaid(transaction) {
 
 	<div v-if="isWalletModalOpen" class="modal-backdrop">
 		<div class="modal" @keydown.enter="handleModalEnter('wallet', $event)">
-			<h3>Criar carteira</h3>
+			<h3>{{ isEditingWallet ? "Editar carteira" : "Criar carteira" }}</h3>
 
 			<div class="field-group">
 				<label class="field-label">Nome</label>
 				<input v-model="walletName" :class="{ 'required-empty': isWalletNameMissing() }" placeholder="Nome" />
 			</div>
 			<div class="field-group">
+				<label class="field-label">Cor</label>
+				<div class="color-field" :class="{ 'required-empty': isWalletColorMissing() }">
+					<input v-model="walletColor" class="color-picker" type="color" />
+					<input v-model="walletColor" class="color-code-input" type="text" placeholder="#AA3BFF" maxlength="7" />
+				</div>
+			</div>
+			<div class="field-group">
 				<label class="field-label">Valor</label>
 				<input
+					v-if="!isEditingWallet"
 					:class="{ 'required-empty': isWalletBalanceMissing() }"
 					:value="walletBalanceInput"
 					type="text"
@@ -1606,6 +1662,7 @@ async function toggleTransactionPaid(transaction) {
 					@input="syncCurrencyFieldInput('wallet', $event)"
 					@blur="handleCurrencyFieldBlur('wallet')"
 				/>
+				<div v-else class="field-note">O saldo continua sendo alterado apenas por ajuste de saldo.</div>
 			</div>
 
 			<div class="toolbar">
@@ -1932,18 +1989,17 @@ async function toggleTransactionPaid(transaction) {
 .page-section,
 .transaction-section,
 .simple-list,
-.wallet-summary-list,
 .error-box {
 	display: grid;
 	gap: 12px;
-	padding: 16px;
-	border: 1px solid var(--border);
-	border-radius: 12px;
-	background: var(--bg);
+	padding: 18px;
+	border: 1px solid var(--glass-border);
+	border-radius: 24px;
+	background: var(--glass-surface);
 	box-shadow: var(--shadow);
+	backdrop-filter: blur(22px);
 }
 
-.wallet-summary-row,
 .simple-list-row,
 .entry-list-head,
 .entry-row {
@@ -1953,12 +2009,78 @@ async function toggleTransactionPaid(transaction) {
 	align-items: center;
 }
 
+.wallet-summary-card {
+	display: grid;
+	gap: 18px;
+	padding: 24px;
+	border: 1px solid var(--glass-border-strong);
+	border-radius: 28px;
+	background:
+		linear-gradient(180deg, var(--glass-highlight) 0%, transparent 100%),
+		var(--glass-surface-strong);
+	box-shadow: var(--shadow), inset 0 1px 0 rgba(255, 255, 255, 0.18);
+	backdrop-filter: blur(26px);
+}
+
+.wallet-summary-hero {
+	display: grid;
+	gap: 8px;
+	justify-items: center;
+	text-align: center;
+	padding: 8px 0 12px;
+}
+
+.summary-eyebrow {
+	font-size: 12px;
+	font-weight: 700;
+	letter-spacing: 0.18em;
+	text-transform: uppercase;
+	color: var(--text-soft);
+}
+
+.wallet-summary-total {
+	font-size: clamp(2rem, 5vw, 3.35rem);
+	line-height: 1;
+	letter-spacing: -0.04em;
+	color: var(--text-h);
+}
+
+.summary-subtitle {
+	font-size: 13px;
+	color: var(--text-soft);
+}
+
+.wallet-summary-list {
+	display: grid;
+	gap: 6px;
+}
+
 .wallet-summary-row {
+	display: grid;
 	grid-template-columns: minmax(160px, 2fr) minmax(120px, 1fr);
+	padding: 12px 0;
+	border-bottom: 1px solid var(--glass-divider);
+	align-items: center;
 }
 
 .simple-list-row {
 	grid-template-columns: minmax(180px, 2fr) minmax(120px, 1fr) minmax(180px, 1.6fr);
+}
+
+.wallet-summary-meta {
+	display: inline-flex;
+	align-items: center;
+	gap: 10px;
+	font-size: 0.94rem;
+	color: var(--text-soft);
+}
+
+.wallet-summary-dot {
+	width: 10px;
+	height: 10px;
+	border-radius: 999px;
+	background: linear-gradient(135deg, var(--color-primary), var(--color-primary-soft));
+	box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-primary) 14%, transparent);
 }
 
 .entry-list {
@@ -1969,14 +2091,13 @@ async function toggleTransactionPaid(transaction) {
 .entry-list-head {
 	font-weight: 700;
 	padding-bottom: 8px;
-	border-bottom: 1px solid var(--border);
+	border-bottom: 1px solid var(--glass-divider);
 }
 
 .entry-row,
-.wallet-summary-row,
 .simple-list-row {
 	padding: 8px 0;
-	border-bottom: 1px solid var(--border);
+	border-bottom: 1px solid var(--glass-divider);
 }
 
 .entry-row:last-child,
@@ -1986,8 +2107,8 @@ async function toggleTransactionPaid(transaction) {
 }
 
 .paid-row {
-	background: rgba(34, 197, 94, 0.14);
-	border-radius: 8px;
+	background: var(--success-surface);
+	border-radius: 16px;
 	padding-inline: 8px;
 }
 
@@ -2006,6 +2127,41 @@ async function toggleTransactionPaid(transaction) {
 	color: var(--text-muted, #9ca3af);
 }
 
+.field-note {
+	font-size: 12px;
+	line-height: 1.4;
+	color: var(--text-soft);
+}
+
+.color-field {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	padding: 10px 12px;
+	border: 1px solid var(--glass-border);
+	border-radius: 16px;
+	background: var(--input-surface);
+	box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.color-picker {
+	width: 48px;
+	min-width: 48px;
+	height: 40px;
+	padding: 0;
+	border: 0;
+	border-radius: 12px;
+	background: transparent;
+	cursor: pointer;
+}
+
+.color-code-input {
+	border: 0;
+	padding: 0;
+	background: transparent;
+	box-shadow: none;
+}
+
 .transaction-sections {
 	display: grid;
 	gap: 16px;
@@ -2015,10 +2171,11 @@ async function toggleTransactionPaid(transaction) {
 	display: grid;
 	gap: 12px;
 	padding: 16px;
-	border: 1px solid var(--border);
-	border-radius: 12px;
-	background: var(--bg);
+	border: 1px solid var(--glass-border);
+	border-radius: 22px;
+	background: var(--glass-surface);
 	box-shadow: var(--shadow);
+	backdrop-filter: blur(22px);
 }
 
 .filter-row {
@@ -2070,7 +2227,7 @@ async function toggleTransactionPaid(transaction) {
 }
 
 .month-remove-button {
-	background: #c2410c;
+	background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
 }
 
 .section-header {
@@ -2078,7 +2235,7 @@ async function toggleTransactionPaid(transaction) {
 	justify-content: space-between;
 	align-items: center;
 	padding-bottom: 8px;
-	border-bottom: 1px solid var(--border);
+	border-bottom: 1px solid var(--glass-divider);
 }
 
 .section-header h2 {
@@ -2099,6 +2256,10 @@ async function toggleTransactionPaid(transaction) {
 	border-radius: 999px;
 }
 
+.row-actions {
+	justify-content: flex-end;
+}
+
 .drag-over-row {
 	outline: 2px dashed var(--accent-border);
 	outline-offset: 6px;
@@ -2117,11 +2278,12 @@ textarea,
 select {
 	width: 100%;
 	padding: 10px 12px;
-	border: 1px solid var(--border);
-	border-radius: 10px;
+	border: 1px solid var(--glass-border);
+	border-radius: 16px;
 	box-sizing: border-box;
-	background: var(--bg);
+	background: var(--input-surface);
 	color: var(--text);
+	box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
 .required-empty {
@@ -2130,12 +2292,29 @@ select {
 }
 
 button {
-	padding: 10px 14px;
-	border: 0;
-	border-radius: 10px;
-	background: var(--accent);
-	color: white;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 10px;
+	padding: 11px 16px;
+	border: 1px solid transparent;
+	border-radius: 16px;
+	background: var(--button-bg);
+	color: var(--button-text);
 	cursor: pointer;
+	box-shadow: var(--button-shadow);
+	transition:
+		transform 0.18s ease,
+		box-shadow 0.18s ease,
+		background 0.18s ease,
+		border-color 0.18s ease,
+		opacity 0.18s ease;
+}
+
+button:hover {
+	transform: translateY(-1px);
+	background: var(--button-hover);
+	box-shadow: var(--button-shadow-hover);
 }
 
 button.active {
@@ -2148,7 +2327,8 @@ button:disabled {
 }
 
 .danger-button {
-	background: #c2410c;
+	background: linear-gradient(135deg, #fb7185 0%, #e11d48 100%);
+	color: #fff;
 }
 
 .error-text {
@@ -2169,9 +2349,142 @@ button:disabled {
 	display: grid;
 	gap: 16px;
 	padding: 20px;
-	border-radius: 16px;
-	background: var(--bg);
+	border-radius: 24px;
+	border: 1px solid var(--glass-border-strong);
+	background: var(--glass-surface-strong);
 	box-shadow: var(--shadow);
+	backdrop-filter: blur(26px);
+}
+
+.button-icon {
+	position: relative;
+	width: 18px;
+	height: 18px;
+	display: inline-block;
+	flex: 0 0 18px;
+}
+
+.button-icon::before,
+.button-icon::after {
+	content: "";
+	position: absolute;
+	inset: 0;
+	margin: auto;
+}
+
+.button-icon-plus::before,
+.button-icon-plus::after {
+	width: 12px;
+	height: 2px;
+	border-radius: 999px;
+	background: currentColor;
+}
+
+.button-icon-plus::after {
+	width: 2px;
+	height: 12px;
+}
+
+.button-icon-edit::before {
+	width: 12px;
+	height: 3px;
+	background: currentColor;
+	border-radius: 999px;
+	transform: rotate(-35deg);
+}
+
+.button-icon-edit::after {
+	width: 4px;
+	height: 4px;
+	border-radius: 1px;
+	background: currentColor;
+	transform: translate(5px, 5px) rotate(-35deg);
+}
+
+.button-icon-delete::before {
+	width: 11px;
+	height: 10px;
+	border: 2px solid currentColor;
+	border-top: 0;
+	border-radius: 0 0 3px 3px;
+	transform: translateY(2px);
+}
+
+.button-icon-delete::after {
+	width: 13px;
+	height: 2px;
+	background: currentColor;
+	border-radius: 999px;
+	transform: translateY(-4px);
+}
+
+.button-icon-adjust::before {
+	width: 14px;
+	height: 14px;
+	border-radius: 999px;
+	border: 2px solid currentColor;
+}
+
+.button-icon-adjust::after {
+	width: 8px;
+	height: 2px;
+	background: currentColor;
+	border-radius: 999px;
+}
+
+@media (max-width: 760px) {
+	.wallet-summary-card,
+	.filter-card,
+	.page-section,
+	.transaction-section,
+	.simple-list,
+	.error-box,
+	.modal {
+		border-radius: 20px;
+	}
+
+	.wallet-summary-row,
+	.simple-list-row,
+	.entry-list-head,
+	.entry-row {
+		grid-template-columns: 1fr;
+		gap: 6px;
+	}
+
+	.wallet-summary-row {
+		padding: 10px 0;
+	}
+
+	.row-actions,
+	.toolbar {
+		width: 100%;
+	}
+
+	.row-actions button,
+	.toolbar button {
+		flex: 1 1 auto;
+	}
+
+	.filter-row {
+		flex-wrap: wrap;
+	}
+
+	.filter-spacer {
+		display: none;
+	}
+
+	.filter-actions {
+		width: 100%;
+		justify-content: flex-end;
+	}
+
+	.filter-selects {
+		width: 100%;
+	}
+
+	.filter-selects select {
+		flex: 1 1 0;
+	}
 }
 </style>
 
