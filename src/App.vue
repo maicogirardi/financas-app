@@ -1371,618 +1371,508 @@ async function toggleTransactionPaid(transaction) {
 </script>
 
 <template>
-<div class="app-page">
-	<h1 class="tittle">Minhas Finanças</h1>
+	<div class="app-page">
+		<h1 class="tittle">Minhas Finanças</h1>
 
-	<div v-if="!authReady">
-		Carregando autenticação...
-	</div>
+		<div v-if="!authReady">
+			Carregando autenticação...
+		</div>
 
-	<template v-else-if="!user">
-		<ConfiguracoesView
-			:theme="theme"
-			:is-authenticated="false"
-			:is-submitting="isSubmitting"
-			@update-theme="updateTheme"
-			@login="handleLogin"
-		/>
-	</template>
+		<template v-else-if="!user">
+			<ConfiguracoesView :theme="theme" :is-authenticated="false" :is-submitting="isSubmitting"
+				@update-theme="updateTheme" @login="handleLogin" />
+		</template>
 
-	<template v-else-if="!isDataReady">
-		<div>Conectando dados online...</div>
-	</template>
+		<template v-else-if="!isDataReady">
+			<div>Conectando dados online...</div>
+		</template>
 
-	<template v-else>
-		<section v-if="currentPage === 'dashboard'" class="filter-card">
-			<div class="filter-row">
-				<div class="filter-selects">
-					<select v-model.number="selectedYear" class="year-filter">
-						<option v-for="year in availableYears" :key="year" :value="year">
-							{{ year }}
-						</option>
-					</select>
+		<template v-else>
+			<section v-if="currentPage === 'dashboard'" class="filter-card">
+				<div class="filter-row">
+					<div class="filter-selects">
+						<select v-model.number="selectedYear" class="year-filter">
+							<option v-for="year in availableYears" :key="year" :value="year">
+								{{ year }}
+							</option>
+						</select>
 
-					<select v-model.number="selectedMonth">
-						<option v-for="month in availableMonths" :key="month.value" :value="month.value">
+						<select v-model.number="selectedMonth">
+							<option v-for="month in availableMonths" :key="month.value" :value="month.value">
+								{{ month.label }}
+							</option>
+						</select>
+					</div>
+
+					<div class="filter-spacer" />
+
+					<div class="filter-actions">
+						<button :disabled="isSubmitting" @click="openPeriodModal">
+							+
+						</button>
+
+						<button class="danger-button month-remove-button" :disabled="isSubmitting || !selectedPeriod"
+							@click="openDeletePeriodModal">
+							-
+						</button>
+					</div>
+				</div>
+			</section>
+
+			<BottomTabs :tabs="navigationTabs" :current-tab="currentPage" @select="currentPage = $event" />
+
+			<div v-if="appError" class="error-box">
+				{{ appError }}
+			</div>
+
+			<ResumoView v-if="currentPage === 'dashboard'" :show-fab="true" @fab-click="handleFabClick">
+				<div class="wallet-summary-card">
+					<div class="wallet-summary-hero">
+						<span class="summary-eyebrow">Saldo total</span>
+						<strong class="wallet-summary-total">{{ formatCurrency(totalWalletBalance) }}</strong>
+					</div>
+
+					<div class="wallet-summary-list">
+						<div v-for="wallet in dashboardWallets" :key="wallet.id" class="wallet-summary-row">
+							<div class="wallet-summary-meta">
+								<span class="wallet-summary-dot"
+									:style="{ background: wallet.color || 'var(--color-primary)' }" />
+								<span>{{ wallet.name }}</span>
+							</div>
+							<strong>{{ formatCurrency(wallet.balance) }}</strong>
+						</div>
+					</div>
+				</div>
+
+				<div class="transaction-sections">
+					<div v-for="group in groupedTransactions" :key="group.id" class="transaction-section">
+						<div class="section-header">
+							<h2>{{ group.title }}</h2>
+							<div v-if="false" class="section-actions">
+								<button class="icon-button" :disabled="isSubmitting || !canMoveCategory(group.id, 'up')"
+									@click="moveCategory(group.id, 'up')">
+									↑
+								</button>
+								<button class="icon-button"
+									:disabled="isSubmitting || !canMoveCategory(group.id, 'down')"
+									@click="moveCategory(group.id, 'down')">
+									↓
+								</button>
+							</div>
+						</div>
+
+						<div class="entry-list">
+							<div class="entry-list-head">
+								<span>Descrição</span>
+								<span>Carteira</span>
+								<span>Data</span>
+								<span>Valor</span>
+								<span>Pago</span>
+								<span>Ações</span>
+							</div>
+
+							<div v-if="group.items.length === 0" class="entry-empty">
+								Sem entradas
+							</div>
+
+							<div v-for="transaction in group.items" :key="transaction.id" class="entry-row"
+								:class="{ 'paid-row': transaction.paid }">
+								<span>{{ transaction.description || transaction.type }}</span>
+								<span class="entry-wallets">
+									<template v-for="(wallet, index) in getTransactionWallets(transaction)"
+										:key="`${transaction.id}-${wallet.id || index}`">
+										<span class="wallet-summary-meta entry-wallet-meta">
+											<span class="wallet-summary-dot" :style="{ background: wallet.color }" />
+											<span>{{ wallet.name }}</span>
+										</span>
+										<span v-if="transaction.type === 'transfer' && index === 0"
+											class="entry-wallet-arrow">
+											→
+										</span>
+									</template>
+								</span>
+								<span>{{ formatDateDisplay(transaction.date) }}</span>
+								<span>{{ formatCurrency(transaction.amount) }}</span>
+								<span>
+									<input type="checkbox" :checked="transaction.paid" :disabled="isSubmitting"
+										@change="toggleTransactionPaid(transaction)" />
+								</span>
+								<span class="row-actions">
+									<button :disabled="isSubmitting" @click="openEditEntryModal(transaction)">
+										<span class="button-icon button-icon-edit" aria-hidden="true" />
+										<span>Editar</span>
+									</button>
+
+									<button class="danger-button" :disabled="isSubmitting"
+										@click="openDeleteTransactionModal(transaction)">
+										<span class="button-icon button-icon-delete" aria-hidden="true" />
+										<span>Excluir</span>
+									</button>
+								</span>
+							</div>
+						</div>
+					</div>
+				</div>
+			</ResumoView>
+
+			<section v-if="currentPage === 'wallets'" class="page-section">
+				<div class="toolbar">
+					<button :disabled="isSubmitting" @click="openWalletModal">
+						<span class="button-icon button-icon-plus" aria-hidden="true" />
+						<span>Criar carteira</span>
+					</button>
+				</div>
+
+				<div class="simple-list">
+					<div v-for="wallet in walletStore.wallets" :key="wallet.id" class="simple-list-row">
+						<span>{{ wallet.name }}</span>
+						<span>{{ formatCurrency(getWalletBalanceForPeriod(wallet)) }}</span>
+						<span class="row-actions">
+							<button :disabled="isSubmitting" @click="openWalletModal(wallet)">
+								<span class="button-icon button-icon-edit" aria-hidden="true" />
+								<span>Editar</span>
+							</button>
+
+							<button :disabled="isSubmitting" @click="openAdjustmentModal(wallet)">
+								<span class="button-icon button-icon-adjust" aria-hidden="true" />
+								<span>Ajustar saldo</span>
+							</button>
+
+							<button class="danger-button" :disabled="isSubmitting"
+								@click="openDeleteWalletModal(wallet)">
+								<span class="button-icon button-icon-delete" aria-hidden="true" />
+								<span>Excluir</span>
+							</button>
+						</span>
+					</div>
+				</div>
+			</section>
+
+			<section v-if="currentPage === 'categories'" class="page-section">
+				<div class="toolbar">
+					<button :disabled="isSubmitting" @click="openCategoryModal()">
+						<span class="button-icon button-icon-plus" aria-hidden="true" />
+						<span>Criar categoria</span>
+					</button>
+				</div>
+
+				<div class="simple-list">
+					<div v-for="category in categoryStore.manageableCategories" :key="category.id"
+						class="simple-list-row" :class="{ 'drag-over-row': dragOverCategoryId === category.id }"
+						@dragover="handleCategoryDragOver(category.id, $event)"
+						@drop.prevent="handleCategoryDrop(category.id)">
+						<span>{{ category.name }}</span>
+						<span class="row-actions">
+							<button class="icon-button" :disabled="isSubmitting" draggable="true"
+								title="Arrastar categoria" @dragstart="handleCategoryDragStart(category.id, $event)"
+								@dragend="handleCategoryDragEnd">
+								::
+							</button>
+
+							<button :disabled="isSubmitting" @click="openCategoryModal(category)">
+								<span class="button-icon button-icon-edit" aria-hidden="true" />
+								<span>Editar</span>
+							</button>
+
+							<button class="danger-button" :disabled="isSubmitting"
+								@click="openDeleteCategoryModal(category)">
+								<span class="button-icon button-icon-delete" aria-hidden="true" />
+								<span>Excluir</span>
+							</button>
+						</span>
+					</div>
+				</div>
+			</section>
+
+			<ConfiguracoesView v-if="currentPage === 'settings'" :theme="theme" :user-email="user?.email || ''"
+				:is-authenticated="Boolean(user)" :is-submitting="isSubmitting" @update-theme="updateTheme"
+				@login="handleLogin" @logout="handleLogout" />
+		</template>
+
+		<div v-if="isWalletModalOpen" class="modal-backdrop">
+			<div class="modal" @keydown.enter="handleModalEnter('wallet', $event)">
+				<h3>{{ isEditingWallet ? "Editar carteira" : "Criar carteira" }}</h3>
+
+				<div class="field-group">
+					<label class="field-label">Nome</label>
+					<input v-model="walletName" :class="{ 'required-empty': isWalletNameMissing() }"
+						placeholder="Nome" />
+				</div>
+				<div class="field-group">
+					<label class="field-label">Cor</label>
+					<div class="color-field" :class="{ 'required-empty': isWalletColorMissing() }">
+						<input v-model="walletColor" class="color-picker" type="color" />
+						<input v-model="walletColor" class="color-code-input" type="text" placeholder="#AA3BFF"
+							maxlength="7" />
+					</div>
+				</div>
+				<div class="field-group">
+					<label class="field-label">Valor</label>
+					<input v-if="!isEditingWallet" :class="{ 'required-empty': isWalletBalanceMissing() }"
+						:value="walletBalanceInput" type="text" inputmode="decimal" placeholder="R$ 0,00"
+						@keydown="handleCurrencyKeydown($event)" @focus="handleCurrencyFieldFocus('wallet', $event)"
+						@input="syncCurrencyFieldInput('wallet', $event)" @blur="handleCurrencyFieldBlur('wallet')" />
+					<div v-else class="field-note">O saldo continua sendo alterado apenas por ajuste de saldo.</div>
+				</div>
+
+				<div class="toolbar">
+					<button :disabled="isSubmitting" @click="addWallet">
+						Salvar
+					</button>
+
+					<button :disabled="isSubmitting" @click="closeWalletModal">
+						Cancelar
+					</button>
+				</div>
+			</div>
+		</div>
+
+		<div v-if="adjustingWalletId" class="modal-backdrop">
+			<div class="modal" @keydown.enter="handleModalEnter('adjustment', $event)">
+				<h3>Ajustar saldo</h3>
+
+				<div class="field-group">
+					<label class="field-label">Valor</label>
+					<input :class="{ 'required-empty': isAdjustmentBalanceMissing() }" :value="adjustmentBalanceInput"
+						type="text" inputmode="decimal" placeholder="R$ 0,00" @keydown="handleCurrencyKeydown($event)"
+						@focus="handleCurrencyFieldFocus('adjustment', $event)"
+						@input="syncCurrencyFieldInput('adjustment', $event)"
+						@blur="handleCurrencyFieldBlur('adjustment')" />
+				</div>
+				<div class="field-group">
+					<label class="field-label">Descricao</label>
+					<textarea v-model="adjustmentDescription"
+						:class="{ 'required-empty': isAdjustmentDescriptionMissing() }" rows="4"
+						placeholder="Descricao do ajuste" />
+				</div>
+
+				<div class="toolbar">
+					<button :disabled="isSubmitting" @click="saveAdjustment">
+						Salvar ajuste
+					</button>
+
+					<button :disabled="isSubmitting" @click="closeAdjustmentModal">
+						Cancelar
+					</button>
+				</div>
+			</div>
+		</div>
+
+		<div v-if="isCategoryModalOpen" class="modal-backdrop">
+			<div class="modal" @keydown.enter="handleModalEnter('category', $event)">
+				<h3>{{ editingCategoryId ? "Editar categoria" : "Criar categoria" }}</h3>
+
+				<div class="field-group">
+					<label class="field-label">Nome</label>
+					<input v-model="categoryName" :class="{ 'required-empty': isCategoryNameMissing() }"
+						placeholder="Nome da categoria" />
+				</div>
+
+				<div class="toolbar">
+					<button :disabled="isSubmitting" @click="saveCategory">
+						Salvar
+					</button>
+
+					<button :disabled="isSubmitting" @click="closeCategoryModal">
+						Cancelar
+					</button>
+				</div>
+			</div>
+		</div>
+
+		<div v-if="isPeriodModalOpen" class="modal-backdrop">
+			<div class="modal" @keydown.enter="handleModalEnter('period', $event)">
+				<h3>Criar mes</h3>
+
+				<div class="field-group">
+					<label class="field-label">Ano</label>
+					<input v-model.number="periodModalYear" :class="{ 'required-empty': isPeriodYearMissing() }"
+						type="number" placeholder="Ano" />
+				</div>
+
+				<div class="field-group">
+					<label class="field-label">Mes</label>
+					<select v-model.number="periodModalMonth" :class="{ 'required-empty': !periodModalMonth }">
+						<option v-for="month in monthOptions" :key="month.value" :value="month.value">
 							{{ month.label }}
 						</option>
 					</select>
 				</div>
 
-				<div class="filter-spacer" />
-
-				<div class="filter-actions">
-					<button :disabled="isSubmitting" @click="openPeriodModal">
-						+
+				<div class="toolbar">
+					<button :disabled="isSubmitting" @click="savePeriod">
+						Salvar
 					</button>
 
-					<button
-						class="danger-button month-remove-button"
-						:disabled="isSubmitting || !selectedPeriod"
-						@click="openDeletePeriodModal"
-					>
-						-
+					<button :disabled="isSubmitting" @click="closePeriodModal">
+						Cancelar
 					</button>
 				</div>
 			</div>
-		</section>
-
-		<BottomTabs
-			:tabs="navigationTabs"
-			:current-tab="currentPage"
-			@select="currentPage = $event"
-		/>
-
-		<div v-if="appError" class="error-box">
-			{{ appError }}
 		</div>
 
-		<ResumoView
-			v-if="currentPage === 'dashboard'"
-			:show-fab="true"
-			@fab-click="handleFabClick"
-		>
-			<div class="wallet-summary-card">
-				<div class="wallet-summary-hero">
-					<span class="summary-eyebrow">Saldo total</span>
-					<strong class="wallet-summary-total">{{ formatCurrency(totalWalletBalance) }}</strong>
+		<div v-if="isEntryModalOpen" class="modal-backdrop">
+			<div class="modal" @keydown.enter="handleModalEnter('entry', $event)">
+				<h3>{{ editingTransactionId ? "Editar entrada" : "Nova entrada" }}</h3>
+
+				<div class="field-group">
+					<label class="field-label">Descricao</label>
+					<input v-model="entryDescription" :class="{ 'required-empty': isEntryDescriptionMissing() }"
+						placeholder="Descricao" />
 				</div>
 
-				<div class="wallet-summary-list">
-					<div
-						v-for="wallet in dashboardWallets"
-						:key="wallet.id"
-						class="wallet-summary-row"
-					>
-						<div class="wallet-summary-meta">
-							<span class="wallet-summary-dot" :style="{ background: wallet.color || 'var(--color-primary)' }" />
-							<span>{{ wallet.name }}</span>
-						</div>
-						<strong>{{ formatCurrency(wallet.balance) }}</strong>
-					</div>
+				<div class="field-group">
+					<label class="field-label">Tipo de entrada</label>
+					<select v-model="entryType">
+						<option value="expense">Despesa</option>
+						<option value="income">Entrada</option>
+						<option value="transfer">Transferencia</option>
+						<option v-if="editingTransactionId" value="adjustment">Ajuste</option>
+					</select>
+				</div>
+
+				<div v-if="entryType !== 'adjustment' && entryType !== 'transfer'" class="field-group">
+					<label class="field-label">Categoria</label>
+					<select v-if="entryType === 'expense'" v-model="entryCategoryId"
+						:class="{ 'required-empty': isEntryCategoryMissing() }">
+						<option disabled value="">Selecione a categoria</option>
+						<option v-for="category in categoryStore.entryCategories" :key="category.id"
+							:value="category.id">
+							{{ category.name }}
+						</option>
+					</select>
+					<select v-else-if="entryType === 'income'" v-model="entryCategoryId" disabled>
+						<option :value="getIncomeEntryCategoryId()">
+							Entradas
+						</option>
+					</select>
+				</div>
+
+				<div class="field-group">
+					<label class="field-label">Carteira</label>
+					<select v-model="entryWalletId" :class="{ 'required-empty': isEntryWalletMissing() }">
+						<option disabled value="">Selecione a carteira</option>
+						<option v-for="wallet in walletStore.wallets" :key="wallet.id" :value="wallet.id">
+							{{ wallet.name }}
+						</option>
+					</select>
+				</div>
+
+				<div v-if="entryType === 'transfer'" class="field-group">
+					<label class="field-label">Carteira de destino</label>
+					<select v-model="entryTargetWalletId" :class="{ 'required-empty': isEntryTargetWalletMissing() }">
+						<option disabled value="">Selecione a carteira de destino</option>
+						<option v-for="wallet in walletStore.wallets" :key="wallet.id" :value="wallet.id">
+							{{ wallet.name }}
+						</option>
+					</select>
+				</div>
+
+				<div v-if="entryType === 'adjustment'" class="field-group">
+					<label class="field-label">Direcao do ajuste</label>
+					<select v-model="entryAdjustmentDirection">
+						<option value="increase">Aumenta saldo</option>
+						<option value="decrease">Diminui saldo</option>
+					</select>
+				</div>
+
+				<div class="field-group">
+					<label class="field-label">Data</label>
+					<input v-model="entryDate" :class="{ 'required-empty': isEntryDateMissing() }" type="date"
+						:min="entryMinDate" :max="entryMaxDate" />
+				</div>
+				<div class="field-group">
+					<label class="field-label">Valor</label>
+					<input :class="{ 'required-empty': isEntryAmountMissing() }" :value="entryAmountInput" type="text"
+						inputmode="decimal" placeholder="R$ 0,00" @keydown="handleCurrencyKeydown($event)"
+						@focus="handleCurrencyFieldFocus('entry', $event)"
+						@input="syncCurrencyFieldInput('entry', $event)" @blur="handleCurrencyFieldBlur('entry')" />
+				</div>
+
+				<div v-if="entryFormError" class="error-text">
+					{{ entryFormError }}
+				</div>
+
+				<div class="toolbar">
+					<button :disabled="isSubmitting" @click="saveEntry">
+						Salvar
+					</button>
+
+					<button :disabled="isSubmitting" @click="closeEntryModal">
+						Cancelar
+					</button>
 				</div>
 			</div>
+		</div>
 
-			<div class="transaction-sections">
-				<div
-					v-for="group in groupedTransactions"
-					:key="group.id"
-					class="transaction-section"
-				>
-					<div class="section-header">
-						<h2>{{ group.title }}</h2>
-						<div v-if="false" class="section-actions">
-							<button
-								class="icon-button"
-								:disabled="isSubmitting || !canMoveCategory(group.id, 'up')"
-								@click="moveCategory(group.id, 'up')"
-							>
-								↑
-							</button>
-							<button
-								class="icon-button"
-								:disabled="isSubmitting || !canMoveCategory(group.id, 'down')"
-								@click="moveCategory(group.id, 'down')"
-							>
-								↓
-							</button>
-						</div>
-					</div>
+		<div v-if="deleteWalletId" class="modal-backdrop">
+			<div class="modal" @keydown.enter="handleModalEnter('delete-wallet', $event)">
+				<h3>Excluir carteira</h3>
+				<p>Tem certeza que deseja excluir esta carteira?</p>
 
-					<div class="entry-list">
-						<div class="entry-list-head">
-							<span>Descrição</span>
-							<span>Carteira</span>
-							<span>Data</span>
-							<span>Valor</span>
-							<span>Pago</span>
-							<span>Ações</span>
-						</div>
+				<div class="toolbar">
+					<button class="danger-button" :disabled="isSubmitting" @click="confirmDeleteWallet">
+						Confirmar exclusao
+					</button>
 
-						<div v-if="group.items.length === 0" class="entry-empty">
-							Sem entradas
-						</div>
-
-						<div
-							v-for="transaction in group.items"
-							:key="transaction.id"
-							class="entry-row"
-							:class="{ 'paid-row': transaction.paid }"
-						>
-							<span>{{ transaction.description || transaction.type }}</span>
-							<span class="entry-wallets">
-								<template
-									v-for="(wallet, index) in getTransactionWallets(transaction)"
-									:key="`${transaction.id}-${wallet.id || index}`"
-								>
-									<span class="wallet-summary-meta entry-wallet-meta">
-										<span class="wallet-summary-dot" :style="{ background: wallet.color }" />
-										<span>{{ wallet.name }}</span>
-									</span>
-									<span
-										v-if="transaction.type === 'transfer' && index === 0"
-										class="entry-wallet-arrow"
-									>
-										→
-									</span>
-								</template>
-							</span>
-							<span>{{ formatDateDisplay(transaction.date) }}</span>
-							<span>{{ formatCurrency(transaction.amount) }}</span>
-							<span>
-								<input
-									type="checkbox"
-									:checked="transaction.paid"
-									:disabled="isSubmitting"
-									@change="toggleTransactionPaid(transaction)"
-								/>
-							</span>
-							<span class="row-actions">
-								<button :disabled="isSubmitting" @click="openEditEntryModal(transaction)">
-									<span class="button-icon button-icon-edit" aria-hidden="true" />
-									<span>Editar</span>
-								</button>
-
-								<button
-									class="danger-button"
-									:disabled="isSubmitting"
-									@click="openDeleteTransactionModal(transaction)"
-								>
-									<span class="button-icon button-icon-delete" aria-hidden="true" />
-									<span>Excluir</span>
-								</button>
-							</span>
-						</div>
-					</div>
+					<button :disabled="isSubmitting" @click="closeDeleteWalletModal">
+						Cancelar
+					</button>
 				</div>
 			</div>
-		</ResumoView>
+		</div>
 
-		<section v-if="currentPage === 'wallets'" class="page-section">
-			<div class="toolbar">
-				<button :disabled="isSubmitting" @click="openWalletModal">
-					<span class="button-icon button-icon-plus" aria-hidden="true" />
-					<span>Criar carteira</span>
-				</button>
-			</div>
+		<div v-if="deleteCategoryId" class="modal-backdrop">
+			<div class="modal" @keydown.enter="handleModalEnter('delete-category', $event)">
+				<h3>Excluir categoria</h3>
+				<p>Tem certeza que deseja excluir esta categoria?</p>
 
-			<div class="simple-list">
-				<div v-for="wallet in walletStore.wallets" :key="wallet.id" class="simple-list-row">
-					<span>{{ wallet.name }}</span>
-					<span>{{ formatCurrency(getWalletBalanceForPeriod(wallet)) }}</span>
-					<span class="row-actions">
-						<button :disabled="isSubmitting" @click="openWalletModal(wallet)">
-							<span class="button-icon button-icon-edit" aria-hidden="true" />
-							<span>Editar</span>
-						</button>
+				<div class="toolbar">
+					<button class="danger-button" :disabled="isSubmitting" @click="confirmDeleteCategory">
+						Confirmar exclusao
+					</button>
 
-						<button :disabled="isSubmitting" @click="openAdjustmentModal(wallet)">
-							<span class="button-icon button-icon-adjust" aria-hidden="true" />
-							<span>Ajustar saldo</span>
-						</button>
-
-						<button
-							class="danger-button"
-							:disabled="isSubmitting"
-							@click="openDeleteWalletModal(wallet)"
-						>
-							<span class="button-icon button-icon-delete" aria-hidden="true" />
-							<span>Excluir</span>
-						</button>
-					</span>
+					<button :disabled="isSubmitting" @click="closeDeleteCategoryModal">
+						Cancelar
+					</button>
 				</div>
 			</div>
-		</section>
+		</div>
 
-		<section v-if="currentPage === 'categories'" class="page-section">
-			<div class="toolbar">
-				<button :disabled="isSubmitting" @click="openCategoryModal()">
-					<span class="button-icon button-icon-plus" aria-hidden="true" />
-					<span>Criar categoria</span>
-				</button>
-			</div>
+		<div v-if="deleteTransactionId" class="modal-backdrop">
+			<div class="modal" @keydown.enter="handleModalEnter('delete-transaction', $event)">
+				<h3>Excluir entrada</h3>
+				<p>Tem certeza que deseja excluir esta entrada?</p>
 
-			<div class="simple-list">
-				<div
-					v-for="category in categoryStore.manageableCategories"
-					:key="category.id"
-					class="simple-list-row"
-					:class="{ 'drag-over-row': dragOverCategoryId === category.id }"
-					@dragover="handleCategoryDragOver(category.id, $event)"
-					@drop.prevent="handleCategoryDrop(category.id)"
-				>
-					<span>{{ category.name }}</span>
-					<span class="row-actions">
-						<button
-							class="icon-button"
-							:disabled="isSubmitting"
-							draggable="true"
-							title="Arrastar categoria"
-							@dragstart="handleCategoryDragStart(category.id, $event)"
-							@dragend="handleCategoryDragEnd"
-						>
-							::
-						</button>
+				<div class="toolbar">
+					<button class="danger-button" :disabled="isSubmitting" @click="confirmDeleteTransaction">
+						Confirmar exclusao
+					</button>
 
-						<button :disabled="isSubmitting" @click="openCategoryModal(category)">
-							<span class="button-icon button-icon-edit" aria-hidden="true" />
-							<span>Editar</span>
-						</button>
-
-						<button
-							class="danger-button"
-							:disabled="isSubmitting"
-							@click="openDeleteCategoryModal(category)"
-						>
-							<span class="button-icon button-icon-delete" aria-hidden="true" />
-							<span>Excluir</span>
-						</button>
-					</span>
+					<button :disabled="isSubmitting" @click="closeDeleteTransactionModal">
+						Cancelar
+					</button>
 				</div>
 			</div>
-		</section>
+		</div>
 
-		<ConfiguracoesView
-			v-if="currentPage === 'settings'"
-			:theme="theme"
-			:user-email="user?.email || ''"
-			:is-authenticated="Boolean(user)"
-			:is-submitting="isSubmitting"
-			@update-theme="updateTheme"
-			@login="handleLogin"
-			@logout="handleLogout"
-		/>
-	</template>
+		<div v-if="deletePeriodId" class="modal-backdrop">
+			<div class="modal" @keydown.enter="handleModalEnter('delete-period', $event)">
+				<h3>Excluir mes</h3>
+				<p>Tem certeza que deseja excluir este mes e todas as entradas dele?</p>
 
-	<div v-if="isWalletModalOpen" class="modal-backdrop">
-		<div class="modal" @keydown.enter="handleModalEnter('wallet', $event)">
-			<h3>{{ isEditingWallet ? "Editar carteira" : "Criar carteira" }}</h3>
+				<div class="toolbar">
+					<button class="danger-button" :disabled="isSubmitting" @click="confirmDeletePeriod">
+						Confirmar exclusao
+					</button>
 
-			<div class="field-group">
-				<label class="field-label">Nome</label>
-				<input v-model="walletName" :class="{ 'required-empty': isWalletNameMissing() }" placeholder="Nome" />
-			</div>
-			<div class="field-group">
-				<label class="field-label">Cor</label>
-				<div class="color-field" :class="{ 'required-empty': isWalletColorMissing() }">
-					<input v-model="walletColor" class="color-picker" type="color" />
-					<input v-model="walletColor" class="color-code-input" type="text" placeholder="#AA3BFF" maxlength="7" />
+					<button :disabled="isSubmitting" @click="closeDeletePeriodModal">
+						Cancelar
+					</button>
 				</div>
 			</div>
-			<div class="field-group">
-				<label class="field-label">Valor</label>
-				<input
-					v-if="!isEditingWallet"
-					:class="{ 'required-empty': isWalletBalanceMissing() }"
-					:value="walletBalanceInput"
-					type="text"
-					inputmode="decimal"
-					placeholder="R$ 0,00"
-					@keydown="handleCurrencyKeydown($event)"
-					@focus="handleCurrencyFieldFocus('wallet', $event)"
-					@input="syncCurrencyFieldInput('wallet', $event)"
-					@blur="handleCurrencyFieldBlur('wallet')"
-				/>
-				<div v-else class="field-note">O saldo continua sendo alterado apenas por ajuste de saldo.</div>
-			</div>
-
-			<div class="toolbar">
-				<button :disabled="isSubmitting" @click="addWallet">
-					Salvar
-				</button>
-
-				<button :disabled="isSubmitting" @click="closeWalletModal">
-					Cancelar
-				</button>
-			</div>
 		</div>
 	</div>
-
-	<div v-if="adjustingWalletId" class="modal-backdrop">
-		<div class="modal" @keydown.enter="handleModalEnter('adjustment', $event)">
-			<h3>Ajustar saldo</h3>
-
-			<div class="field-group">
-				<label class="field-label">Valor</label>
-				<input
-					:class="{ 'required-empty': isAdjustmentBalanceMissing() }"
-					:value="adjustmentBalanceInput"
-					type="text"
-					inputmode="decimal"
-					placeholder="R$ 0,00"
-					@keydown="handleCurrencyKeydown($event)"
-					@focus="handleCurrencyFieldFocus('adjustment', $event)"
-					@input="syncCurrencyFieldInput('adjustment', $event)"
-					@blur="handleCurrencyFieldBlur('adjustment')"
-				/>
-			</div>
-			<div class="field-group">
-				<label class="field-label">Descricao</label>
-				<textarea
-					v-model="adjustmentDescription"
-					:class="{ 'required-empty': isAdjustmentDescriptionMissing() }"
-					rows="4"
-					placeholder="Descricao do ajuste"
-				/>
-			</div>
-
-			<div class="toolbar">
-				<button :disabled="isSubmitting" @click="saveAdjustment">
-					Salvar ajuste
-				</button>
-
-				<button :disabled="isSubmitting" @click="closeAdjustmentModal">
-					Cancelar
-				</button>
-			</div>
-		</div>
-	</div>
-
-	<div v-if="isCategoryModalOpen" class="modal-backdrop">
-		<div class="modal" @keydown.enter="handleModalEnter('category', $event)">
-			<h3>{{ editingCategoryId ? "Editar categoria" : "Criar categoria" }}</h3>
-
-			<div class="field-group">
-				<label class="field-label">Nome</label>
-				<input v-model="categoryName" :class="{ 'required-empty': isCategoryNameMissing() }" placeholder="Nome da categoria" />
-			</div>
-
-			<div class="toolbar">
-				<button :disabled="isSubmitting" @click="saveCategory">
-					Salvar
-				</button>
-
-				<button :disabled="isSubmitting" @click="closeCategoryModal">
-					Cancelar
-				</button>
-			</div>
-		</div>
-	</div>
-
-	<div v-if="isPeriodModalOpen" class="modal-backdrop">
-		<div class="modal" @keydown.enter="handleModalEnter('period', $event)">
-			<h3>Criar mes</h3>
-
-			<div class="field-group">
-				<label class="field-label">Ano</label>
-				<input v-model.number="periodModalYear" :class="{ 'required-empty': isPeriodYearMissing() }" type="number" placeholder="Ano" />
-			</div>
-
-			<div class="field-group">
-				<label class="field-label">Mes</label>
-				<select v-model.number="periodModalMonth" :class="{ 'required-empty': !periodModalMonth }">
-					<option v-for="month in monthOptions" :key="month.value" :value="month.value">
-						{{ month.label }}
-					</option>
-				</select>
-			</div>
-
-			<div class="toolbar">
-				<button :disabled="isSubmitting" @click="savePeriod">
-					Salvar
-				</button>
-
-				<button :disabled="isSubmitting" @click="closePeriodModal">
-					Cancelar
-				</button>
-			</div>
-		</div>
-	</div>
-
-	<div v-if="isEntryModalOpen" class="modal-backdrop">
-		<div class="modal" @keydown.enter="handleModalEnter('entry', $event)">
-			<h3>{{ editingTransactionId ? "Editar entrada" : "Nova entrada" }}</h3>
-
-			<div class="field-group">
-				<label class="field-label">Descricao</label>
-				<input
-					v-model="entryDescription"
-					:class="{ 'required-empty': isEntryDescriptionMissing() }"
-					placeholder="Descricao"
-				/>
-			</div>
-
-			<div class="field-group">
-				<label class="field-label">Tipo de entrada</label>
-				<select v-model="entryType">
-					<option value="expense">Despesa</option>
-					<option value="income">Entrada</option>
-					<option value="transfer">Transferencia</option>
-					<option v-if="editingTransactionId" value="adjustment">Ajuste</option>
-				</select>
-			</div>
-
-			<div v-if="entryType !== 'adjustment' && entryType !== 'transfer'" class="field-group">
-				<label class="field-label">Categoria</label>
-				<select
-					v-if="entryType === 'expense'"
-					v-model="entryCategoryId"
-					:class="{ 'required-empty': isEntryCategoryMissing() }"
-				>
-					<option disabled value="">Selecione a categoria</option>
-					<option
-						v-for="category in categoryStore.entryCategories"
-						:key="category.id"
-						:value="category.id"
-					>
-						{{ category.name }}
-					</option>
-				</select>
-				<select v-else-if="entryType === 'income'" v-model="entryCategoryId" disabled>
-					<option :value="getIncomeEntryCategoryId()">
-						Entradas
-					</option>
-				</select>
-			</div>
-
-			<div class="field-group">
-				<label class="field-label">Carteira</label>
-				<select v-model="entryWalletId" :class="{ 'required-empty': isEntryWalletMissing() }">
-					<option disabled value="">Selecione a carteira</option>
-					<option
-						v-for="wallet in walletStore.wallets"
-						:key="wallet.id"
-						:value="wallet.id"
-					>
-						{{ wallet.name }}
-					</option>
-				</select>
-			</div>
-
-			<div v-if="entryType === 'transfer'" class="field-group">
-				<label class="field-label">Carteira de destino</label>
-				<select
-					v-model="entryTargetWalletId"
-					:class="{ 'required-empty': isEntryTargetWalletMissing() }"
-				>
-					<option disabled value="">Selecione a carteira de destino</option>
-					<option
-						v-for="wallet in walletStore.wallets"
-						:key="wallet.id"
-						:value="wallet.id"
-					>
-						{{ wallet.name }}
-					</option>
-				</select>
-			</div>
-
-			<div v-if="entryType === 'adjustment'" class="field-group">
-				<label class="field-label">Direcao do ajuste</label>
-				<select v-model="entryAdjustmentDirection">
-					<option value="increase">Aumenta saldo</option>
-					<option value="decrease">Diminui saldo</option>
-				</select>
-			</div>
-
-			<div class="field-group">
-				<label class="field-label">Data</label>
-				<input
-					v-model="entryDate"
-					:class="{ 'required-empty': isEntryDateMissing() }"
-					type="date"
-					:min="entryMinDate"
-					:max="entryMaxDate"
-				/>
-			</div>
-			<div class="field-group">
-				<label class="field-label">Valor</label>
-				<input
-					:class="{ 'required-empty': isEntryAmountMissing() }"
-					:value="entryAmountInput"
-					type="text"
-					inputmode="decimal"
-					placeholder="R$ 0,00"
-					@keydown="handleCurrencyKeydown($event)"
-					@focus="handleCurrencyFieldFocus('entry', $event)"
-					@input="syncCurrencyFieldInput('entry', $event)"
-					@blur="handleCurrencyFieldBlur('entry')"
-				/>
-			</div>
-
-			<div v-if="entryFormError" class="error-text">
-				{{ entryFormError }}
-			</div>
-
-			<div class="toolbar">
-				<button :disabled="isSubmitting" @click="saveEntry">
-					Salvar
-				</button>
-
-				<button :disabled="isSubmitting" @click="closeEntryModal">
-					Cancelar
-				</button>
-			</div>
-		</div>
-	</div>
-
-	<div v-if="deleteWalletId" class="modal-backdrop">
-		<div class="modal" @keydown.enter="handleModalEnter('delete-wallet', $event)">
-			<h3>Excluir carteira</h3>
-			<p>Tem certeza que deseja excluir esta carteira?</p>
-
-			<div class="toolbar">
-				<button class="danger-button" :disabled="isSubmitting" @click="confirmDeleteWallet">
-					Confirmar exclusao
-				</button>
-
-				<button :disabled="isSubmitting" @click="closeDeleteWalletModal">
-					Cancelar
-				</button>
-			</div>
-		</div>
-	</div>
-
-	<div v-if="deleteCategoryId" class="modal-backdrop">
-		<div class="modal" @keydown.enter="handleModalEnter('delete-category', $event)">
-			<h3>Excluir categoria</h3>
-			<p>Tem certeza que deseja excluir esta categoria?</p>
-
-			<div class="toolbar">
-				<button class="danger-button" :disabled="isSubmitting" @click="confirmDeleteCategory">
-					Confirmar exclusao
-				</button>
-
-				<button :disabled="isSubmitting" @click="closeDeleteCategoryModal">
-					Cancelar
-				</button>
-			</div>
-		</div>
-	</div>
-
-	<div v-if="deleteTransactionId" class="modal-backdrop">
-		<div class="modal" @keydown.enter="handleModalEnter('delete-transaction', $event)">
-			<h3>Excluir entrada</h3>
-			<p>Tem certeza que deseja excluir esta entrada?</p>
-
-			<div class="toolbar">
-				<button class="danger-button" :disabled="isSubmitting" @click="confirmDeleteTransaction">
-					Confirmar exclusao
-				</button>
-
-				<button :disabled="isSubmitting" @click="closeDeleteTransactionModal">
-					Cancelar
-				</button>
-			</div>
-		</div>
-	</div>
-
-	<div v-if="deletePeriodId" class="modal-backdrop">
-		<div class="modal" @keydown.enter="handleModalEnter('delete-period', $event)">
-			<h3>Excluir mes</h3>
-			<p>Tem certeza que deseja excluir este mes e todas as entradas dele?</p>
-
-			<div class="toolbar">
-				<button class="danger-button" :disabled="isSubmitting" @click="confirmDeletePeriod">
-					Confirmar exclusao
-				</button>
-
-				<button :disabled="isSubmitting" @click="closeDeletePeriodModal">
-					Cancelar
-				</button>
-			</div>
-		</div>
-	</div>
-</div>
 </template>
 
 <style scoped>
@@ -1999,6 +1889,7 @@ async function toggleTransactionPaid(transaction) {
 .tittle {
 	text-align: center;
 }
+
 .topbar,
 .toolbar,
 .tabs,
@@ -2035,7 +1926,8 @@ async function toggleTransactionPaid(transaction) {
 .wallet-summary-card {
 	display: grid;
 	gap: 18px;
-	padding: 24px;
+	padding: 25px;
+	align-items: center;
 	border: 1px solid var(--glass-border-strong);
 	border-radius: 28px;
 	background:
@@ -2051,6 +1943,8 @@ async function toggleTransactionPaid(transaction) {
 	justify-items: center;
 	text-align: center;
 	padding: 8px 0 12px;
+	width: 100%;
+	max-width: 992px;
 }
 
 .summary-eyebrow {
@@ -2074,16 +1968,23 @@ async function toggleTransactionPaid(transaction) {
 }
 
 .wallet-summary-list {
-	display: grid;
-	gap: 6px;
+	width: 100%;
+	max-width: 992px;
+	margin: 0 auto;
 }
 
 .wallet-summary-row {
 	display: grid;
-	grid-template-columns: minmax(160px, 2fr) minmax(120px, 1fr);
+	grid-template-columns: 1fr auto;
 	align-items: center;
-	padding: 12px 0 13px;
-	border-bottom: 1px solid var(--glass-divider);
+	padding: 9px 0 11px;
+	gap: 12px;
+	margin: 0 auto;
+}
+
+.wallet-summary-row > :last-child {
+	justify-self: end;
+	text-align: right;
 }
 
 .simple-list-row {
@@ -2492,6 +2393,7 @@ button:disabled {
 	border-radius: 999px;
 }
 
+/* MOBILE */
 @media (max-width: 480px) {
 	.app-page {
 		padding: 16px 12px 100px;
@@ -2513,13 +2415,6 @@ button:disabled {
 		grid-template-columns: minmax(110px, 1fr) auto;
 		padding: 9px 0 11px;
 		gap: 6px;
-	}
-
-	.wallet-summary-row {
-		grid-template-columns: 1fr auto;
-		align-items: center;
-		padding: 9px 0 11px;
-		gap: 12px;
 	}
 
 	.row-actions,
@@ -2553,6 +2448,16 @@ button:disabled {
 		flex: 1 1 0;
 	}
 }
+
+/* DESKTOP */
+@media (min-width: 1024px) {
+	.wallet-summary-row {
+		width: 75%;
+		padding: 12px 0 13px;
+	}
+
+	.wallet-summary-list {
+		width: 75%;
+	}
+}
 </style>
-
-
