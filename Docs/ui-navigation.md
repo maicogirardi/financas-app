@@ -18,6 +18,13 @@ Resumo-specific top controls:
 
 * year filter visible only in Resumo
 * month filter visible only in Resumo
+* month select must display month names like Janeiro, Fevereiro, Março
+* year and month filters must stay on a single row inside a card section
+* year filter can be narrower and does not need to stretch across the row
+* dropdowns should stay aligned to the left and action buttons aligned to the right
+* an empty flexible spacer should occupy the middle of the row so the card fills 100% width
+* `+` button must appear on the same row after the month filter
+* month removal action must use a red `-` button on the same row
 
 Mobile-first layout.
 

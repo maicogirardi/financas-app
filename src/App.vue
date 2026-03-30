@@ -90,18 +90,18 @@ const availableYears = computed(() => {
 })
 
 const monthOptions = [
-	{ value: 1, label: "01" },
-	{ value: 2, label: "02" },
-	{ value: 3, label: "03" },
-	{ value: 4, label: "04" },
-	{ value: 5, label: "05" },
-	{ value: 6, label: "06" },
-	{ value: 7, label: "07" },
-	{ value: 8, label: "08" },
-	{ value: 9, label: "09" },
-	{ value: 10, label: "10" },
-	{ value: 11, label: "11" },
-	{ value: 12, label: "12" }
+	{ value: 1, label: "Janeiro" },
+	{ value: 2, label: "Fevereiro" },
+	{ value: 3, label: "Março" },
+	{ value: 4, label: "Abril" },
+	{ value: 5, label: "Maio" },
+	{ value: 6, label: "Junho" },
+	{ value: 7, label: "Julho" },
+	{ value: 8, label: "Agosto" },
+	{ value: 9, label: "Setembro" },
+	{ value: 10, label: "Outubro" },
+	{ value: 11, label: "Novembro" },
+	{ value: 12, label: "Dezembro" }
 ]
 
 const availableMonths = computed(() => {
@@ -1340,10 +1340,10 @@ async function toggleTransactionPaid(transaction) {
 
 <template>
 <div class="app-page">
-	<h1>Financas</h1>
+	<h1 class="tittle">Minhas Finanças</h1>
 
 	<div v-if="!authReady">
-		Carregando autenticacao...
+		Carregando autenticação...
 	</div>
 
 	<template v-else-if="!user">
@@ -1361,29 +1361,39 @@ async function toggleTransactionPaid(transaction) {
 	</template>
 
 	<template v-else>
-		<div v-if="currentPage === 'dashboard'" class="topbar">
-			<div class="toolbar">
-				<select v-model.number="selectedYear">
-					<option v-for="year in availableYears" :key="year" :value="year">
-						{{ year }}
-					</option>
-				</select>
+		<section v-if="currentPage === 'dashboard'" class="filter-card">
+			<div class="filter-row">
+				<div class="filter-selects">
+					<select v-model.number="selectedYear" class="year-filter">
+						<option v-for="year in availableYears" :key="year" :value="year">
+							{{ year }}
+						</option>
+					</select>
 
-				<select v-model.number="selectedMonth">
-					<option v-for="month in availableMonths" :key="month.value" :value="month.value">
-						{{ month.label }}
-					</option>
-				</select>
+					<select v-model.number="selectedMonth">
+						<option v-for="month in availableMonths" :key="month.value" :value="month.value">
+							{{ month.label }}
+						</option>
+					</select>
+				</div>
 
-				<button :disabled="isSubmitting" @click="openPeriodModal">
-					+
-				</button>
+				<div class="filter-spacer" />
 
-				<button :disabled="isSubmitting || !selectedPeriod" @click="openDeletePeriodModal">
-					Remover mes
-				</button>
+				<div class="filter-actions">
+					<button :disabled="isSubmitting" @click="openPeriodModal">
+						+
+					</button>
+
+					<button
+						class="danger-button month-remove-button"
+						:disabled="isSubmitting || !selectedPeriod"
+						@click="openDeletePeriodModal"
+					>
+						-
+					</button>
+				</div>
 			</div>
-		</div>
+		</section>
 
 		<BottomTabs
 			:tabs="navigationTabs"
@@ -1439,13 +1449,13 @@ async function toggleTransactionPaid(transaction) {
 
 					<div class="entry-list">
 						<div class="entry-list-head">
-							<span>Descricao</span>
+							<span>Descrição</span>
 							<span>Tipo</span>
 							<span>Carteira</span>
 							<span>Data</span>
 							<span>Valor</span>
 							<span>Pago</span>
-							<span>Acoes</span>
+							<span>Ações</span>
 						</div>
 
 						<div v-if="group.items.length === 0" class="entry-empty">
@@ -1906,7 +1916,9 @@ async function toggleTransactionPaid(transaction) {
 	margin: 0 auto;
 	text-align: left;
 }
-
+.tittle {
+	text-align: center;
+}
 .topbar,
 .toolbar,
 .tabs,
@@ -1997,6 +2009,68 @@ async function toggleTransactionPaid(transaction) {
 .transaction-sections {
 	display: grid;
 	gap: 16px;
+}
+
+.filter-card {
+	display: grid;
+	gap: 12px;
+	padding: 16px;
+	border: 1px solid var(--border);
+	border-radius: 12px;
+	background: var(--bg);
+	box-shadow: var(--shadow);
+}
+
+.filter-row {
+	display: flex;
+	gap: 12px;
+	align-items: center;
+	flex-wrap: nowrap;
+	width: 100%;
+}
+
+.filter-selects {
+	display: flex;
+	gap: 12px;
+	align-items: center;
+	flex: 0 1 auto;
+}
+
+.filter-row select {
+	flex: 0 1 auto;
+	min-width: 0;
+}
+
+.filter-spacer {
+	flex: 1 1 auto;
+	min-width: 0;
+}
+
+.filter-actions {
+	display: flex;
+	gap: 12px;
+	align-items: center;
+	justify-content: flex-end;
+	flex: 0 0 auto;
+}
+
+.filter-row button {
+	flex: 0 0 auto;
+	min-width: 48px;
+}
+
+.year-filter {
+	width: 110px;
+	flex: 0 0 110px;
+}
+
+.filter-row select:not(.year-filter) {
+	width: auto;
+	min-width: 180px;
+}
+
+.month-remove-button {
+	background: #c2410c;
 }
 
 .section-header {
@@ -2100,3 +2174,5 @@ button:disabled {
 	box-shadow: var(--shadow);
 }
 </style>
+
+

@@ -128,6 +128,8 @@ UI structure:
 - BottomTabs navigation must include Configurações
 - login/logout controls and "Logado como" status must live inside Configurações
 - month/year filters must appear only on Resumo
+- month/year filters on Resumo must appear in a dedicated card section on a single row
+- the Resumo filter row must use month names, keep the year select narrower, place dropdowns on the left, action buttons on the right, use a flexible empty spacer in the middle, place `+` after the month select, and use a red `-` for remove month
 - the FAB `+` on Resumo must open the new entry modal and replace any redundant "Nova entrada" button
 - theme variables must include `--color-primary`, `--color-text`, and `--color-bg`
 - theme must be saved in Firebase user preferences
