@@ -9,7 +9,6 @@ Examples:
 - Credit Card
 - Savings
 - Investment
-- Mother's expenses
 
 Wallet model (Firestore):
 
@@ -35,6 +34,11 @@ Current wallet actions:
 - adjust balance via modal
 - delete wallet via confirmation modal
 - wallet can be selected in manual transaction modal
+- wallet money inputs must use Brazilian Real prefix while typing
+- wallet balances must display as Brazilian Real with 2 decimal places
+- wallet creation must happen in a dedicated modal
+- wallet creation modal must use the same required-field validation behavior as category creation
+- wallet creation modal must support Enter to confirm and Esc to cancel
 
 Rules:
 

@@ -13,8 +13,7 @@ const DEFAULT_CATEGORY_NAMES = [
 	"Entradas",
 	"Despesas Fixas",
 	"Despesas Diversas",
-	"Cartoes de Credito",
-	"Mae"
+	"Cart\u00f5es de Cr\u00e9dito"
 ]
 
 export const TRANSFER_CATEGORY_ID = "system-transfer"
@@ -170,7 +169,9 @@ export function useCategoryStore() {
 		const visibleCount = state.categories.filter(category => !category.hidden).length
 
 		if (visibleCount === 0) {
-			for (const [index, name] of DEFAULT_CATEGORY_NAMES.entries()) {
+			for (let index = 0; index < DEFAULT_CATEGORY_NAMES.length; index += 1) {
+				const name = DEFAULT_CATEGORY_NAMES[index]
+
 				await ensureCategoryDoc(`default-${index}`, {
 					name,
 					order: index,

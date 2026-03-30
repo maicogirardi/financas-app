@@ -28,7 +28,7 @@ Transaction list rules:
 - transaction list must be grouped by category sections
 - each category creates a visible section title
 - adjustment transactions must be saved in "Ajuste de Saldo" section
-- transfer transactions must appear in "Transferências" section by default
+- transfer transactions must appear in "Transferências" section
 - each transaction row must support edit and delete actions
 - transaction list must support year and month filtering
 - each transaction row must include paid checkbox
@@ -36,6 +36,9 @@ Transaction list rules:
 - only paid transactions must affect balances and totals
 - wallet balance adjustments must use hidden category "Ajuste de Saldo"
 - each transaction must belong to a monthly period
+- "Transferências" and "Ajuste de Saldo" sections should only be rendered when there is at least one transaction in the selected period
+- dates in transaction rows must display as DD/MM/AAAA
+- values in transaction rows must display as Brazilian Real with 2 decimal places
 
 Manual entry modal:
 
@@ -46,6 +49,18 @@ Manual entry modal:
 - value
 - destination wallet when type is transfer
 - date
+
+Manual entry UX:
+
+- description is required
+- date input must keep the native calendar picker
+- new entry date must default to the current day, clamped to the selected month when needed
+- money inputs must start as `R$ 0,00`
+- if a money input is zero and the user starts typing, the numeric zero should clear and only the `R$ ` prefix should remain before the typed value
+- money inputs must keep the `R$ ` prefix while typing
+- money inputs must accept only numbers and comma
+- Enter should confirm modal actions
+- Esc should cancel modal actions
 
 Edit transaction rules:
 
@@ -63,7 +78,7 @@ Adjustment transaction rules:
 - amount is absolute difference between current balance and new balance
 - if new balance is higher, use walletTo
 - if new balance is lower, use walletFrom
-- description should explain reason for manual correction
+- description is required and should explain reason for manual correction
 - date should be current date/time when adjustment is created
 - adjustment entries should also start with paid = false
 - adjustment category must be hidden from category management UI

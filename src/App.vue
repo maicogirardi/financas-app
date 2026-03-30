@@ -29,9 +29,12 @@ const selectedMonth = ref(new Date().getMonth() + 1)
 
 const walletName = ref("")
 const walletBalance = ref(0)
+const walletBalanceInput = ref("")
+const isWalletModalOpen = ref(false)
 
 const adjustingWalletId = ref("")
 const adjustmentBalance = ref(0)
+const adjustmentBalanceInput = ref("")
 const adjustmentDescription = ref("")
 
 const deleteWalletId = ref("")
@@ -57,6 +60,7 @@ const entryCategoryId = ref("")
 const entryWalletId = ref("")
 const entryTargetWalletId = ref("")
 const entryAmount = ref(0)
+const entryAmountInput = ref("")
 const entryDate = ref("")
 const entryAdjustmentDirection = ref("increase")
 const entryFormError = ref("")
@@ -111,16 +115,15 @@ const availableMonths = computed(() => {
 const selectedPeriodId = computed(() => buildPeriodId(selectedYear.value, selectedMonth.value))
 const selectedPeriod = computed(() => periodStore.getPeriodById(selectedPeriodId.value))
 
-const selectedPeriodStart = computed(() =>
-	new Date(selectedYear.value, selectedMonth.value - 1, 1)
-)
+const currencyFormatter = new Intl.NumberFormat("pt-BR", {
+	style: "currency",
+	currency: "BRL",
+	minimumFractionDigits: 2,
+	maximumFractionDigits: 2
+})
 
-const selectedPeriodEnd = computed(() =>
-	new Date(selectedYear.value, selectedMonth.value, 0)
-)
-
-const entryMinDate = computed(() => formatDateInput(selectedPeriodStart.value))
-const entryMaxDate = computed(() => formatDateInput(selectedPeriodEnd.value))
+const entryMinDate = computed(() => formatDateValue(new Date(selectedYear.value, selectedMonth.value - 1, 1)))
+const entryMaxDate = computed(() => formatDateValue(new Date(selectedYear.value, selectedMonth.value, 0)))
 
 const filteredTransactions = computed(() =>
 	transactionStore.transactions.filter(transaction => {
@@ -139,15 +142,23 @@ const groupedTransactions = computed(() => {
 			category.id === TRANSFER_CATEGORY_ID ||
 			(category.name !== TRANSFER_CATEGORY_NAME && category.name !== TRANSFER_CATEGORY_LABEL)
 		)
-		.map(category => ({
-		id: category.id,
-		title: category.name,
-		items: filteredTransactions.value.filter(transaction =>
-			transaction.categoryId
-				? transaction.categoryId === category.id
-				: transaction.category === category.name
+		.map(category => {
+			const items = filteredTransactions.value.filter(transaction =>
+				transaction.categoryId
+					? transaction.categoryId === category.id
+					: transaction.category === category.name
+			)
+
+			return {
+				id: category.id,
+				title: category.name,
+				items
+			}
+		})
+		.filter(group =>
+			(group.id !== TRANSFER_CATEGORY_ID && group.id !== BALANCE_ADJUSTMENT_CATEGORY_ID) ||
+			group.items.length > 0
 		)
-	}))
 })
 
 const dashboardWallets = computed(() =>
@@ -160,6 +171,8 @@ const dashboardWallets = computed(() =>
 let stopAuthListener = null
 
 onMounted(() => {
+	window.addEventListener("keydown", handleModalKeydown)
+
 	stopAuthListener = onUserChanged(currentUser => {
 		user.value = currentUser
 		authReady.value = true
@@ -181,6 +194,8 @@ onMounted(() => {
 })
 
 onBeforeUnmount(() => {
+	window.removeEventListener("keydown", handleModalKeydown)
+
 	if (stopAuthListener) {
 		stopAuthListener()
 	}
@@ -240,6 +255,7 @@ watch(selectedYear, year => {
 })
 
 function closeAllModals() {
+	closeWalletModal()
 	closeAdjustmentModal()
 	closeCategoryModal()
 	closeEntryModal()
@@ -250,13 +266,361 @@ function closeAllModals() {
 	closeDeletePeriodModal()
 }
 
-function formatDateInput(date) {
+function formatDateDisplay(date) {
+	const current = new Date(date)
+	const day = `${current.getDate()}`.padStart(2, "0")
+	const month = `${current.getMonth() + 1}`.padStart(2, "0")
+	const year = current.getFullYear()
+	return `${day}/${month}/${year}`
+}
+
+function formatDateValue(date) {
 	const current = new Date(date)
 	const year = current.getFullYear()
 	const month = `${current.getMonth() + 1}`.padStart(2, "0")
 	const day = `${current.getDate()}`.padStart(2, "0")
 	return `${year}-${month}-${day}`
 }
+
+function formatCurrency(value) {
+	return currencyFormatter.format(Number(value ?? 0))
+}
+
+function normalizeCurrencyText(value) {
+	const raw = String(value ?? "").replace("R$ ", "")
+	const sanitized = raw.replace(/[^\d,]/g, "")
+	const firstCommaIndex = sanitized.indexOf(",")
+
+	if (firstCommaIndex < 0) {
+		const integerOnly = sanitized.replace(/^0+(?=\d)/, "")
+		return integerOnly
+	}
+
+	const integerPart = sanitized.slice(0, firstCommaIndex).replace(/[^\d]/g, "").replace(/^0+(?=\d)/, "")
+	const decimalPart = sanitized.slice(firstCommaIndex + 1).replace(/[^\d]/g, "").slice(0, 2)
+
+	return `${integerPart || "0"},${decimalPart}`
+}
+
+function parseCurrencyInput(value) {
+	const normalized = normalizeCurrencyText(value)
+	const [integerPart = "0", decimalPart = ""] = normalized.split(",")
+	const integerValue = Number(integerPart || "0")
+	const fractionValue = Number(decimalPart.padEnd(2, "0") || "0")
+	return integerValue + (fractionValue / 100)
+}
+
+function getCurrencyField(field) {
+	switch (field) {
+		case "wallet":
+			return { model: walletBalance, input: walletBalanceInput }
+		case "adjustment":
+			return { model: adjustmentBalance, input: adjustmentBalanceInput }
+		case "entry":
+			return { model: entryAmount, input: entryAmountInput }
+		default:
+			return null
+	}
+}
+
+function syncCurrencyInput(model, input, event) {
+	const target = event?.target instanceof HTMLInputElement ? event.target : null
+	const rawValue = target?.value ?? ""
+	const normalizedInput = normalizeCurrencyText(rawValue)
+	const parsedValue = parseCurrencyInput(normalizedInput)
+	const displayValue = normalizedInput ? `R$ ${normalizedInput}` : "R$ "
+
+	model.value = parsedValue
+	input.value = displayValue
+
+	if (target && target.value !== displayValue) {
+		target.value = displayValue
+	}
+}
+
+function syncCurrencyFieldInput(field, event) {
+	const currencyField = getCurrencyField(field)
+
+	if (!currencyField) return
+
+	syncCurrencyInput(currencyField.model, currencyField.input, event)
+}
+
+function setCurrencyInput(model, input, value) {
+	model.value = Number(value ?? 0)
+	input.value = formatCurrency(model.value)
+}
+
+function parseDateInput(value) {
+	if (!value) return null
+
+	const date = new Date(`${value}T12:00:00`)
+	return Number.isNaN(date.getTime()) ? null : date
+}
+
+function buildDefaultEntryDate() {
+	const now = new Date()
+	const currentDay = now.getDate()
+	const lastDay = new Date(selectedYear.value, selectedMonth.value, 0).getDate()
+
+	return new Date(
+		selectedYear.value,
+		selectedMonth.value - 1,
+		Math.min(currentDay, lastDay),
+		12,
+		0,
+		0
+	)
+}
+
+function getActiveModalActions() {
+	if (isWalletModalOpen.value) {
+		return {
+			confirm: addWallet,
+			cancel: closeWalletModal
+		}
+	}
+
+	if (adjustingWalletId.value) {
+		return {
+			confirm: saveAdjustment,
+			cancel: closeAdjustmentModal
+		}
+	}
+
+	if (isCategoryModalOpen.value) {
+		return {
+			confirm: saveCategory,
+			cancel: closeCategoryModal
+		}
+	}
+
+	if (isPeriodModalOpen.value) {
+		return {
+			confirm: savePeriod,
+			cancel: closePeriodModal
+		}
+	}
+
+	if (isEntryModalOpen.value) {
+		return {
+			confirm: saveEntry,
+			cancel: closeEntryModal
+		}
+	}
+
+	if (deleteWalletId.value) {
+		return {
+			confirm: confirmDeleteWallet,
+			cancel: closeDeleteWalletModal
+		}
+	}
+
+	if (deleteCategoryId.value) {
+		return {
+			confirm: confirmDeleteCategory,
+			cancel: closeDeleteCategoryModal
+		}
+	}
+
+	if (deleteTransactionId.value) {
+		return {
+			confirm: confirmDeleteTransaction,
+			cancel: closeDeleteTransactionModal
+		}
+	}
+
+	if (deletePeriodId.value) {
+		return {
+			confirm: confirmDeletePeriod,
+			cancel: closeDeletePeriodModal
+		}
+	}
+
+	return null
+}
+
+function handleModalKeydown(event) {
+	if (isSubmitting.value) return
+
+	const modalActions = getActiveModalActions()
+
+	if (!modalActions) return
+
+	if (event.key === "Escape") {
+		event.preventDefault()
+		modalActions.cancel()
+		return
+	}
+
+	if (event.key !== "Enter" || event.shiftKey) return
+
+	const activeTag = document.activeElement?.tagName
+
+	if (activeTag === "TEXTAREA") return
+
+	event.preventDefault()
+	void modalActions.confirm()
+}
+
+function handleModalEnter(action, event) {
+	if (isSubmitting.value) return
+
+	if (event?.target instanceof HTMLTextAreaElement) return
+
+	event?.preventDefault?.()
+
+	switch (action) {
+		case "wallet":
+			void addWallet()
+			return
+		case "adjustment":
+			void saveAdjustment()
+			return
+		case "category":
+			void saveCategory()
+			return
+		case "period":
+			void savePeriod()
+			return
+		case "entry":
+			void saveEntry()
+			return
+		case "delete-wallet":
+			void confirmDeleteWallet()
+			return
+		case "delete-category":
+			void confirmDeleteCategory()
+			return
+		case "delete-transaction":
+			void confirmDeleteTransaction()
+			return
+		case "delete-period":
+			void confirmDeletePeriod()
+			return
+		default:
+			return
+	}
+}
+
+function handleCurrencyFocus(model, input, event) {
+	const target = event?.target
+
+	if (model.value === 0) {
+		input.value = "R$ "
+
+		if (target instanceof HTMLInputElement) {
+			target.value = "R$ "
+			requestAnimationFrame(() => {
+				target.setSelectionRange(target.value.length, target.value.length)
+			})
+		}
+	}
+}
+
+function handleCurrencyFieldFocus(field, event) {
+	const currencyField = getCurrencyField(field)
+
+	if (!currencyField) return
+
+	handleCurrencyFocus(currencyField.model, currencyField.input, event)
+}
+
+function handleCurrencyBlur(model, input) {
+	setCurrencyInput(model, input, model.value)
+}
+
+function handleCurrencyFieldBlur(field) {
+	const currencyField = getCurrencyField(field)
+
+	if (!currencyField) return
+
+	handleCurrencyBlur(currencyField.model, currencyField.input)
+}
+
+function handleCurrencyKeydown(event) {
+	const allowedKeys = [
+		"Backspace",
+		"Delete",
+		"Tab",
+		"Enter",
+		"Escape",
+		"ArrowLeft",
+		"ArrowRight",
+		"ArrowUp",
+		"ArrowDown",
+		"Home",
+		"End"
+	]
+
+	if (
+		event.ctrlKey ||
+		event.metaKey ||
+		allowedKeys.includes(event.key) ||
+		/^\d$/.test(event.key) ||
+		event.key === ","
+	) {
+		return
+	}
+
+	event.preventDefault()
+}
+
+function hasText(value) {
+	return String(value ?? "").trim().length > 0
+}
+
+function isAdjustmentBalanceMissing() {
+	return adjustmentBalance.value <= 0
+}
+
+function isWalletNameMissing() {
+	return !hasText(walletName.value)
+}
+
+function isWalletBalanceMissing() {
+	return walletBalance.value <= 0
+}
+
+function isAdjustmentDescriptionMissing() {
+	return !hasText(adjustmentDescription.value)
+}
+
+function isCategoryNameMissing() {
+	return !hasText(categoryName.value)
+}
+
+function isPeriodYearMissing() {
+	return !Number.isFinite(periodModalYear.value) || periodModalYear.value <= 0
+}
+
+function isEntryCategoryMissing() {
+	return entryType.value !== "adjustment" && entryType.value !== "transfer" && !entryCategoryId.value
+}
+
+function isEntryWalletMissing() {
+	return !entryWalletId.value
+}
+
+function isEntryTargetWalletMissing() {
+	return entryType.value === "transfer" && !entryTargetWalletId.value
+}
+
+function isEntryDateMissing() {
+	return !entryDate.value
+}
+
+function isEntryAmountMissing() {
+	return entryAmount.value <= 0
+}
+
+function isEntryDescriptionMissing() {
+	return !hasText(entryDescription.value)
+}
+
+setCurrencyInput(walletBalance, walletBalanceInput, 0)
+setCurrencyInput(adjustmentBalance, adjustmentBalanceInput, 0)
+setCurrencyInput(entryAmount, entryAmountInput, 0)
 
 function getSelectedCategory() {
 	return categoryStore.entryCategories.find(category => category.id === entryCategoryId.value)
@@ -601,22 +965,33 @@ async function addWallet() {
 
 	try {
 		await walletStore.createWallet(trimmedName, walletBalance.value)
-		walletName.value = ""
-		walletBalance.value = 0
+		closeWalletModal()
 	} finally {
 		isSubmitting.value = false
 	}
 }
 
+function openWalletModal() {
+	isWalletModalOpen.value = true
+	walletName.value = ""
+	setCurrencyInput(walletBalance, walletBalanceInput, 0)
+}
+
+function closeWalletModal() {
+	isWalletModalOpen.value = false
+	walletName.value = ""
+	setCurrencyInput(walletBalance, walletBalanceInput, 0)
+}
+
 function openAdjustmentModal(wallet) {
 	adjustingWalletId.value = wallet.id
-	adjustmentBalance.value = getWalletBalanceForPeriod(wallet)
+	setCurrencyInput(adjustmentBalance, adjustmentBalanceInput, getWalletBalanceForPeriod(wallet))
 	adjustmentDescription.value = ""
 }
 
 function closeAdjustmentModal() {
 	adjustingWalletId.value = ""
-	adjustmentBalance.value = 0
+	setCurrencyInput(adjustmentBalance, adjustmentBalanceInput, 0)
 	adjustmentDescription.value = ""
 }
 
@@ -624,6 +999,7 @@ async function saveAdjustment() {
 	const wallet = walletStore.getWallet(adjustingWalletId.value)
 
 	if (!wallet) return
+	if (isAdjustmentBalanceMissing() || isAdjustmentDescriptionMissing()) return
 
 	isSubmitting.value = true
 
@@ -724,8 +1100,8 @@ function resetEntryForm() {
 	entryCategoryId.value = categoryStore.entryCategories[0]?.id ?? ""
 	entryWalletId.value = walletStore.wallets[0]?.id ?? ""
 	entryTargetWalletId.value = ""
-	entryAmount.value = 0
-	entryDate.value = formatDateInput(new Date(selectedYear.value, selectedMonth.value - 1, 1))
+	setCurrencyInput(entryAmount, entryAmountInput, 0)
+	entryDate.value = formatDateValue(buildDefaultEntryDate())
 	entryAdjustmentDirection.value = "increase"
 	entryFormError.value = ""
 }
@@ -747,8 +1123,8 @@ function openEditEntryModal(transaction) {
 		""
 	entryWalletId.value = transaction.walletFrom || transaction.walletTo || ""
 	entryTargetWalletId.value = transaction.type === "transfer" ? transaction.walletTo || "" : ""
-	entryAmount.value = transaction.amount
-	entryDate.value = formatDateInput(transaction.date)
+	setCurrencyInput(entryAmount, entryAmountInput, transaction.amount)
+	entryDate.value = formatDateValue(transaction.date)
 	entryAdjustmentDirection.value = transaction.walletTo ? "increase" : "decrease"
 }
 
@@ -762,11 +1138,16 @@ async function saveEntry() {
 	const existingTransaction = editingTransactionId.value
 		? transactionStore.transactions.find(transaction => transaction.id === editingTransactionId.value)
 		: null
-	const normalizedDate = entryDate.value ? new Date(`${entryDate.value}T12:00:00`) : new Date()
+	const normalizedDate = parseDateInput(entryDate.value)
 
 	entryFormError.value = ""
 
+	if (isEntryDescriptionMissing()) return
 	if (!entryWalletId.value || entryAmount.value <= 0) return
+	if (!normalizedDate) {
+		entryFormError.value = "Selecione uma data valida."
+		return
+	}
 	if (!isDateInSelectedPeriod(normalizedDate)) {
 		entryFormError.value = "A data da entrada deve estar dentro do mes e ano selecionados."
 		return
@@ -967,7 +1348,7 @@ async function toggleTransactionPaid(transaction) {
 					class="wallet-summary-row"
 				>
 					<span>{{ wallet.name }}</span>
-					<strong>{{ wallet.balance }}</strong>
+					<strong>{{ formatCurrency(wallet.balance) }}</strong>
 				</div>
 			</div>
 
@@ -1021,8 +1402,8 @@ async function toggleTransactionPaid(transaction) {
 							<span>{{ transaction.description || transaction.type }}</span>
 							<span>{{ transaction.type }}</span>
 							<span>{{ getTransactionWalletLabel(transaction) }}</span>
-							<span>{{ formatDateInput(transaction.date) }}</span>
-							<span>{{ transaction.amount }}</span>
+							<span>{{ formatDateDisplay(transaction.date) }}</span>
+							<span>{{ formatCurrency(transaction.amount) }}</span>
 							<span>
 								<input
 									type="checkbox"
@@ -1052,10 +1433,7 @@ async function toggleTransactionPaid(transaction) {
 
 		<section v-if="currentPage === 'wallets'" class="page-section">
 			<div class="toolbar">
-				<input v-model="walletName" placeholder="Nome" />
-				<input v-model.number="walletBalance" type="number" placeholder="Saldo inicial" />
-
-				<button :disabled="isSubmitting" @click="addWallet">
+				<button :disabled="isSubmitting" @click="openWalletModal">
 					Criar carteira
 				</button>
 			</div>
@@ -1063,7 +1441,7 @@ async function toggleTransactionPaid(transaction) {
 			<div class="simple-list">
 				<div v-for="wallet in walletStore.wallets" :key="wallet.id" class="simple-list-row">
 					<span>{{ wallet.name }}</span>
-					<span>{{ getWalletBalanceForPeriod(wallet) }}</span>
+					<span>{{ formatCurrency(getWalletBalanceForPeriod(wallet)) }}</span>
 					<span class="row-actions">
 						<button :disabled="isSubmitting" @click="openAdjustmentModal(wallet)">
 							Ajustar saldo
@@ -1127,12 +1505,56 @@ async function toggleTransactionPaid(transaction) {
 		</section>
 	</template>
 
+	<div v-if="isWalletModalOpen" class="modal-backdrop">
+		<div class="modal" @keydown.enter="handleModalEnter('wallet', $event)">
+			<h3>Criar carteira</h3>
+
+			<input v-model="walletName" :class="{ 'required-empty': isWalletNameMissing() }" placeholder="Nome" />
+			<input
+				:class="{ 'required-empty': isWalletBalanceMissing() }"
+				:value="walletBalanceInput"
+				type="text"
+				inputmode="decimal"
+				placeholder="R$ 0,00"
+				@keydown="handleCurrencyKeydown($event)"
+				@focus="handleCurrencyFieldFocus('wallet', $event)"
+				@input="syncCurrencyFieldInput('wallet', $event)"
+				@blur="handleCurrencyFieldBlur('wallet')"
+			/>
+
+			<div class="toolbar">
+				<button :disabled="isSubmitting" @click="addWallet">
+					Salvar
+				</button>
+
+				<button :disabled="isSubmitting" @click="closeWalletModal">
+					Cancelar
+				</button>
+			</div>
+		</div>
+	</div>
+
 	<div v-if="adjustingWalletId" class="modal-backdrop">
-		<div class="modal">
+		<div class="modal" @keydown.enter="handleModalEnter('adjustment', $event)">
 			<h3>Ajustar saldo</h3>
 
-			<input v-model.number="adjustmentBalance" type="number" placeholder="Novo saldo" />
-			<textarea v-model="adjustmentDescription" rows="4" placeholder="Descricao do ajuste" />
+			<input
+				:class="{ 'required-empty': isAdjustmentBalanceMissing() }"
+				:value="adjustmentBalanceInput"
+				type="text"
+				inputmode="decimal"
+				placeholder="R$ 0,00"
+				@keydown="handleCurrencyKeydown($event)"
+				@focus="handleCurrencyFieldFocus('adjustment', $event)"
+				@input="syncCurrencyFieldInput('adjustment', $event)"
+				@blur="handleCurrencyFieldBlur('adjustment')"
+			/>
+			<textarea
+				v-model="adjustmentDescription"
+				:class="{ 'required-empty': isAdjustmentDescriptionMissing() }"
+				rows="4"
+				placeholder="Descricao do ajuste"
+			/>
 
 			<div class="toolbar">
 				<button :disabled="isSubmitting" @click="saveAdjustment">
@@ -1147,10 +1569,10 @@ async function toggleTransactionPaid(transaction) {
 	</div>
 
 	<div v-if="isCategoryModalOpen" class="modal-backdrop">
-		<div class="modal">
+		<div class="modal" @keydown.enter="handleModalEnter('category', $event)">
 			<h3>{{ editingCategoryId ? "Editar categoria" : "Criar categoria" }}</h3>
 
-			<input v-model="categoryName" placeholder="Nome da categoria" />
+			<input v-model="categoryName" :class="{ 'required-empty': isCategoryNameMissing() }" placeholder="Nome da categoria" />
 
 			<div class="toolbar">
 				<button :disabled="isSubmitting" @click="saveCategory">
@@ -1165,12 +1587,12 @@ async function toggleTransactionPaid(transaction) {
 	</div>
 
 	<div v-if="isPeriodModalOpen" class="modal-backdrop">
-		<div class="modal">
+		<div class="modal" @keydown.enter="handleModalEnter('period', $event)">
 			<h3>Criar mes</h3>
 
-			<input v-model.number="periodModalYear" type="number" placeholder="Ano" />
+			<input v-model.number="periodModalYear" :class="{ 'required-empty': isPeriodYearMissing() }" type="number" placeholder="Ano" />
 
-			<select v-model.number="periodModalMonth">
+			<select v-model.number="periodModalMonth" :class="{ 'required-empty': !periodModalMonth }">
 				<option v-for="month in monthOptions" :key="month.value" :value="month.value">
 					{{ month.label }}
 				</option>
@@ -1189,10 +1611,14 @@ async function toggleTransactionPaid(transaction) {
 	</div>
 
 	<div v-if="isEntryModalOpen" class="modal-backdrop">
-		<div class="modal">
+		<div class="modal" @keydown.enter="handleModalEnter('entry', $event)">
 			<h3>{{ editingTransactionId ? "Editar entrada" : "Nova entrada" }}</h3>
 
-			<input v-model="entryDescription" placeholder="Descricao" />
+			<input
+				v-model="entryDescription"
+				:class="{ 'required-empty': isEntryDescriptionMissing() }"
+				placeholder="Descricao"
+			/>
 
 			<select v-model="entryType">
 				<option value="expense">Despesa</option>
@@ -1201,7 +1627,11 @@ async function toggleTransactionPaid(transaction) {
 				<option v-if="editingTransactionId" value="adjustment">Ajuste</option>
 			</select>
 
-			<select v-if="entryType !== 'adjustment' && entryType !== 'transfer'" v-model="entryCategoryId">
+			<select
+				v-if="entryType !== 'adjustment' && entryType !== 'transfer'"
+				v-model="entryCategoryId"
+				:class="{ 'required-empty': isEntryCategoryMissing() }"
+			>
 				<option disabled value="">Selecione a categoria</option>
 				<option
 					v-for="category in categoryStore.entryCategories"
@@ -1212,7 +1642,7 @@ async function toggleTransactionPaid(transaction) {
 				</option>
 			</select>
 
-			<select v-model="entryWalletId">
+			<select v-model="entryWalletId" :class="{ 'required-empty': isEntryWalletMissing() }">
 				<option disabled value="">Selecione a carteira</option>
 				<option
 					v-for="wallet in walletStore.wallets"
@@ -1223,7 +1653,11 @@ async function toggleTransactionPaid(transaction) {
 				</option>
 			</select>
 
-			<select v-if="entryType === 'transfer'" v-model="entryTargetWalletId">
+			<select
+				v-if="entryType === 'transfer'"
+				v-model="entryTargetWalletId"
+				:class="{ 'required-empty': isEntryTargetWalletMissing() }"
+			>
 				<option disabled value="">Selecione a carteira de destino</option>
 				<option
 					v-for="wallet in walletStore.wallets"
@@ -1241,11 +1675,22 @@ async function toggleTransactionPaid(transaction) {
 
 			<input
 				v-model="entryDate"
+				:class="{ 'required-empty': isEntryDateMissing() }"
 				type="date"
 				:min="entryMinDate"
 				:max="entryMaxDate"
 			/>
-			<input v-model.number="entryAmount" type="number" placeholder="Valor" />
+			<input
+				:class="{ 'required-empty': isEntryAmountMissing() }"
+				:value="entryAmountInput"
+				type="text"
+				inputmode="decimal"
+				placeholder="R$ 0,00"
+				@keydown="handleCurrencyKeydown($event)"
+				@focus="handleCurrencyFieldFocus('entry', $event)"
+				@input="syncCurrencyFieldInput('entry', $event)"
+				@blur="handleCurrencyFieldBlur('entry')"
+			/>
 
 			<div v-if="entryFormError" class="error-text">
 				{{ entryFormError }}
@@ -1264,7 +1709,7 @@ async function toggleTransactionPaid(transaction) {
 	</div>
 
 	<div v-if="deleteWalletId" class="modal-backdrop">
-		<div class="modal">
+		<div class="modal" @keydown.enter="handleModalEnter('delete-wallet', $event)">
 			<h3>Excluir carteira</h3>
 			<p>Tem certeza que deseja excluir esta carteira?</p>
 
@@ -1281,7 +1726,7 @@ async function toggleTransactionPaid(transaction) {
 	</div>
 
 	<div v-if="deleteCategoryId" class="modal-backdrop">
-		<div class="modal">
+		<div class="modal" @keydown.enter="handleModalEnter('delete-category', $event)">
 			<h3>Excluir categoria</h3>
 			<p>Tem certeza que deseja excluir esta categoria?</p>
 
@@ -1298,7 +1743,7 @@ async function toggleTransactionPaid(transaction) {
 	</div>
 
 	<div v-if="deleteTransactionId" class="modal-backdrop">
-		<div class="modal">
+		<div class="modal" @keydown.enter="handleModalEnter('delete-transaction', $event)">
 			<h3>Excluir entrada</h3>
 			<p>Tem certeza que deseja excluir esta entrada?</p>
 
@@ -1315,7 +1760,7 @@ async function toggleTransactionPaid(transaction) {
 	</div>
 
 	<div v-if="deletePeriodId" class="modal-backdrop">
-		<div class="modal">
+		<div class="modal" @keydown.enter="handleModalEnter('delete-period', $event)">
 			<h3>Excluir mes</h3>
 			<p>Tem certeza que deseja excluir este mes e todas as entradas dele?</p>
 
@@ -1473,6 +1918,11 @@ select {
 	box-sizing: border-box;
 	background: var(--bg);
 	color: var(--text);
+}
+
+.required-empty {
+	background: rgba(220, 38, 38, 0.12);
+	border-color: rgba(220, 38, 38, 0.8);
 }
 
 button {

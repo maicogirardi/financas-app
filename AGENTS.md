@@ -36,6 +36,8 @@ If a wallet is deleted, related online transactions must also be removed
 
 Current implementation may use local store state until Firestore listeners are connected
 
+Wallet creation must use a dedicated modal with the same validation and keyboard shortcut behavior used by the category modal
+
 ## Transactions And Categories
 
 All new transaction features must be implemented with Firebase first
@@ -49,12 +51,11 @@ Default categories:
 - Entradas
 - Despesas Fixas
 - Despesas Diversas
-- Cartoes de Credito
-- Mae
-- Transferencias
+- Cartões de Crédito
 
-Hidden system category:
+Hidden system categories:
 
+- Transferências
 - Ajuste de Saldo
 
 Manual transaction entry must support:
@@ -65,6 +66,9 @@ Manual transaction entry must support:
 - wallet
 - value
 - destination wallet for transfer
+- native date picker
+
+Description fields must be required in transaction and balance adjustment modals
 
 Transaction list requirements:
 
@@ -76,6 +80,25 @@ Transaction list requirements:
 - paid defaults to false on new entries
 - only paid rows affect balances
 - wallet balance adjustments must use hidden category "Ajuste de Saldo"
+- dates in the list must display as DD/MM/AAAA
+- money display must use Brazilian Real format with 2 decimals
+
+Money input requirements:
+
+- inputs must start as `R$ 0,00`
+- inputs must keep the `R$ ` prefix while typing
+- if the current value is zero and the user starts typing, the numeric zero should clear and only the prefix should remain before the typed value
+- money inputs must accept only numbers and comma
+
+System category visibility:
+
+- Transferências and Ajuste de Saldo must stay hidden from category management
+- Transferências and Ajuste de Saldo must appear in transaction sections only when there is at least one transaction of that type in the selected period
+
+Modal keyboard shortcuts:
+
+- Enter confirms the active modal action
+- Esc cancels the active modal
 
 Monthly period requirements:
 

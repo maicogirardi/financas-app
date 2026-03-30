@@ -2,15 +2,14 @@
 
 Category represents a transaction section/group.
 
-Examples:
+Default categories:
 
 - Entradas
 - Despesas Fixas
 - Despesas Diversas
-- Cartoes de Credito
-- Mae
+- Cartões de Crédito
 
-Hidden system example:
+Hidden system categories:
 
 - Transferências
 - Ajuste de Saldo
@@ -37,5 +36,4 @@ Rules:
 - Hidden system categories may exist for internal flows
 - Hidden categories must not appear in category management page
 - Hidden categories must not appear in manual category dropdowns
-- Transferências must be a fixed system section for list visualization
-- Transferências must not appear in category management page
+- Transferências and Ajuste de Saldo should only appear in the transaction list when the selected period has at least one matching transaction
