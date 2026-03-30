@@ -1982,7 +1982,7 @@ async function toggleTransactionPaid(transaction) {
 	margin: 0 auto;
 }
 
-.wallet-summary-row > :last-child {
+.wallet-summary-row> :last-child {
 	justify-self: end;
 	text-align: right;
 }
@@ -2109,7 +2109,6 @@ async function toggleTransactionPaid(transaction) {
 
 .filter-card {
 	display: grid;
-	gap: 12px;
 	padding: 16px;
 	border: 1px solid var(--glass-border);
 	border-radius: 22px;
@@ -2152,18 +2151,25 @@ async function toggleTransactionPaid(transaction) {
 }
 
 .filter-row button {
-	flex: 0 0 auto;
-	min-width: 48px;
+	width: 36px;
+	height: 36px;
+	min-width: 36px;
+	padding: 0;
+	border-radius: 50%;
+	flex: 0 0 36px;
 }
 
 .year-filter {
-	width: 110px;
-	flex: 0 0 110px;
+	flex: 0 0 90px;
+	min-width: 80px;
+	max-width: 100px;
+	height: 36px;
 }
 
-.filter-row select:not(.year-filter) {
-	width: auto;
-	min-width: 180px;
+.filter-selects select:not(.year-filter) {
+	flex: 1;
+	min-width: 0;
+	height: 36px;
 }
 
 .month-remove-button {
@@ -2458,6 +2464,66 @@ button:disabled {
 
 	.wallet-summary-list {
 		width: 75%;
+	}
+
+	.filter-card {
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
+		align-items: center;
+
+		padding: 16px;
+
+		border-radius: 20px;
+		border: 1px solid var(--glass-border);
+		background: var(--glass-surface);
+		backdrop-filter: blur(11px);
+	}
+
+	/* ROW */
+	.filter-row {
+		display: flex;
+		align-items: center;
+		width: 100%;
+
+		gap: 8px;
+		/* controla o único espaçamento */
+	}
+
+	/* SELECTS */
+	.filter-selects {
+		display: flex;
+		align-items: center;
+
+		flex: 1;
+		min-width: 0;
+		gap: 8px;
+	}
+
+	/* ANO — FORÇADO */
+	.filter-selects select.year-filter {
+		width: 280px !important;
+		flex: 0 0 280px !important;
+		min-width: 280px !important;
+		height: 48px;
+	}
+
+	/* MÊS */
+	.filter-selects select:not(.year-filter) {
+		flex: 1;
+		min-width: 320px;
+		height: 48px;
+	}
+
+	/* BOTÕES */
+	.filter-row button {
+		width: 48px;
+		height: 48px;
+		flex: 0 0 48px;
+
+		padding: 0;
+		border-radius: 50%;
+		aspect-ratio: 1 / 1;
 	}
 }
 </style>
