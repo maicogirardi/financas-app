@@ -254,6 +254,20 @@ watch(selectedYear, year => {
 	}
 })
 
+watch(entryType, nextType => {
+	if (nextType === "income") {
+		entryCategoryId.value = getIncomeEntryCategoryId()
+		return
+	}
+
+	if (
+		nextType === "expense" &&
+		(!entryCategoryId.value || entryCategoryId.value === getIncomeEntryCategoryId())
+	) {
+		entryCategoryId.value = getPreferredEntryCategoryId()
+	}
+})
+
 function closeAllModals() {
 	closeWalletModal()
 	closeAdjustmentModal()
@@ -622,6 +636,18 @@ setCurrencyInput(walletBalance, walletBalanceInput, 0)
 setCurrencyInput(adjustmentBalance, adjustmentBalanceInput, 0)
 setCurrencyInput(entryAmount, entryAmountInput, 0)
 
+function getPreferredEntryCategoryId() {
+	return (
+		categoryStore.entryCategories.find(category => category.name === "Despesas Fixas")?.id ||
+		categoryStore.entryCategories[0]?.id ||
+		""
+	)
+}
+
+function getIncomeEntryCategoryId() {
+	return categoryStore.entryCategories.find(category => category.name === "Entradas")?.id || ""
+}
+
 function getSelectedCategory() {
 	return categoryStore.entryCategories.find(category => category.id === entryCategoryId.value)
 }
@@ -869,18 +895,17 @@ async function savePeriod() {
 		return
 	}
 
-	const previousPeriodDate = buildPreviousPeriodDate(periodModalYear.value, periodModalMonth.value)
-	const previousPeriod = periodStore.getPeriodByYearMonth(previousPeriodDate.year, previousPeriodDate.month)
+	const sourcePeriod = selectedPeriod.value
 	const newPeriodId = buildPeriodId(periodModalYear.value, periodModalMonth.value)
 
 	isSubmitting.value = true
 
 	try {
-		const openingBalances = previousPeriod
+		const openingBalances = sourcePeriod
 			? Object.fromEntries(
 				walletStore.wallets.map(wallet => [
 					wallet.id,
-					getWalletBalanceForPeriodId(wallet, previousPeriod.id)
+					getWalletBalanceForPeriodId(wallet, sourcePeriod.id)
 				])
 			)
 			: Object.fromEntries(
@@ -889,8 +914,8 @@ async function savePeriod() {
 
 		await periodStore.ensurePeriod(periodModalYear.value, periodModalMonth.value, openingBalances)
 
-		if (previousPeriod) {
-			for (const transaction of getTransactionsForPeriod(previousPeriod.id)) {
+		if (sourcePeriod) {
+			for (const transaction of getTransactionsForPeriod(sourcePeriod.id)) {
 				if (transaction.type === "adjustment") continue
 
 				await transactionStore.createTransaction({
@@ -1097,7 +1122,7 @@ function resetEntryForm() {
 	editingTransactionId.value = ""
 	entryDescription.value = ""
 	entryType.value = "expense"
-	entryCategoryId.value = categoryStore.entryCategories[0]?.id ?? ""
+	entryCategoryId.value = getPreferredEntryCategoryId()
 	entryWalletId.value = walletStore.wallets[0]?.id ?? ""
 	entryTargetWalletId.value = ""
 	setCurrencyInput(entryAmount, entryAmountInput, 0)
@@ -1509,18 +1534,24 @@ async function toggleTransactionPaid(transaction) {
 		<div class="modal" @keydown.enter="handleModalEnter('wallet', $event)">
 			<h3>Criar carteira</h3>
 
-			<input v-model="walletName" :class="{ 'required-empty': isWalletNameMissing() }" placeholder="Nome" />
-			<input
-				:class="{ 'required-empty': isWalletBalanceMissing() }"
-				:value="walletBalanceInput"
-				type="text"
-				inputmode="decimal"
-				placeholder="R$ 0,00"
-				@keydown="handleCurrencyKeydown($event)"
-				@focus="handleCurrencyFieldFocus('wallet', $event)"
-				@input="syncCurrencyFieldInput('wallet', $event)"
-				@blur="handleCurrencyFieldBlur('wallet')"
-			/>
+			<div class="field-group">
+				<label class="field-label">Nome</label>
+				<input v-model="walletName" :class="{ 'required-empty': isWalletNameMissing() }" placeholder="Nome" />
+			</div>
+			<div class="field-group">
+				<label class="field-label">Valor</label>
+				<input
+					:class="{ 'required-empty': isWalletBalanceMissing() }"
+					:value="walletBalanceInput"
+					type="text"
+					inputmode="decimal"
+					placeholder="R$ 0,00"
+					@keydown="handleCurrencyKeydown($event)"
+					@focus="handleCurrencyFieldFocus('wallet', $event)"
+					@input="syncCurrencyFieldInput('wallet', $event)"
+					@blur="handleCurrencyFieldBlur('wallet')"
+				/>
+			</div>
 
 			<div class="toolbar">
 				<button :disabled="isSubmitting" @click="addWallet">
@@ -1538,23 +1569,29 @@ async function toggleTransactionPaid(transaction) {
 		<div class="modal" @keydown.enter="handleModalEnter('adjustment', $event)">
 			<h3>Ajustar saldo</h3>
 
-			<input
-				:class="{ 'required-empty': isAdjustmentBalanceMissing() }"
-				:value="adjustmentBalanceInput"
-				type="text"
-				inputmode="decimal"
-				placeholder="R$ 0,00"
-				@keydown="handleCurrencyKeydown($event)"
-				@focus="handleCurrencyFieldFocus('adjustment', $event)"
-				@input="syncCurrencyFieldInput('adjustment', $event)"
-				@blur="handleCurrencyFieldBlur('adjustment')"
-			/>
-			<textarea
-				v-model="adjustmentDescription"
-				:class="{ 'required-empty': isAdjustmentDescriptionMissing() }"
-				rows="4"
-				placeholder="Descricao do ajuste"
-			/>
+			<div class="field-group">
+				<label class="field-label">Valor</label>
+				<input
+					:class="{ 'required-empty': isAdjustmentBalanceMissing() }"
+					:value="adjustmentBalanceInput"
+					type="text"
+					inputmode="decimal"
+					placeholder="R$ 0,00"
+					@keydown="handleCurrencyKeydown($event)"
+					@focus="handleCurrencyFieldFocus('adjustment', $event)"
+					@input="syncCurrencyFieldInput('adjustment', $event)"
+					@blur="handleCurrencyFieldBlur('adjustment')"
+				/>
+			</div>
+			<div class="field-group">
+				<label class="field-label">Descricao</label>
+				<textarea
+					v-model="adjustmentDescription"
+					:class="{ 'required-empty': isAdjustmentDescriptionMissing() }"
+					rows="4"
+					placeholder="Descricao do ajuste"
+				/>
+			</div>
 
 			<div class="toolbar">
 				<button :disabled="isSubmitting" @click="saveAdjustment">
@@ -1572,7 +1609,10 @@ async function toggleTransactionPaid(transaction) {
 		<div class="modal" @keydown.enter="handleModalEnter('category', $event)">
 			<h3>{{ editingCategoryId ? "Editar categoria" : "Criar categoria" }}</h3>
 
-			<input v-model="categoryName" :class="{ 'required-empty': isCategoryNameMissing() }" placeholder="Nome da categoria" />
+			<div class="field-group">
+				<label class="field-label">Nome</label>
+				<input v-model="categoryName" :class="{ 'required-empty': isCategoryNameMissing() }" placeholder="Nome da categoria" />
+			</div>
 
 			<div class="toolbar">
 				<button :disabled="isSubmitting" @click="saveCategory">
@@ -1590,13 +1630,19 @@ async function toggleTransactionPaid(transaction) {
 		<div class="modal" @keydown.enter="handleModalEnter('period', $event)">
 			<h3>Criar mes</h3>
 
-			<input v-model.number="periodModalYear" :class="{ 'required-empty': isPeriodYearMissing() }" type="number" placeholder="Ano" />
+			<div class="field-group">
+				<label class="field-label">Ano</label>
+				<input v-model.number="periodModalYear" :class="{ 'required-empty': isPeriodYearMissing() }" type="number" placeholder="Ano" />
+			</div>
 
-			<select v-model.number="periodModalMonth" :class="{ 'required-empty': !periodModalMonth }">
-				<option v-for="month in monthOptions" :key="month.value" :value="month.value">
-					{{ month.label }}
-				</option>
-			</select>
+			<div class="field-group">
+				<label class="field-label">Mes</label>
+				<select v-model.number="periodModalMonth" :class="{ 'required-empty': !periodModalMonth }">
+					<option v-for="month in monthOptions" :key="month.value" :value="month.value">
+						{{ month.label }}
+					</option>
+				</select>
+			</div>
 
 			<div class="toolbar">
 				<button :disabled="isSubmitting" @click="savePeriod">
@@ -1614,83 +1660,111 @@ async function toggleTransactionPaid(transaction) {
 		<div class="modal" @keydown.enter="handleModalEnter('entry', $event)">
 			<h3>{{ editingTransactionId ? "Editar entrada" : "Nova entrada" }}</h3>
 
-			<input
-				v-model="entryDescription"
-				:class="{ 'required-empty': isEntryDescriptionMissing() }"
-				placeholder="Descricao"
-			/>
+			<div class="field-group">
+				<label class="field-label">Descricao</label>
+				<input
+					v-model="entryDescription"
+					:class="{ 'required-empty': isEntryDescriptionMissing() }"
+					placeholder="Descricao"
+				/>
+			</div>
 
-			<select v-model="entryType">
-				<option value="expense">Despesa</option>
-				<option value="income">Entrada</option>
-				<option value="transfer">Transferencia</option>
-				<option v-if="editingTransactionId" value="adjustment">Ajuste</option>
-			</select>
+			<div class="field-group">
+				<label class="field-label">Tipo de entrada</label>
+				<select v-model="entryType">
+					<option value="expense">Despesa</option>
+					<option value="income">Entrada</option>
+					<option value="transfer">Transferencia</option>
+					<option v-if="editingTransactionId" value="adjustment">Ajuste</option>
+				</select>
+			</div>
 
-			<select
-				v-if="entryType !== 'adjustment' && entryType !== 'transfer'"
-				v-model="entryCategoryId"
-				:class="{ 'required-empty': isEntryCategoryMissing() }"
-			>
-				<option disabled value="">Selecione a categoria</option>
-				<option
-					v-for="category in categoryStore.entryCategories"
-					:key="category.id"
-					:value="category.id"
+			<div v-if="entryType !== 'adjustment' && entryType !== 'transfer'" class="field-group">
+				<label class="field-label">Categoria</label>
+				<select
+					v-if="entryType === 'expense'"
+					v-model="entryCategoryId"
+					:class="{ 'required-empty': isEntryCategoryMissing() }"
 				>
-					{{ category.name }}
-				</option>
-			</select>
+					<option disabled value="">Selecione a categoria</option>
+					<option
+						v-for="category in categoryStore.entryCategories"
+						:key="category.id"
+						:value="category.id"
+					>
+						{{ category.name }}
+					</option>
+				</select>
+				<select v-else-if="entryType === 'income'" v-model="entryCategoryId" disabled>
+					<option :value="getIncomeEntryCategoryId()">
+						Entradas
+					</option>
+				</select>
+			</div>
 
-			<select v-model="entryWalletId" :class="{ 'required-empty': isEntryWalletMissing() }">
-				<option disabled value="">Selecione a carteira</option>
-				<option
-					v-for="wallet in walletStore.wallets"
-					:key="wallet.id"
-					:value="wallet.id"
+			<div class="field-group">
+				<label class="field-label">Carteira</label>
+				<select v-model="entryWalletId" :class="{ 'required-empty': isEntryWalletMissing() }">
+					<option disabled value="">Selecione a carteira</option>
+					<option
+						v-for="wallet in walletStore.wallets"
+						:key="wallet.id"
+						:value="wallet.id"
+					>
+						{{ wallet.name }}
+					</option>
+				</select>
+			</div>
+
+			<div v-if="entryType === 'transfer'" class="field-group">
+				<label class="field-label">Carteira de destino</label>
+				<select
+					v-model="entryTargetWalletId"
+					:class="{ 'required-empty': isEntryTargetWalletMissing() }"
 				>
-					{{ wallet.name }}
-				</option>
-			</select>
+					<option disabled value="">Selecione a carteira de destino</option>
+					<option
+						v-for="wallet in walletStore.wallets"
+						:key="wallet.id"
+						:value="wallet.id"
+					>
+						{{ wallet.name }}
+					</option>
+				</select>
+			</div>
 
-			<select
-				v-if="entryType === 'transfer'"
-				v-model="entryTargetWalletId"
-				:class="{ 'required-empty': isEntryTargetWalletMissing() }"
-			>
-				<option disabled value="">Selecione a carteira de destino</option>
-				<option
-					v-for="wallet in walletStore.wallets"
-					:key="wallet.id"
-					:value="wallet.id"
-				>
-					{{ wallet.name }}
-				</option>
-			</select>
+			<div v-if="entryType === 'adjustment'" class="field-group">
+				<label class="field-label">Direcao do ajuste</label>
+				<select v-model="entryAdjustmentDirection">
+					<option value="increase">Aumenta saldo</option>
+					<option value="decrease">Diminui saldo</option>
+				</select>
+			</div>
 
-			<select v-if="entryType === 'adjustment'" v-model="entryAdjustmentDirection">
-				<option value="increase">Aumenta saldo</option>
-				<option value="decrease">Diminui saldo</option>
-			</select>
-
-			<input
-				v-model="entryDate"
-				:class="{ 'required-empty': isEntryDateMissing() }"
-				type="date"
-				:min="entryMinDate"
-				:max="entryMaxDate"
-			/>
-			<input
-				:class="{ 'required-empty': isEntryAmountMissing() }"
-				:value="entryAmountInput"
-				type="text"
-				inputmode="decimal"
-				placeholder="R$ 0,00"
-				@keydown="handleCurrencyKeydown($event)"
-				@focus="handleCurrencyFieldFocus('entry', $event)"
-				@input="syncCurrencyFieldInput('entry', $event)"
-				@blur="handleCurrencyFieldBlur('entry')"
-			/>
+			<div class="field-group">
+				<label class="field-label">Data</label>
+				<input
+					v-model="entryDate"
+					:class="{ 'required-empty': isEntryDateMissing() }"
+					type="date"
+					:min="entryMinDate"
+					:max="entryMaxDate"
+				/>
+			</div>
+			<div class="field-group">
+				<label class="field-label">Valor</label>
+				<input
+					:class="{ 'required-empty': isEntryAmountMissing() }"
+					:value="entryAmountInput"
+					type="text"
+					inputmode="decimal"
+					placeholder="R$ 0,00"
+					@keydown="handleCurrencyKeydown($event)"
+					@focus="handleCurrencyFieldFocus('entry', $event)"
+					@input="syncCurrencyFieldInput('entry', $event)"
+					@blur="handleCurrencyFieldBlur('entry')"
+				/>
+			</div>
 
 			<div v-if="entryFormError" class="error-text">
 				{{ entryFormError }}
@@ -1862,6 +1936,17 @@ async function toggleTransactionPaid(transaction) {
 
 .entry-empty {
 	padding: 8px 0;
+}
+
+.field-group {
+	display: grid;
+	gap: 6px;
+}
+
+.field-label {
+	font-size: 12px;
+	line-height: 1.2;
+	color: var(--text-muted, #9ca3af);
 }
 
 .transaction-sections {

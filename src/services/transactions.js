@@ -113,7 +113,7 @@ export async function deleteTransactionsByPeriodDoc(periodId) {
 
 export function subscribeTransactions(callback, onError) {
 	const transactionsCollection = getTransactionsCollection()
-	const transactionsQuery = query(transactionsCollection, orderBy("createdAt", "desc"))
+	const transactionsQuery = query(transactionsCollection, orderBy("createdAt", "asc"))
 
 	return onSnapshot(
 		transactionsQuery,

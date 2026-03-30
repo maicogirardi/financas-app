@@ -15,8 +15,8 @@ Rules:
 - One period exists for each available month page
 - Filters must use existing periods only
 - Plus button opens a modal to choose year and month
-- New period must copy opening balance from previous period ending balance
-- New period must clone previous month transactions with same values
+- New period must copy opening balance from the currently selected period current balances
+- New period must clone the currently selected period transactions with same values
 - Cloned transactions must start with paid = false
 - Adjustment transactions must not be cloned to the next month
 - Manual entry date must stay inside the selected period month

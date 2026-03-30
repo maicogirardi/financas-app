@@ -74,6 +74,7 @@ Transaction list requirements:
 
 - render transactions in list rows, not cards
 - split transaction list by category section headers
+- transaction rows must stay ordered by creation order, with older entries first and newer entries appended below
 - support edit and delete from the list
 - support year and month filtering
 - each row must have paid checkbox
@@ -82,6 +83,9 @@ Transaction list requirements:
 - wallet balance adjustments must use hidden category "Ajuste de Saldo"
 - dates in the list must display as DD/MM/AAAA
 - money display must use Brazilian Real format with 2 decimals
+- new manual expense entries should default category selection to "Despesas Fixas"
+- when manual entry type is "Entrada", category must default to "Entradas" and stay locked
+- form modals must show a small title label above each field
 
 Money input requirements:
 
@@ -104,8 +108,8 @@ Monthly period requirements:
 
 - month/year filter must use explicit saved periods
 - plus button must open a modal to create a period with chosen year/month
-- next period must carry opening balances from previous period ending balances
-- next period must clone previous month transactions as unpaid
+- next period must carry opening balances from the currently selected month current balances
+- next period must clone the currently selected month transactions as unpaid
 - adjustment transactions must not be cloned to next period
 - removing a period must require confirmation modal
 - removing a period must also remove that period transactions

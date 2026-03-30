@@ -29,6 +29,7 @@ Transaction list rules:
 - each category creates a visible section title
 - adjustment transactions must be saved in "Ajuste de Saldo" section
 - transfer transactions must appear in "Transferências" section
+- transaction rows must stay ordered by creation order, with older entries first and newer entries appended below
 - each transaction row must support edit and delete actions
 - transaction list must support year and month filtering
 - each transaction row must include paid checkbox
@@ -53,12 +54,15 @@ Manual entry modal:
 Manual entry UX:
 
 - description is required
+- new manual expense entries should default category selection to "Despesas Fixas"
+- when manual entry type is "Entrada", category must default to "Entradas" and stay locked
 - date input must keep the native calendar picker
 - new entry date must default to the current day, clamped to the selected month when needed
 - money inputs must start as `R$ 0,00`
 - if a money input is zero and the user starts typing, the numeric zero should clear and only the `R$ ` prefix should remain before the typed value
 - money inputs must keep the `R$ ` prefix while typing
 - money inputs must accept only numbers and comma
+- form modals must show a small title label above each field
 - Enter should confirm modal actions
 - Esc should cancel modal actions
 
