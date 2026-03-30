@@ -1993,7 +1993,9 @@ async function toggleTransactionPaid(transaction) {
 	max-width: 1180px;
 	margin: 0 auto;
 	text-align: left;
+	box-sizing: border-box;
 }
+
 .tittle {
 	text-align: center;
 }
@@ -2079,9 +2081,9 @@ async function toggleTransactionPaid(transaction) {
 .wallet-summary-row {
 	display: grid;
 	grid-template-columns: minmax(160px, 2fr) minmax(120px, 1fr);
-	padding: 12px 0;
-	border-bottom: 1px solid var(--glass-divider);
 	align-items: center;
+	padding: 12px 0 13px;
+	border-bottom: 1px solid var(--glass-divider);
 }
 
 .simple-list-row {
@@ -2490,7 +2492,11 @@ button:disabled {
 	border-radius: 999px;
 }
 
-@media (max-width: 760px) {
+@media (max-width: 480px) {
+	.app-page {
+		padding: 16px 12px 100px;
+	}
+
 	.wallet-summary-card,
 	.filter-card,
 	.page-section,
@@ -2501,16 +2507,19 @@ button:disabled {
 		border-radius: 20px;
 	}
 
-	.wallet-summary-row,
 	.simple-list-row,
 	.entry-list-head,
 	.entry-row {
-		grid-template-columns: 1fr;
+		grid-template-columns: minmax(110px, 1fr) auto;
+		padding: 9px 0 11px;
 		gap: 6px;
 	}
 
 	.wallet-summary-row {
-		padding: 10px 0;
+		grid-template-columns: 1fr auto;
+		align-items: center;
+		padding: 9px 0 11px;
+		gap: 12px;
 	}
 
 	.row-actions,
