@@ -1547,7 +1547,12 @@ async function toggleTransactionPaid(transaction) {
 							</button>
 
 							<button :disabled="isSubmitting" @click="openAdjustmentModal(wallet)">
-								<span class="button-icon button-icon-adjust" aria-hidden="true">✏️</span>
+								<span class="button-icon button-icon-adjust" aria-hidden="true">
+									<svg width="24" height="24" viewBox="0 0 24 24" fill="white">
+										<path d="M4 16.5V20h3.5L19 8.5 15.5 5 4 16.5z" />
+										<path d="M14.5 6L18 9.5" stroke="white" stroke-width="1.5" />
+									</svg>
+								</span>
 							</button>
 
 							<button class="danger-button" :disabled="isSubmitting"
@@ -1841,7 +1846,7 @@ async function toggleTransactionPaid(transaction) {
 
 				<div class="toolbar">
 					<button class="danger-button" :disabled="isSubmitting" @click="confirmDeleteWallet">
-						Confirmar exclusao
+						Confirmar exclusão
 					</button>
 
 					<button :disabled="isSubmitting" @click="closeDeleteWalletModal">
@@ -1858,7 +1863,7 @@ async function toggleTransactionPaid(transaction) {
 
 				<div class="toolbar">
 					<button class="danger-button" :disabled="isSubmitting" @click="confirmDeleteCategory">
-						Confirmar exclusao
+						Confirmar exclusão
 					</button>
 
 					<button :disabled="isSubmitting" @click="closeDeleteCategoryModal">
@@ -1875,7 +1880,7 @@ async function toggleTransactionPaid(transaction) {
 
 				<div class="toolbar">
 					<button class="danger-button" :disabled="isSubmitting" @click="confirmDeleteTransaction">
-						Confirmar exclusao
+						Confirmar exclusão
 					</button>
 
 					<button :disabled="isSubmitting" @click="closeDeleteTransactionModal">
@@ -1887,12 +1892,12 @@ async function toggleTransactionPaid(transaction) {
 
 		<div v-if="deletePeriodId" class="modal-backdrop">
 			<div class="modal" @keydown.enter="handleModalEnter('delete-period', $event)">
-				<h3>Excluir mes</h3>
-				<p>Tem certeza que deseja excluir este mes e todas as entradas dele?</p>
+				<h3>Excluir mês</h3>
+				<p>Tem certeza que deseja excluir este mês e todas as entradas dele?</p>
 
 				<div class="toolbar">
 					<button class="danger-button" :disabled="isSubmitting" @click="confirmDeletePeriod">
-						Confirmar exclusao
+						Confirmar exclusão
 					</button>
 
 					<button :disabled="isSubmitting" @click="closeDeletePeriodModal">
@@ -2067,13 +2072,13 @@ async function toggleTransactionPaid(transaction) {
 .entry-row,
 .simple-list-row {
 	padding: 8px 0;
-	border-bottom: 1px solid var(--glass-divider);
+	/* border-bottom: 1px solid var(--glass-divider); */
 }
 
 .entry-row {
 	padding-inline: 12px;
 	border-radius: 16px;
-	background: transparent;
+	background: #ffffff08;
 }
 
 .entry-row:last-child,
@@ -2215,7 +2220,6 @@ async function toggleTransactionPaid(transaction) {
 	justify-content: space-between;
 	align-items: center;
 	padding-bottom: 8px;
-	border-bottom: 1px solid var(--glass-divider);
 }
 
 .section-header h2 {
@@ -2371,6 +2375,16 @@ button:disabled {
 	justify-content: center;
 	align-items: center;
 	/* padding-left: 3px; */
+	width: 24px;
+	height: 24px;
+
+}
+
+.button-icon-adjust {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	padding-left: 3px;
 	width: 24px;
 	height: 24px;
 }
@@ -2564,7 +2578,7 @@ button:disabled {
 		padding: 10px 12px;
 		border-radius: 16px;
 
-		background: var(--success-surface);
+		background: #7522c52e
 	}
 
 	.descTittle {
