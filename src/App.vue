@@ -1463,12 +1463,12 @@ async function toggleTransactionPaid(transaction) {
 
 						<div class="entry-list">
 							<div class="entry-list-head">
-								<span class="descTittle">Descrição</span>
+								<span>Descrição</span>
 								<span class="centerTittle">Carteira</span>
 								<span class="centerTittle">Data</span>
 								<span class="centerTittle">Valor</span>
 								<span class="centerTittle">Pago</span>
-								<span class="actionTittle">Ações</span>
+								<span class="centerTittle">Ações</span>
 							</div>
 							<div v-if="group.items.length === 0" class="entry-empty">
 								Sem entradas
@@ -1955,7 +1955,13 @@ async function toggleTransactionPaid(transaction) {
 	grid-template-columns: minmax(180px, 2.2fr) minmax(150px, 1.35fr) minmax(110px, 1fr) minmax(100px, 1fr) 80px minmax(140px, 1.4fr);
 	gap: 12px;
 	align-items: center;
-	/* justify-items: center; */
+	justify-items: center;
+}
+
+.entry-list-head > *:first-child,
+.entry-row > *:first-child {
+	justify-self: end;
+	text-align: right;
 }
 
 .wallet-summary-card {
@@ -2066,13 +2072,14 @@ async function toggleTransactionPaid(transaction) {
 .entry-list-head {
 	font-weight: 700;
 	padding-bottom: 8px;
+	padding-left: 12px;
+	padding-right: 12px;
 	border-bottom: 1px solid var(--glass-divider);
 }
 
 .entry-row,
 .simple-list-row {
 	padding: 8px 0;
-	/* border-bottom: 1px solid var(--glass-divider); */
 }
 
 .entry-row {
@@ -2579,15 +2586,6 @@ button:disabled {
 		border-radius: 16px;
 
 		background: #7522c52e
-	}
-
-	.descTittle {
-		padding: 0px 16px;
-	}
-
-	.actionTittle {
-		/* padding: 0px 12px; */
-		text-align: center;
 	}
 
 	.centerTittle {
