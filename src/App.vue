@@ -1960,8 +1960,8 @@ async function toggleTransactionPaid(transaction) {
 
 .entry-list-head > *:first-child,
 .entry-row > *:first-child {
-	justify-self: end;
-	text-align: right;
+	justify-self: start;
+	text-align: center;
 }
 
 .wallet-summary-card {
@@ -2088,6 +2088,56 @@ async function toggleTransactionPaid(transaction) {
 	background: #ffffff08;
 }
 
+.entry-row input[type="checkbox"] {
+	appearance: none;
+	-webkit-appearance: none;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 22px;
+	height: 22px;
+	min-width: 22px;
+	min-height: 22px;
+	box-sizing: border-box;
+	border: 2px solid rgba(255, 255, 255, 0.65);
+	border-radius: 50%;
+	background: rgba(255, 255, 255, 0.02);
+	cursor: pointer;
+	position: relative;
+	transition: border-color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+	outline: none;
+}
+
+.entry-row input[type="checkbox"]::before {
+	content: "";
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	width: 12px;
+	height: 12px;
+	border-radius: 50%;
+	background: #28c35d;
+	transform: translate(-50%, -50%) scale(0);
+	transition: transform 0.2s ease;
+	box-shadow: inset 0 0 0 0 rgba(0, 0, 0, 0.08);
+
+}
+
+.entry-row input[type="checkbox"]:checked {
+	border-color: #28c35d;
+	box-shadow: 0 0 0 4px rgba(40, 195, 93, 0.12);
+	background: rgba(40, 195, 93, 0.08);
+}
+
+.entry-row input[type="checkbox"]:checked::before {
+	transform: translate(-50%, -50%) scale(1);
+}
+
+.entry-row input[type="checkbox"]:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
 .entry-row:last-child,
 .wallet-summary-row:last-child,
 .simple-list-row:last-child {
@@ -2099,7 +2149,10 @@ async function toggleTransactionPaid(transaction) {
 }
 
 .entry-empty {
-	padding: 8px 0;
+	padding: 8px 12px;
+	font-style: italic;
+	font-size: 14px;
+	color: #FFFFFF63
 }
 
 .field-group {
@@ -2257,14 +2310,12 @@ async function toggleTransactionPaid(transaction) {
 	border-radius: 10px;
 }
 
-input,
 textarea,
 button,
 select {
 	font: inherit;
 }
 
-input,
 textarea,
 select {
 	width: 100%;
