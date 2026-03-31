@@ -1463,13 +1463,13 @@ async function toggleTransactionPaid(transaction) {
 
 						<div class="entry-list">
 							<div class="entry-list-head">
-						<span class="descTittle">Descrição</span>
-						<span class="centerTittle">Carteira</span>
-						<span class="centerTittle">Data</span>
-						<span class="centerTittle">Valor</span>
-						<span class="centerTittle">Pago</span>
-						<span class="actionTittle">Ações</span>
-					</div>
+								<span class="descTittle">Descrição</span>
+								<span class="centerTittle">Carteira</span>
+								<span class="centerTittle">Data</span>
+								<span class="centerTittle">Valor</span>
+								<span class="centerTittle">Pago</span>
+								<span class="actionTittle">Ações</span>
+							</div>
 							<div v-if="group.items.length === 0" class="entry-empty">
 								Sem entradas
 							</div>
@@ -1498,12 +1498,23 @@ async function toggleTransactionPaid(transaction) {
 								</span>
 								<span class="row-actions">
 									<button :disabled="isSubmitting" @click="openEditEntryModal(transaction)">
-										<span class="button-icon button-icon-edit" >📝</span>
+										<span class="button-icon button-icon-edit">
+											<svg width="24" height="24" viewBox="0 0 24 24" fill="white">
+												<path
+													d="M6 2h9l5 5v15a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zm8 1.5V8h4.5L14 3.5z" />
+												<path d="M8 13h8v1.5H8zm0 3h6v1.5H8z" />
+											</svg>
+										</span>
 									</button>
 
 									<button class="danger-button" :disabled="isSubmitting"
 										@click="openDeleteTransactionModal(transaction)">
-										<span class="button-icon button-icon-delete" aria-hidden="true">❌</span>
+										<span class="button-icon button-icon-delete" aria-hidden="true">
+											<svg width="24" height="24" viewBox="0 0 24 24" fill="white">
+												<path
+													d="M18.3 5.71 12 12l6.3 6.29-1.41 1.42L10.59 13.4 4.29 19.71 2.88 18.29 9.17 12 2.88 5.71 4.29 4.29l6.3 6.3 6.29-6.3z" />
+											</svg>
+										</span>
 									</button>
 								</span>
 							</div>
@@ -1526,7 +1537,13 @@ async function toggleTransactionPaid(transaction) {
 						<span>{{ formatCurrency(getWalletBalanceForPeriod(wallet)) }}</span>
 						<span class="row-actions">
 							<button :disabled="isSubmitting" @click="openWalletModal(wallet)">
-								<span class="button-icon button-icon-edit" aria-hidden="true">📝</span>
+								<span class="button-icon button-icon-edit" aria-hidden="true">
+									<svg width="24" height="24" viewBox="0 0 24 24" fill="white">
+										<path
+											d="M6 2h9l5 5v15a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zm8 1.5V8h4.5L14 3.5z" />
+										<path d="M8 13h8v1.5H8zm0 3h6v1.5H8z" />
+									</svg>
+								</span>
 							</button>
 
 							<button :disabled="isSubmitting" @click="openAdjustmentModal(wallet)">
@@ -1535,7 +1552,12 @@ async function toggleTransactionPaid(transaction) {
 
 							<button class="danger-button" :disabled="isSubmitting"
 								@click="openDeleteWalletModal(wallet)">
-								<span class="button-icon button-icon-delete" aria-hidden="true">❌</span>
+								<span class="button-icon button-icon-delete" aria-hidden="true">
+									<svg width="24" height="24" viewBox="0 0 24 24" fill="white">
+										<path
+											d="M18.3 5.71 12 12l6.3 6.29-1.41 1.42L10.59 13.4 4.29 19.71 2.88 18.29 9.17 12 2.88 5.71 4.29 4.29l6.3 6.3 6.29-6.3z" />
+									</svg>
+								</span>
 							</button>
 						</span>
 					</div>
@@ -1557,19 +1579,34 @@ async function toggleTransactionPaid(transaction) {
 						@drop.prevent="handleCategoryDrop(category.id)">
 						<span>{{ category.name }}</span>
 						<span class="row-actions">
-							<button class="icon-button" :disabled="isSubmitting" draggable="true"
+							<button class="icon-button button-icon-drag" :disabled="isSubmitting" draggable="true"
 								title="Arrastar categoria" @dragstart="handleCategoryDragStart(category.id, $event)"
 								@dragend="handleCategoryDragEnd">
-								<span>✊</span>
+								<span>
+									<svg width="24" height="24" viewBox="0 0 24 24" fill="white">
+										<path d="M7 14l5 5 5-5H7zM7 10l5-5 5 5H7z" />
+									</svg>
+								</span>
 							</button>
 
 							<button :disabled="isSubmitting" @click="openCategoryModal(category)">
-								<span class="button-icon button-icon-edit" aria-hidden="true">📝</span>
+								<span class="button-icon button-icon-edit" aria-hidden="true">
+									<svg width="24" height="24" viewBox="0 0 24 24" fill="white">
+										<path
+											d="M6 2h9l5 5v15a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zm8 1.5V8h4.5L14 3.5z" />
+										<path d="M8 13h8v1.5H8zm0 3h6v1.5H8z" />
+									</svg>
+								</span>
 							</button>
 
 							<button class="danger-button" :disabled="isSubmitting"
 								@click="openDeleteCategoryModal(category)">
-								<span class="button-icon button-icon-delete" aria-hidden="true">❌</span>
+								<span class="button-icon button-icon-delete" aria-hidden="true">
+									<svg width="24" height="24" viewBox="0 0 24 24" fill="white">
+										<path
+											d="M18.3 5.71 12 12l6.3 6.29-1.41 1.42L10.59 13.4 4.29 19.71 2.88 18.29 9.17 12 2.88 5.71 4.29 4.29l6.3 6.3 6.29-6.3z" />
+									</svg>
+								</span>
 							</button>
 						</span>
 					</div>
@@ -1913,6 +1950,7 @@ async function toggleTransactionPaid(transaction) {
 	grid-template-columns: minmax(180px, 2.2fr) minmax(150px, 1.35fr) minmax(110px, 1fr) minmax(100px, 1fr) 80px minmax(140px, 1.4fr);
 	gap: 12px;
 	align-items: center;
+	/* justify-items: center; */
 }
 
 .wallet-summary-card {
@@ -2318,11 +2356,32 @@ button:disabled {
 	backdrop-filter: blur(26px);
 }
 
-.button-icon {
-	font-size: 16px;
-}
-.button-icon-edit {
+.button-icon-delete {
+	display: flex;
+	justify-content: center;
+	align-items: center;
 	margin-left: 3px;
+	width: 24px;
+	height: 24px;
+
+}
+
+.button-icon-edit {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	/* padding-left: 3px; */
+	width: 24px;
+	height: 24px;
+}
+
+.button-icon-drag {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	padding-top: 5px;
+	width: 24px;
+	height: 24px;
 }
 
 .button-icon-plus::before,
@@ -2507,20 +2566,20 @@ button:disabled {
 
 		background: var(--success-surface);
 	}
-	
+
 	.descTittle {
 		padding: 0px 12px;
 	}
-	
-	.actionTittle{
+
+	.actionTittle {
 		padding-right: 0px 12px;
 		text-align: right;
 	}
-	
-	.centerTittle{
+
+	.centerTittle {
 		text-align: center;
 	}
-	
+
 	.row-actions button {
 		width: 48px;
 		height: 48px;
@@ -2532,13 +2591,13 @@ button:disabled {
 		align-items: center;
 		justify-content: center;
 	}
-	
+
 	.row-actions .danger-button {
 		background: var(--danger-bg);
 		border-color: var(--danger-border);
 		color: var(--danger-text);
 	}
-	
+
 	.row-actions {
 		display: flex;
 		justify-content: flex-end;
