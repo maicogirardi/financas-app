@@ -2582,12 +2582,12 @@ button:disabled {
 	}
 
 	.descTittle {
-		padding: 0px 12px;
+		padding: 0px 16px;
 	}
 
 	.actionTittle {
-		padding-right: 0px 12px;
-		text-align: right;
+		/* padding: 0px 12px; */
+		text-align: center;
 	}
 
 	.centerTittle {
@@ -2614,7 +2614,7 @@ button:disabled {
 
 	.row-actions {
 		display: flex;
-		justify-content: flex-end;
+		justify-content: center;
 	}
 }
 </style>
