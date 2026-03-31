@@ -1523,7 +1523,7 @@ async function toggleTransactionPaid(transaction) {
 				</div>
 			</ResumoView>
 
-			<section v-if="currentPage === 'wallets'" class="page-section">
+			<section v-if="currentPage === 'wallets'" class="page-section equal-section">
 				<div class="toolbar">
 					<button :disabled="isSubmitting" @click="openWalletModal">
 						<span class="button-icon button-icon-plus" aria-hidden="true" />
@@ -1569,7 +1569,7 @@ async function toggleTransactionPaid(transaction) {
 				</div>
 			</section>
 
-			<section v-if="currentPage === 'categories'" class="page-section">
+			<section v-if="currentPage === 'categories'" class="page-section equal-section">
 				<div class="toolbar">
 					<button :disabled="isSubmitting" @click="openCategoryModal()">
 						<span class="button-icon button-icon-plus" aria-hidden="true" />
@@ -1579,7 +1579,7 @@ async function toggleTransactionPaid(transaction) {
 
 				<div class="simple-list">
 					<div v-for="category in categoryStore.manageableCategories" :key="category.id"
-						class="simple-list-row" :class="{ 'drag-over-row': dragOverCategoryId === category.id }"
+						class="simple-list-row category-row" :class="{ 'drag-over-row': dragOverCategoryId === category.id }"
 						@dragover="handleCategoryDragOver(category.id, $event)"
 						@drop.prevent="handleCategoryDrop(category.id)">
 						<span>{{ category.name }}</span>
@@ -1640,15 +1640,7 @@ async function toggleTransactionPaid(transaction) {
 							maxlength="7" />
 					</div>
 				</div>
-				<div class="field-group">
-					<label class="field-label">Valor</label>
-					<input v-if="!isEditingWallet" :class="{ 'required-empty': isWalletBalanceMissing() }"
-						:value="walletBalanceInput" type="text" inputmode="decimal" placeholder="R$ 0,00"
-						@keydown="handleCurrencyKeydown($event)" @focus="handleCurrencyFieldFocus('wallet', $event)"
-						@input="syncCurrencyFieldInput('wallet', $event)" @blur="handleCurrencyFieldBlur('wallet')" />
-					<div v-else class="field-note">O saldo continua sendo alterado apenas por ajuste de saldo.</div>
-				</div>
-
+				
 				<div class="toolbar">
 					<button :disabled="isSubmitting" @click="addWallet">
 						Salvar
@@ -1948,6 +1940,10 @@ async function toggleTransactionPaid(transaction) {
 	backdrop-filter: blur(22px);
 }
 
+.equal-section {
+	min-height: 420px;
+}
+
 .simple-list-row,
 .entry-list-head,
 .entry-row {
@@ -1959,6 +1955,7 @@ async function toggleTransactionPaid(transaction) {
 }
 
 .entry-list-head > *:first-child,
+.simple-list-row > *:first-child,
 .entry-row > *:first-child {
 	justify-self: start;
 	text-align: center;
@@ -2030,6 +2027,8 @@ async function toggleTransactionPaid(transaction) {
 
 .simple-list-row {
 	grid-template-columns: minmax(180px, 2fr) minmax(120px, 1fr) minmax(180px, 1.6fr);
+	border-radius: 16px;
+	background: #ffffff08
 }
 
 .wallet-summary-meta {
@@ -2079,7 +2078,7 @@ async function toggleTransactionPaid(transaction) {
 
 .entry-row,
 .simple-list-row {
-	padding: 8px 0;
+	padding: 8px 12px;
 }
 
 .entry-row {
@@ -2312,16 +2311,18 @@ async function toggleTransactionPaid(transaction) {
 
 textarea,
 button,
-select {
+select,
+input {
 	font: inherit;
 }
 
 textarea,
-select {
+select,
+input:not([type="checkbox"]):not([type="color"]) {
 	width: 100%;
 	padding: 10px 12px;
 	border: 1px solid var(--glass-border);
-	border-radius: 16px;
+	border-radius: 12px;
 	box-sizing: border-box;
 	background: var(--input-surface);
 	color: var(--text);
@@ -2407,7 +2408,8 @@ button:disabled {
 }
 
 .modal {
-	width: min(100%, 460px);
+	width: min(100%, 520px);
+	max-width: 520px;
 	display: grid;
 	gap: 16px;
 	padding: 20px;
@@ -2581,6 +2583,15 @@ button:disabled {
 		border: 1px solid var(--glass-border);
 		background: var(--glass-surface);
 		backdrop-filter: blur(11px);
+	}
+
+	.category-row {
+		grid-template-columns: 1fr auto;
+	}
+
+	.category-row > *:first-child {
+		justify-self: start;
+		text-align: left;
 	}
 
 	/* ROW */
