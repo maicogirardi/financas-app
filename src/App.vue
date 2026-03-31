@@ -1451,26 +1451,25 @@ async function toggleTransactionPaid(transaction) {
 							<div v-if="false" class="section-actions">
 								<button class="icon-button" :disabled="isSubmitting || !canMoveCategory(group.id, 'up')"
 									@click="moveCategory(group.id, 'up')">
-									↑
+									?
 								</button>
 								<button class="icon-button"
 									:disabled="isSubmitting || !canMoveCategory(group.id, 'down')"
 									@click="moveCategory(group.id, 'down')">
-									↓
+									?
 								</button>
 							</div>
 						</div>
 
 						<div class="entry-list">
 							<div class="entry-list-head">
-								<span>Descrição</span>
-								<span>Carteira</span>
-								<span>Data</span>
-								<span>Valor</span>
-								<span>Pago</span>
-								<span>Ações</span>
-							</div>
-
+						<span class="descTittle">Descrição</span>
+						<span class="centerTittle">Carteira</span>
+						<span class="centerTittle">Data</span>
+						<span class="centerTittle">Valor</span>
+						<span class="centerTittle">Pago</span>
+						<span class="actionTittle">Ações</span>
+					</div>
 							<div v-if="group.items.length === 0" class="entry-empty">
 								Sem entradas
 							</div>
@@ -1487,7 +1486,7 @@ async function toggleTransactionPaid(transaction) {
 										</span>
 										<span v-if="transaction.type === 'transfer' && index === 0"
 											class="entry-wallet-arrow">
-											→
+											?
 										</span>
 									</template>
 								</span>
@@ -1499,14 +1498,12 @@ async function toggleTransactionPaid(transaction) {
 								</span>
 								<span class="row-actions">
 									<button :disabled="isSubmitting" @click="openEditEntryModal(transaction)">
-										<span class="button-icon button-icon-edit" aria-hidden="true" />
-										<span>Editar</span>
+										<span class="button-icon button-icon-edit" >📝</span>
 									</button>
 
 									<button class="danger-button" :disabled="isSubmitting"
 										@click="openDeleteTransactionModal(transaction)">
-										<span class="button-icon button-icon-delete" aria-hidden="true" />
-										<span>Excluir</span>
+										<span class="button-icon button-icon-delete" aria-hidden="true">❌</span>
 									</button>
 								</span>
 							</div>
@@ -1529,19 +1526,16 @@ async function toggleTransactionPaid(transaction) {
 						<span>{{ formatCurrency(getWalletBalanceForPeriod(wallet)) }}</span>
 						<span class="row-actions">
 							<button :disabled="isSubmitting" @click="openWalletModal(wallet)">
-								<span class="button-icon button-icon-edit" aria-hidden="true" />
-								<span>Editar</span>
+								<span class="button-icon button-icon-edit" aria-hidden="true">📝</span>
 							</button>
 
 							<button :disabled="isSubmitting" @click="openAdjustmentModal(wallet)">
-								<span class="button-icon button-icon-adjust" aria-hidden="true" />
-								<span>Ajustar saldo</span>
+								<span class="button-icon button-icon-adjust" aria-hidden="true">✏️</span>
 							</button>
 
 							<button class="danger-button" :disabled="isSubmitting"
 								@click="openDeleteWalletModal(wallet)">
-								<span class="button-icon button-icon-delete" aria-hidden="true" />
-								<span>Excluir</span>
+								<span class="button-icon button-icon-delete" aria-hidden="true">❌</span>
 							</button>
 						</span>
 					</div>
@@ -1566,18 +1560,16 @@ async function toggleTransactionPaid(transaction) {
 							<button class="icon-button" :disabled="isSubmitting" draggable="true"
 								title="Arrastar categoria" @dragstart="handleCategoryDragStart(category.id, $event)"
 								@dragend="handleCategoryDragEnd">
-								::
+								<span>✊</span>
 							</button>
 
 							<button :disabled="isSubmitting" @click="openCategoryModal(category)">
-								<span class="button-icon button-icon-edit" aria-hidden="true" />
-								<span>Editar</span>
+								<span class="button-icon button-icon-edit" aria-hidden="true">📝</span>
 							</button>
 
 							<button class="danger-button" :disabled="isSubmitting"
 								@click="openDeleteCategoryModal(category)">
-								<span class="button-icon button-icon-delete" aria-hidden="true" />
-								<span>Excluir</span>
+								<span class="button-icon button-icon-delete" aria-hidden="true">❌</span>
 							</button>
 						</span>
 					</div>
@@ -1640,10 +1632,10 @@ async function toggleTransactionPaid(transaction) {
 						@blur="handleCurrencyFieldBlur('adjustment')" />
 				</div>
 				<div class="field-group">
-					<label class="field-label">Descricao</label>
+					<label class="field-label">Descrição</label>
 					<textarea v-model="adjustmentDescription"
 						:class="{ 'required-empty': isAdjustmentDescriptionMissing() }" rows="4"
-						placeholder="Descricao do ajuste" />
+						placeholder="Descrição do ajuste" />
 				</div>
 
 				<div class="toolbar">
@@ -2040,6 +2032,12 @@ async function toggleTransactionPaid(transaction) {
 	border-bottom: 1px solid var(--glass-divider);
 }
 
+.entry-row {
+	padding-inline: 12px;
+	border-radius: 16px;
+	background: transparent;
+}
+
 .entry-row:last-child,
 .wallet-summary-row:last-child,
 .simple-list-row:last-child {
@@ -2048,8 +2046,6 @@ async function toggleTransactionPaid(transaction) {
 
 .paid-row {
 	background: var(--success-surface);
-	border-radius: 16px;
-	padding-inline: 8px;
 }
 
 .entry-empty {
@@ -2241,7 +2237,6 @@ button {
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-	gap: 10px;
 	padding: 11px 16px;
 	border: 1px solid var(--button-muted-border);
 	border-radius: 18px;
@@ -2324,19 +2319,10 @@ button:disabled {
 }
 
 .button-icon {
-	position: relative;
-	width: 18px;
-	height: 18px;
-	display: inline-block;
-	flex: 0 0 18px;
+	font-size: 16px;
 }
-
-.button-icon::before,
-.button-icon::after {
-	content: "";
-	position: absolute;
-	inset: 0;
-	margin: auto;
+.button-icon-edit {
+	margin-left: 3px;
 }
 
 .button-icon-plus::before,
@@ -2350,53 +2336,6 @@ button:disabled {
 .button-icon-plus::after {
 	width: 2px;
 	height: 12px;
-}
-
-.button-icon-edit::before {
-	width: 12px;
-	height: 3px;
-	background: currentColor;
-	border-radius: 999px;
-	transform: rotate(-35deg);
-}
-
-.button-icon-edit::after {
-	width: 4px;
-	height: 4px;
-	border-radius: 1px;
-	background: currentColor;
-	transform: translate(5px, 5px) rotate(-35deg);
-}
-
-.button-icon-delete::before {
-	width: 11px;
-	height: 10px;
-	border: 2px solid currentColor;
-	border-top: 0;
-	border-radius: 0 0 3px 3px;
-	transform: translateY(2px);
-}
-
-.button-icon-delete::after {
-	width: 13px;
-	height: 2px;
-	background: currentColor;
-	border-radius: 999px;
-	transform: translateY(-4px);
-}
-
-.button-icon-adjust::before {
-	width: 14px;
-	height: 14px;
-	border-radius: 999px;
-	border: 2px solid currentColor;
-}
-
-.button-icon-adjust::after {
-	width: 8px;
-	height: 2px;
-	background: currentColor;
-	border-radius: 999px;
 }
 
 /* MOBILE */
@@ -2520,7 +2459,6 @@ button:disabled {
 		width: 100%;
 
 		gap: 8px;
-		/* controla o único espaçamento */
 	}
 
 	/* SELECTS */
@@ -2533,7 +2471,6 @@ button:disabled {
 		gap: 8px;
 	}
 
-	/* ANO — FORÇADO */
 	.filter-selects select.year-filter {
 		width: 280px !important;
 		flex: 0 0 280px !important;
@@ -2557,6 +2494,54 @@ button:disabled {
 		padding: 0;
 		border-radius: 50%;
 		aspect-ratio: 1 / 1;
+	}
+
+	/* HEADER LISTA */
+	.section-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+
+		padding: 10px 12px;
+		border-radius: 16px;
+
+		background: var(--success-surface);
+	}
+	
+	.descTittle {
+		padding: 0px 12px;
+	}
+	
+	.actionTittle{
+		padding-right: 0px 12px;
+		text-align: right;
+	}
+	
+	.centerTittle{
+		text-align: center;
+	}
+	
+	.row-actions button {
+		width: 48px;
+		height: 48px;
+		min-width: 48px;
+
+		border-radius: 50%;
+
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+	}
+	
+	.row-actions .danger-button {
+		background: var(--danger-bg);
+		border-color: var(--danger-border);
+		color: var(--danger-text);
+	}
+	
+	.row-actions {
+		display: flex;
+		justify-content: flex-end;
 	}
 }
 </style>
