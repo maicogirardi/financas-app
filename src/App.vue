@@ -1523,7 +1523,7 @@ async function toggleTransactionPaid(transaction) {
 				</div>
 			</ResumoView>
 
-			<section v-if="currentPage === 'wallets'" class="page-section equal-section">
+			<section v-if="currentPage === 'wallets'" class="page-section">
 				<div class="toolbar">
 					<button :disabled="isSubmitting" @click="openWalletModal">
 						<span class="button-icon button-icon-plus" aria-hidden="true" />
@@ -1569,7 +1569,7 @@ async function toggleTransactionPaid(transaction) {
 				</div>
 			</section>
 
-			<section v-if="currentPage === 'categories'" class="page-section equal-section">
+			<section v-if="currentPage === 'categories'" class="page-section">
 				<div class="toolbar">
 					<button :disabled="isSubmitting" @click="openCategoryModal()">
 						<span class="button-icon button-icon-plus" aria-hidden="true" />
@@ -2482,9 +2482,14 @@ button:disabled {
 	.page-section,
 	.transaction-section,
 	.simple-list,
+	.equal-section,
 	.error-box,
 	.modal {
 		border-radius: 20px;
+	}
+
+	.equal-section {
+		min-height: 320px;
 	}
 
 	.simple-list-row,
