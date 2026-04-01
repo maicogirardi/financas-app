@@ -28,6 +28,7 @@ const authReady = ref(false)
 const isSubmitting = ref(false)
 const currentPage = ref("dashboard")
 const theme = ref("light")
+const themeColor = ref("#aa3bff")
 
 const selectedYear = ref(new Date().getFullYear())
 const selectedMonth = ref(new Date().getMonth() + 1)
@@ -205,11 +206,13 @@ onMounted(() => {
 
 		if (currentUser) {
 			unsubscribeThemePreference = subscribeThemePreference(
-				nextTheme => {
+				({ theme: nextTheme, primaryColor }) => {
 					applyTheme(nextTheme)
+					applyThemeColor(primaryColor)
 				},
 				() => {
 					applyTheme("light")
+					applyThemeColor(themeColor.value)
 				}
 			)
 			walletStore.startWalletsSync()
@@ -331,16 +334,58 @@ function applyTheme(nextTheme) {
 	document.documentElement.setAttribute("data-theme", nextTheme)
 }
 
+function parseHexColor(value) {
+	const normalized = String(value || "").trim()
+	if (!/^#[0-9A-Fa-f]{6}$/.test(normalized)) return null
+	return {
+		r: parseInt(normalized.slice(1, 3), 16),
+		g: parseInt(normalized.slice(3, 5), 16),
+		b: parseInt(normalized.slice(5, 7), 16)
+	}
+}
+
+function applyThemeColor(nextColor) {
+	themeColor.value = nextColor
+	document.documentElement.style.setProperty("--color-primary", nextColor)
+	document.documentElement.style.setProperty("--accent", nextColor)
+
+	const rgb = parseHexColor(nextColor)
+	if (!rgb) return
+
+	document.documentElement.style.setProperty("--theme-button-bg", `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.12)`)
+	document.documentElement.style.setProperty("--theme-button-border", `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.28)`)
+	document.documentElement.style.setProperty("--theme-button-hover-border", `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.42)`)
+	document.documentElement.style.setProperty("--theme-fab-bg", `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.14)`)
+	document.documentElement.style.setProperty("--theme-fab-border", `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.32)`)
+}
+
 async function updateTheme(nextTheme) {
 	applyTheme(nextTheme)
 
 	if (!user.value) return
 
 	try {
-		await saveThemePreference(nextTheme)
+		await saveThemePreference({ theme: nextTheme, primaryColor: themeColor.value })
 	} catch (error) {
 		console.error("Failed to save theme preference", error)
 	}
+}
+
+async function updateThemeColor(nextColor) {
+	applyThemeColor(nextColor)
+
+	if (!user.value) return
+
+	try {
+		await saveThemePreference({ theme: theme.value, primaryColor: nextColor })
+	} catch (error) {
+		console.error("Failed to save theme preference", error)
+	}
+}
+
+function handleTabSelect(tab) {
+	closeAllModals()
+	currentPage.value = tab
 }
 
 function handleFabClick() {
@@ -1419,7 +1464,7 @@ async function toggleTransactionPaid(transaction) {
 				</div>
 			</section>
 
-			<BottomTabs :tabs="navigationTabs" :current-tab="currentPage" @select="currentPage = $event" />
+<BottomTabs :tabs="navigationTabs" :current-tab="currentPage" @select="handleTabSelect" />
 
 			<div v-if="appError" class="error-box">
 				{{ appError }}
@@ -1618,8 +1663,9 @@ async function toggleTransactionPaid(transaction) {
 				</div>
 			</section>
 
-			<ConfiguracoesView v-if="currentPage === 'settings'" :theme="theme" :user-email="user?.email || ''"
-				:is-authenticated="Boolean(user)" :is-submitting="isSubmitting" @update-theme="updateTheme"
+			<ConfiguracoesView v-if="currentPage === 'settings'" :theme="theme" :theme-color="themeColor"
+				:user-email="user?.email || ''" :is-authenticated="Boolean(user)" :is-submitting="isSubmitting"
+				@update-theme="updateTheme" @update-theme-color="updateThemeColor"
 				@login="handleLogin" @logout="handleLogout" />
 		</template>
 
@@ -2198,6 +2244,9 @@ async function toggleTransactionPaid(transaction) {
 	padding: 0;
 	background: transparent;
 	box-shadow: none;
+	flex: 1;
+	min-width: 0;
+	height: 40px;
 }
 
 .transaction-sections {
@@ -2652,7 +2701,8 @@ button:disabled {
 		padding: 10px 12px;
 		border-radius: 16px;
 
-		background: #7522c52e
+		background: #7522c52e;
+		background: color-mix(in srgb, var(--color-primary) 18%, transparent);
 	}
 
 	.centerTittle {

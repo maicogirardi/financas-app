@@ -7,6 +7,7 @@ import {
 import { auth, db } from "@/firebase"
 
 const DEFAULT_THEME = "light"
+const DEFAULT_THEME_COLOR = "#aa3bff"
 const THEME_DOC_PATH = ["preferences", "ui"]
 
 function getThemeDocRef() {
@@ -19,27 +20,44 @@ function getThemeDocRef() {
 	return doc(db, "users", user.uid, ...THEME_DOC_PATH)
 }
 
+function normalizeColor(value) {
+	if (typeof value !== "string") return DEFAULT_THEME_COLOR
+	const normalized = value.trim()
+	return /^#[0-9A-Fa-f]{6}$/.test(normalized) ? normalized : DEFAULT_THEME_COLOR
+}
+
 export function subscribeThemePreference(callback, onError) {
 	const themeDocRef = getThemeDocRef()
 
 	return onSnapshot(
 		themeDocRef,
 		snapshot => {
-			const data = snapshot.data()
-			const theme = data?.theme === "dark" ? "dark" : DEFAULT_THEME
-			callback(theme)
+			const data = snapshot.data() || {}
+			const theme = data.theme === "dark" ? "dark" : DEFAULT_THEME
+			const primaryColor = normalizeColor(data.primaryColor)
+			callback({ theme, primaryColor })
 		},
 		onError
 	)
 }
 
-export async function saveThemePreference(theme) {
+export async function saveThemePreference(preferences) {
 	const themeDocRef = getThemeDocRef()
+	const payload = {}
+
+	if (typeof preferences === "string") {
+		payload.theme = preferences === "dark" ? "dark" : DEFAULT_THEME
+	} else if (typeof preferences === "object" && preferences !== null) {
+		payload.theme = preferences.theme === "dark" ? "dark" : DEFAULT_THEME
+		if (preferences.primaryColor) {
+			payload.primaryColor = normalizeColor(preferences.primaryColor)
+		}
+	}
 
 	await setDoc(
 		themeDocRef,
 		{
-			theme: theme === "dark" ? "dark" : DEFAULT_THEME,
+			...payload,
 			updatedAt: serverTimestamp()
 		},
 		{ merge: true }

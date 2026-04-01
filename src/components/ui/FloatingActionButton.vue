@@ -15,13 +15,13 @@ defineEmits(["click"])
 	bottom: calc(88px + env(safe-area-inset-bottom, 0px));
 	width: 60px;
 	height: 60px;
-	border: 1px solid var(--glass-border-strong);
+	border: 1px solid var(--theme-fab-border);
 	border-radius: 22px;
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
 	background:
-		linear-gradient(180deg, var(--glass-highlight) 0%, rgba(255, 255, 255, 0) 100%),
+		linear-gradient(180deg, var(--theme-fab-bg) 0%, rgba(255, 255, 255, 0) 100%),
 		var(--glass-surface-strong);
 	color: var(--text-h);
 	box-shadow:
@@ -40,7 +40,7 @@ defineEmits(["click"])
 .fab:hover {
 	transform: translateY(-2px);
 	background:
-		linear-gradient(180deg, rgba(255, 255, 255, 0.16) 0%, rgba(255, 255, 255, 0) 100%),
+		linear-gradient(180deg, color-mix(in srgb, var(--color-primary) 16%, rgba(255, 255, 255, 0.22)) 0%, rgba(255, 255, 255, 0) 100%),
 		var(--glass-surface);
 	box-shadow:
 		0 22px 42px rgba(15, 17, 21, 0.16),

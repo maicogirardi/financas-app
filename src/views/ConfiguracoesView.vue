@@ -1,10 +1,14 @@
 <script setup>
-import { computed } from "vue"
+import { computed, ref, watch } from "vue"
 
 const props = defineProps({
 	theme: {
 		type: String,
 		default: "light"
+	},
+	themeColor: {
+		type: String,
+		default: "#aa3bff"
 	},
 	userEmail: {
 		type: String,
@@ -20,9 +24,32 @@ const props = defineProps({
 	}
 })
 
-const emit = defineEmits(["update-theme", "login", "logout"])
+const emit = defineEmits(["update-theme", "update-theme-color", "login", "logout"])
 
 const isDarkMode = computed(() => props.theme === "dark")
+const themeColorText = ref(props.themeColor)
+
+watch(
+	() => props.themeColor,
+	value => {
+		themeColorText.value = value
+	}
+)
+
+function handleThemeColorChange(event) {
+	const nextValue = event.target.value
+	themeColorText.value = nextValue
+	if (/^#[0-9A-Fa-f]{6}$/.test(nextValue)) {
+		emit("update-theme-color", nextValue)
+	}
+}
+
+function handleThemeColorTextBlur() {
+	const nextValue = themeColorText.value.trim()
+	if (/^#[0-9A-Fa-f]{6}$/.test(nextValue)) {
+		emit("update-theme-color", nextValue)
+	}
+}
 
 function handleThemeToggle(event) {
 	const checked = event.target.checked
@@ -53,6 +80,29 @@ function handleThemeToggle(event) {
 					<span class="switch-track" />
 					<span class="switch-thumb" />
 				</label>
+			</div>
+		</div>
+
+		<div class="settings-card">
+			<div class="field-group">
+				<label class="settings-label" for="theme-color-picker">Cor</label>
+				<div class="color-field">
+					<input
+						id="theme-color-picker"
+						class="color-picker"
+						type="color"
+						:value="themeColorText"
+						@change="handleThemeColorChange"
+					/>
+					<input
+						class="color-code-input"
+						type="text"
+						maxlength="7"
+						v-model="themeColorText"
+						@blur="handleThemeColorTextBlur"
+						placeholder="#AA3BFF"
+					/>
+				</div>
 			</div>
 		</div>
 
@@ -167,6 +217,45 @@ function handleThemeToggle(event) {
 .settings-help {
 	font-size: 12px;
 	color: var(--text);
+}
+
+.field-group {
+	width: 100%;
+}
+
+.color-field {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	padding: 10px 12px;
+	margin-top: 10px;
+	border: 1px solid var(--glass-border);
+	border-radius: 16px;
+	background: var(--input-surface);
+	box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+	/* width: 100%; */
+}
+
+.color-picker {
+	width: 48px;
+	min-width: 48px;
+	height: 40px;
+	padding: 0;
+	border: 0;
+	border-radius: 12px;
+	background: transparent;
+	cursor: pointer;
+}
+
+.color-code-input {
+	flex: 1;
+	min-width: 0;
+	height: 40px;
+	border: 0;
+	padding: 0 0 0 6px;
+	background: transparent;
+	color: var(--text);
+	font: inherit;
 }
 
 .switch {

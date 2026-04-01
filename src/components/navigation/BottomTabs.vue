@@ -54,9 +54,9 @@ defineEmits(["select"])
 	justify-content: center;
 	gap: 6px;
 	padding: 10px 14px;
-	border: 1px solid transparent;
+	border: 1px solid var(--theme-button-border);
 	border-radius: 22px;
-	background: var(--button-muted-bg);
+	background: var(--theme-button-bg);
 	color: var(--text-soft);
 	font: inherit;
 	font-weight: 500;
@@ -72,14 +72,14 @@ defineEmits(["select"])
 
 .tab-button:hover {
 	transform: translateY(-1px);
-	border-color: var(--glass-border-strong);
+	border-color: var(--theme-button-hover-border);
 	color: var(--text-h);
 }
 
 .tab-button.active {
-	border-color: var(--glass-border-strong);
+	border-color: color-mix(in srgb, var(--color-primary) 40%, var(--glass-border-strong));
 	background:
-		linear-gradient(180deg, var(--glass-highlight) 0%, rgba(255, 255, 255, 0) 100%),
+		linear-gradient(180deg, color-mix(in srgb, var(--color-primary) 18%, transparent) 0%, rgba(255, 255, 255, 0) 100%),
 		var(--glass-surface-strong);
 	color: var(--text-h);
 	box-shadow:
