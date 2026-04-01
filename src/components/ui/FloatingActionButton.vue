@@ -11,7 +11,7 @@ defineEmits(["click"])
 <style scoped>
 .fab {
 	position: fixed;
-	right: 20px;
+	right: 80px;
 	bottom: calc(88px + env(safe-area-inset-bottom, 0px));
 	width: 60px;
 	height: 60px;

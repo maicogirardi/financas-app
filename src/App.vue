@@ -1453,18 +1453,31 @@ async function toggleTransactionPaid(transaction) {
 
 					<div class="filter-actions">
 						<button :disabled="isSubmitting" @click="openPeriodModal">
-							+
+							<svg class="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true"
+								xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor"
+								viewBox="0 0 24 24">
+								<path fill-rule="evenodd"
+									d="M9 7V2.221a2 2 0 0 0-.5.365L4.586 6.5a2 2 0 0 0-.365.5H9Zm2 0V2h7a2 2 0 0 1 2 2v6.41A7.5 7.5 0 1 0 10.5 22H6a2 2 0 0 1-2-2V9h5a2 2 0 0 0 2-2Z"
+									clip-rule="evenodd" />
+								<path fill-rule="evenodd"
+									d="M9 16a6 6 0 1 1 12 0 6 6 0 0 1-12 0Zm6-3a1 1 0 0 1 1 1v1h1a1 1 0 1 1 0 2h-1v1a1 1 0 1 1-2 0v-1h-1a1 1 0 1 1 0-2h1v-1a1 1 0 0 1 1-1Z"
+									clip-rule="evenodd" />
+							</svg>
+
 						</button>
 
 						<button class="danger-button month-remove-button" :disabled="isSubmitting || !selectedPeriod"
 							@click="openDeletePeriodModal">
-							-
+							<svg width="24" height="24" viewBox="0 0 24 24" fill="white">
+								<path
+									d="M18.3 5.71 12 12l6.3 6.29-1.41 1.42L10.59 13.4 4.29 19.71 2.88 18.29 9.17 12 2.88 5.71 4.29 4.29l6.3 6.3 6.29-6.3z" />
+							</svg>
 						</button>
 					</div>
 				</div>
 			</section>
 
-<BottomTabs :tabs="navigationTabs" :current-tab="currentPage" @select="handleTabSelect" />
+			<BottomTabs :tabs="navigationTabs" :current-tab="currentPage" @select="handleTabSelect" />
 
 			<div v-if="appError" class="error-box">
 				{{ appError }}
@@ -1624,7 +1637,8 @@ async function toggleTransactionPaid(transaction) {
 
 				<div class="simple-list">
 					<div v-for="category in categoryStore.manageableCategories" :key="category.id"
-						class="simple-list-row category-row" :class="{ 'drag-over-row': dragOverCategoryId === category.id }"
+						class="simple-list-row category-row"
+						:class="{ 'drag-over-row': dragOverCategoryId === category.id }"
 						@dragover="handleCategoryDragOver(category.id, $event)"
 						@drop.prevent="handleCategoryDrop(category.id)">
 						<span>{{ category.name }}</span>
@@ -1665,8 +1679,8 @@ async function toggleTransactionPaid(transaction) {
 
 			<ConfiguracoesView v-if="currentPage === 'settings'" :theme="theme" :theme-color="themeColor"
 				:user-email="user?.email || ''" :is-authenticated="Boolean(user)" :is-submitting="isSubmitting"
-				@update-theme="updateTheme" @update-theme-color="updateThemeColor"
-				@login="handleLogin" @logout="handleLogout" />
+				@update-theme="updateTheme" @update-theme-color="updateThemeColor" @login="handleLogin"
+				@logout="handleLogout" />
 		</template>
 
 		<div v-if="isWalletModalOpen" class="modal-backdrop">
@@ -1686,7 +1700,7 @@ async function toggleTransactionPaid(transaction) {
 							maxlength="7" />
 					</div>
 				</div>
-				
+
 				<div class="toolbar">
 					<button :disabled="isSubmitting" @click="addWallet">
 						Salvar
@@ -2000,9 +2014,9 @@ async function toggleTransactionPaid(transaction) {
 	justify-items: center;
 }
 
-.entry-list-head > *:first-child,
-.simple-list-row > *:first-child,
-.entry-row > *:first-child {
+.entry-list-head>*:first-child,
+.simple-list-row>*:first-child,
+.entry-row>*:first-child {
 	justify-self: start;
 	text-align: center;
 }
@@ -2516,7 +2530,7 @@ button:disabled {
 }
 
 .button-icon-plus::after {
-	width: 2px;
+	width: 4px;
 	height: 12px;
 }
 
@@ -2643,7 +2657,7 @@ button:disabled {
 		grid-template-columns: 1fr auto;
 	}
 
-	.category-row > *:first-child {
+	.category-row>*:first-child {
 		justify-self: start;
 		text-align: left;
 	}

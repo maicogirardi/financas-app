@@ -85,7 +85,7 @@ function handleThemeToggle(event) {
 
 		<div class="settings-card">
 			<div class="field-group">
-				<label class="settings-label" for="theme-color-picker">Cor</label>
+				<label class="settings-label" for="theme-color-picker">Cor do Tema</label>
 				<div class="color-field">
 					<input
 						id="theme-color-picker"
