@@ -108,10 +108,13 @@ const monthOptions = [
 ]
 
 const availableMonths = computed(() => {
-	const months = periodStore.periods
-		.filter(period => period.year === selectedYear.value)
-		.map(period => period.month)
-		.sort((a, b) => a - b)
+	const months = Array.from(
+		new Set(
+			periodStore.periods
+				.filter(period => period.year === selectedYear.value)
+				.map(period => period.month)
+		)
+	).sort((a, b) => a - b)
 
 	if (months.length === 0) {
 		return monthOptions.filter(option => option.value === selectedMonth.value)
@@ -273,7 +276,12 @@ watch(
 		}
 
 		if (!periodStore.getPeriodByYearMonth(selectedYear.value, selectedMonth.value)) {
-			const latestPeriod = periodStore.periods[periodStore.periods.length - 1]
+			const latestPeriod = [...periodStore.periods]
+				.sort((a, b) => {
+					if (a.year !== b.year) return a.year - b.year
+					return a.month - b.month
+				})
+				.at(-1)
 
 			if (latestPeriod) {
 				selectedYear.value = latestPeriod.year

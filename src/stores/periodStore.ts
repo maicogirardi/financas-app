@@ -35,7 +35,9 @@ export function usePeriodStore() {
 	}
 
 	function setPeriods(periods: Period[]) {
-		state.periods.splice(0, state.periods.length, ...periods)
+		periods.forEach(period => {
+			upsertLocalPeriod(period)
+		})
 		state.isLoaded = true
 	}
 
@@ -51,13 +53,17 @@ export function usePeriodStore() {
 	}
 
 	function startPeriodsSync() {
+		console.log("startPeriodsSync called")
+
 		clearPeriods()
 
 		unsubscribePeriods = subscribePeriods(
 			periods => {
+				console.log("periods received", periods)
 				setPeriods(periods)
 			},
 			error => {
+				console.error("period sync error", error)
 				state.error = error.message
 				state.isLoaded = true
 			}
@@ -72,7 +78,8 @@ export function usePeriodStore() {
 			await upsertPeriodDoc(id, {
 				year,
 				month,
-				openingBalances
+				openingBalances,
+				createdAt: new Date()
 			})
 
 			upsertLocalPeriod({

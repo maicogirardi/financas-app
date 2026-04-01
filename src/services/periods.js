@@ -29,10 +29,7 @@ export async function upsertPeriodDoc(id, data) {
 
 	await setDoc(
 		doc(periodsCollection, id),
-		{
-			...data,
-			createdAt: serverTimestamp()
-		},
+		data,
 		{ merge: true }
 	)
 }
@@ -45,22 +42,26 @@ export async function deletePeriodDoc(id) {
 
 export function subscribePeriods(callback, onError) {
 	const periodsCollection = getPeriodsCollection()
-	const periodsQuery = query(periodsCollection, orderBy("year", "asc"), orderBy("month", "asc"))
 
 	return onSnapshot(
-		periodsQuery,
+		periodsCollection,
 		snapshot => {
-			const periods = snapshot.docs.map(periodDoc => {
-				const data = periodDoc.data()
+			const periods = snapshot.docs
+				.map(periodDoc => {
+					const data = periodDoc.data()
 
-				return {
-					id: periodDoc.id,
-					year: Number(data.year),
-					month: Number(data.month),
-					openingBalances: data.openingBalances ?? {},
-					createdAt: data.createdAt?.toDate?.() ?? new Date()
-				}
-			})
+					return {
+						id: periodDoc.id,
+						year: Number(data.year),
+						month: Number(data.month),
+						openingBalances: data.openingBalances ?? {},
+						createdAt: data.createdAt?.toDate?.() ?? new Date()
+					}
+				})
+				.sort((a, b) => {
+					if (a.year !== b.year) return a.year - b.year
+					return a.month - b.month
+				})
 
 			callback(periods)
 		},
