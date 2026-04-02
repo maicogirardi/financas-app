@@ -1776,7 +1776,7 @@ async function toggleTransactionPaid(transaction) {
 
 		<div v-if="isPeriodModalOpen" class="modal-backdrop">
 			<div class="modal" @keydown.enter="handleModalEnter('period', $event)">
-				<h3>Criar mes</h3>
+				<h3>Criar mês</h3>
 
 				<div class="field-group">
 					<label class="field-label">Ano</label>
@@ -1785,7 +1785,7 @@ async function toggleTransactionPaid(transaction) {
 				</div>
 
 				<div class="field-group">
-					<label class="field-label">Mes</label>
+					<label class="field-label">Mês</label>
 					<select v-model.number="periodModalMonth" :class="{ 'required-empty': !periodModalMonth }">
 						<option v-for="month in monthOptions" :key="month.value" :value="month.value">
 							{{ month.label }}
@@ -1810,9 +1810,9 @@ async function toggleTransactionPaid(transaction) {
 				<h3>{{ editingTransactionId ? "Editar entrada" : "Nova entrada" }}</h3>
 
 				<div class="field-group">
-					<label class="field-label">Descricao</label>
+					<label class="field-label">Descrição</label>
 					<input v-model="entryDescription" :class="{ 'required-empty': isEntryDescriptionMissing() }"
-						placeholder="Descricao" />
+						placeholder="Descrição" />
 				</div>
 
 				<div class="field-group">
@@ -1820,7 +1820,7 @@ async function toggleTransactionPaid(transaction) {
 					<select v-model="entryType">
 						<option value="expense">Despesa</option>
 						<option value="income">Entrada</option>
-						<option value="transfer">Transferencia</option>
+						<option value="transfer">Transferência</option>
 						<option v-if="editingTransactionId" value="adjustment">Ajuste</option>
 					</select>
 				</div>
@@ -1863,7 +1863,7 @@ async function toggleTransactionPaid(transaction) {
 				</div>
 
 				<div v-if="entryType === 'adjustment'" class="field-group">
-					<label class="field-label">Direcao do ajuste</label>
+					<label class="field-label">Direção do ajuste</label>
 					<select v-model="entryAdjustmentDirection">
 						<option value="increase">Aumenta saldo</option>
 						<option value="decrease">Diminui saldo</option>
