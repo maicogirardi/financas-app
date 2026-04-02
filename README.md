@@ -21,9 +21,10 @@ Aplicativo de controle financeiro em Vue 3 + Vite com Firebase Authentication e 
 
 * layout mobile first, com ajustes de desktop por `@media (min-width: ...)`
 * visual com cards e modais em estilo frosted glass
-* botões principais com gradiente consistente
+* botões e ícones devem respeitar a cor do tema e manter contraste suave
 * campos obrigatórios em modais devem ter estado visual de erro
-* selects e dropdowns devem respeitar o tema ativo
+* selects, inputs e listas devem compartilhar a mesma linguagem de borda temática
+* dropdowns usam um componente Vue customizado para garantir consistência entre temas
 
 ## Documentação
 

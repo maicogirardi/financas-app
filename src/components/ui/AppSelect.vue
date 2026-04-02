@@ -331,13 +331,14 @@ onBeforeUnmount(() => {
 }
 
 .app-select__trigger {
+	position: relative;
 	width: 100%;
 	height: var(--app-select-height, auto);
 	min-height: var(--app-select-min-height, 46px);
-	padding: 10px 42px 10px 12px;
+	padding: 10px 52px 10px 12px;
 	display: flex;
 	align-items: center;
-	justify-content: space-between;
+	justify-content: flex-start;
 	gap: 12px;
 	border: 1px solid var(--select-border, var(--input-border));
 	border-radius: 14px;
@@ -378,11 +379,14 @@ onBeforeUnmount(() => {
 }
 
 .app-select__chevron {
+	position: absolute;
+	right: 14px;
+	top: 50%;
 	width: 16px;
 	height: 16px;
-	flex: 0 0 16px;
+	transform: translateY(-50%);
 	color: var(--select-arrow);
-	transition: transform 0.18s ease;
+	transition: transform 0.18s ease, top 0.18s ease;
 }
 
 .app-select__chevron path {
@@ -394,7 +398,7 @@ onBeforeUnmount(() => {
 }
 
 .app-select.is-open .app-select__chevron {
-	transform: rotate(180deg);
+	transform: translateY(-50%) rotate(180deg);
 }
 
 .app-select__menu {

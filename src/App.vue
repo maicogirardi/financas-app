@@ -406,6 +406,7 @@ function applyThemeColor(nextColor) {
 	if (!rgb) return
 
 	document.documentElement.style.setProperty("--theme-button-bg", `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.12)`)
+	document.documentElement.style.setProperty("--theme-button-hover-bg", `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.18)`)
 	document.documentElement.style.setProperty("--theme-button-border", `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.28)`)
 	document.documentElement.style.setProperty("--theme-button-hover-border", `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.42)`)
 	document.documentElement.style.setProperty("--theme-fab-bg", `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.14)`)
@@ -1494,7 +1495,7 @@ async function toggleTransactionPaid(transaction) {
 
 					<div class="filter-actions">
 						<button :disabled="isSubmitting" @click="openPeriodModal">
-							<svg class="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true"
+							<svg aria-hidden="true"
 								xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor"
 								viewBox="0 0 24 24">
 								<path fill-rule="evenodd"
@@ -1509,7 +1510,7 @@ async function toggleTransactionPaid(transaction) {
 
 						<button class="danger-button month-remove-button" :disabled="isSubmitting || !selectedPeriod"
 							@click="openDeletePeriodModal">
-							<svg width="24" height="24" viewBox="0 0 24 24" fill="white">
+							<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
 								<path
 									d="M18.3 5.71 12 12l6.3 6.29-1.41 1.42L10.59 13.4 4.29 19.71 2.88 18.29 9.17 12 2.88 5.71 4.29 4.29l6.3 6.3 6.29-6.3z" />
 							</svg>
@@ -1743,11 +1744,11 @@ async function toggleTransactionPaid(transaction) {
 				</div>
 
 				<div class="toolbar">
-					<button :disabled="isSubmitting" @click="addWallet">
+					<button class="primary-button" :disabled="isSubmitting" @click="addWallet">
 						Salvar
 					</button>
 
-					<button :disabled="isSubmitting" @click="closeWalletModal">
+					<button class="secondary-button" :disabled="isSubmitting" @click="closeWalletModal">
 						Cancelar
 					</button>
 				</div>
@@ -1774,11 +1775,11 @@ async function toggleTransactionPaid(transaction) {
 				</div>
 
 				<div class="toolbar">
-					<button :disabled="isSubmitting" @click="saveAdjustment">
+					<button class="primary-button" :disabled="isSubmitting" @click="saveAdjustment">
 						Salvar ajuste
 					</button>
 
-					<button :disabled="isSubmitting" @click="closeAdjustmentModal">
+					<button class="secondary-button" :disabled="isSubmitting" @click="closeAdjustmentModal">
 						Cancelar
 					</button>
 				</div>
@@ -1796,11 +1797,11 @@ async function toggleTransactionPaid(transaction) {
 				</div>
 
 				<div class="toolbar">
-					<button :disabled="isSubmitting" @click="saveCategory">
+					<button class="primary-button" :disabled="isSubmitting" @click="saveCategory">
 						Salvar
 					</button>
 
-					<button :disabled="isSubmitting" @click="closeCategoryModal">
+					<button class="secondary-button" :disabled="isSubmitting" @click="closeCategoryModal">
 						Cancelar
 					</button>
 				</div>
@@ -1828,11 +1829,11 @@ async function toggleTransactionPaid(transaction) {
 				</div>
 
 				<div class="toolbar">
-					<button :disabled="isSubmitting" @click="savePeriod">
+					<button class="primary-button" :disabled="isSubmitting" @click="savePeriod">
 						Salvar
 					</button>
 
-					<button :disabled="isSubmitting" @click="closePeriodModal">
+					<button class="secondary-button" :disabled="isSubmitting" @click="closePeriodModal">
 						Cancelar
 					</button>
 				</div>
@@ -1914,11 +1915,11 @@ async function toggleTransactionPaid(transaction) {
 				</div>
 
 				<div class="toolbar">
-					<button :disabled="isSubmitting" @click="saveEntry">
+					<button class="primary-button" :disabled="isSubmitting" @click="saveEntry">
 						Salvar
 					</button>
 
-					<button :disabled="isSubmitting" @click="closeEntryModal">
+					<button class="secondary-button" :disabled="isSubmitting" @click="closeEntryModal">
 						Cancelar
 					</button>
 				</div>
@@ -1935,7 +1936,7 @@ async function toggleTransactionPaid(transaction) {
 						Confirmar exclusão
 					</button>
 
-					<button :disabled="isSubmitting" @click="closeDeleteWalletModal">
+					<button class="secondary-button" :disabled="isSubmitting" @click="closeDeleteWalletModal">
 						Cancelar
 					</button>
 				</div>
@@ -1952,7 +1953,7 @@ async function toggleTransactionPaid(transaction) {
 						Confirmar exclusão
 					</button>
 
-					<button :disabled="isSubmitting" @click="closeDeleteCategoryModal">
+					<button class="secondary-button" :disabled="isSubmitting" @click="closeDeleteCategoryModal">
 						Cancelar
 					</button>
 				</div>
@@ -1969,7 +1970,7 @@ async function toggleTransactionPaid(transaction) {
 						Confirmar exclusão
 					</button>
 
-					<button :disabled="isSubmitting" @click="closeDeleteTransactionModal">
+					<button class="secondary-button" :disabled="isSubmitting" @click="closeDeleteTransactionModal">
 						Cancelar
 					</button>
 				</div>
@@ -1986,7 +1987,7 @@ async function toggleTransactionPaid(transaction) {
 						Confirmar exclusão
 					</button>
 
-					<button :disabled="isSubmitting" @click="closeDeletePeriodModal">
+					<button class="secondary-button" :disabled="isSubmitting" @click="closeDeletePeriodModal">
 						Cancelar
 					</button>
 				</div>
@@ -2046,6 +2047,7 @@ async function toggleTransactionPaid(transaction) {
 	display: grid;
 	grid-template-columns: minmax(180px, 2.2fr) minmax(150px, 1.35fr) minmax(110px, 1fr) minmax(100px, 1fr) 80px minmax(140px, 1.4fr);
 	gap: 12px;
+	min-height: 64px;
 	align-items: center;
 	justify-items: center;
 }
@@ -2123,8 +2125,9 @@ async function toggleTransactionPaid(transaction) {
 
 .simple-list-row {
 	grid-template-columns: minmax(180px, 2fr) minmax(120px, 1fr) minmax(180px, 1.6fr);
+	border: 1px solid var(--input-border);
 	border-radius: 16px;
-	background: #ffffff08
+	background: color-mix(in srgb, var(--input-surface) 88%, transparent);
 }
 
 .wallet-summary-meta {
@@ -2174,13 +2177,14 @@ async function toggleTransactionPaid(transaction) {
 
 .entry-row,
 .simple-list-row {
-	padding: 8px 12px;
+	padding: 10px 12px;
+	overflow: visible;
 }
 
 .entry-row {
 	padding-inline: 12px;
 	border-radius: 16px;
-	background: #ffffff08;
+	background: color-mix(in srgb, var(--color-primary) 8%, var(--input-surface));
 }
 
 .entry-row input[type="checkbox"] {
@@ -2194,9 +2198,9 @@ async function toggleTransactionPaid(transaction) {
 	min-width: 22px;
 	min-height: 22px;
 	box-sizing: border-box;
-	border: 2px solid rgba(255, 255, 255, 0.65);
+	border: 2px solid var(--input-border-strong);
 	border-radius: 50%;
-	background: rgba(255, 255, 255, 0.02);
+	background: color-mix(in srgb, var(--input-surface) 92%, transparent);
 	cursor: pointer;
 	position: relative;
 	transition: border-color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
@@ -2224,6 +2228,11 @@ async function toggleTransactionPaid(transaction) {
 	background: rgba(40, 195, 93, 0.08);
 }
 
+.entry-row input[type="checkbox"]:focus-visible {
+	border-color: var(--input-focus-border);
+	box-shadow: 0 0 0 3px var(--input-focus-ring);
+}
+
 .entry-row input[type="checkbox"]:checked::before {
 	transform: translate(-50%, -50%) scale(1);
 }
@@ -2233,9 +2242,7 @@ async function toggleTransactionPaid(transaction) {
 	cursor: not-allowed;
 }
 
-.entry-row:last-child,
-.wallet-summary-row:last-child,
-.simple-list-row:last-child {
+.wallet-summary-row:last-child {
 	border-bottom: 0;
 }
 
@@ -2285,14 +2292,33 @@ async function toggleTransactionPaid(transaction) {
 }
 
 .color-picker {
-	width: 48px;
-	min-width: 48px;
-	height: 40px;
+	width: 46px;
+	min-width: 46px;
+	height: 46px;
 	padding: 0;
-	border: 0;
-	border-radius: 12px;
-	background: transparent;
+	border: 1px solid color-mix(in srgb, var(--color-primary) 22%, var(--glass-border-strong));
+	border-radius: 999px;
+	background: color-mix(in srgb, var(--color-primary) 10%, var(--glass-surface-strong));
 	cursor: pointer;
+	box-shadow:
+		inset 0 1px 0 rgba(255, 255, 255, 0.3),
+		0 0 0 4px color-mix(in srgb, var(--color-primary) 10%, transparent);
+	overflow: hidden;
+}
+
+.color-picker::-webkit-color-swatch-wrapper {
+	padding: 3px;
+	border-radius: 999px;
+}
+
+.color-picker::-webkit-color-swatch {
+	border: 0;
+	border-radius: 999px;
+}
+
+.color-picker::-moz-color-swatch {
+	border: 0;
+	border-radius: 999px;
 }
 
 .color-code-input {
@@ -2360,6 +2386,25 @@ async function toggleTransactionPaid(transaction) {
 	flex: 0 0 auto;
 }
 
+.filter-actions button {
+	color: var(--text-soft);
+}
+
+.filter-actions button:hover {
+	color: var(--text-h);
+}
+
+.filter-actions .danger-button,
+.filter-actions .month-remove-button {
+	color: var(--danger-text);
+}
+
+.filter-actions button svg,
+.filter-actions button svg * {
+	fill: currentColor !important;
+	stroke: currentColor !important;
+}
+
 .filter-row button {
 	width: 36px;
 	height: 36px;
@@ -2415,10 +2460,21 @@ async function toggleTransactionPaid(transaction) {
 	justify-content: flex-end;
 }
 
+.row-actions button,
+.icon-button {
+	color: var(--text-soft);
+}
+
+.row-actions button:hover,
+.icon-button:hover {
+	color: var(--text-h);
+}
+
 .drag-over-row {
-	outline: 2px dashed var(--accent-border);
+	outline: 2px dashed color-mix(in srgb, var(--color-primary) 58%, transparent);
 	outline-offset: 6px;
 	border-radius: 10px;
+	background: color-mix(in srgb, var(--color-primary) 8%, transparent);
 }
 
 textarea,
@@ -2500,31 +2556,29 @@ button {
 	align-items: center;
 	justify-content: center;
 	padding: 11px 16px;
-	border: 1px solid var(--button-muted-border);
+	border: 1px solid var(--theme-button-border);
 	border-radius: 18px;
 	background:
 		linear-gradient(180deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0) 100%),
-		var(--button-muted-bg);
-	color: var(--text-h);
+		var(--theme-button-bg);
+	color: var(--text-soft);
 	cursor: pointer;
 	box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
 	transition:
 		transform 0.18s ease,
-		box-shadow 0.18s ease,
 		background 0.18s ease,
 		border-color 0.18s ease,
+		color 0.18s ease,
 		opacity 0.18s ease;
 }
 
 button:hover {
 	transform: translateY(-1px);
-	border-color: var(--accent-border);
+	border-color: var(--theme-button-hover-border);
 	background:
 		linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0) 100%),
-		var(--button-muted-hover);
-	box-shadow:
-		0 12px 24px rgba(15, 17, 21, 0.08),
-		inset 0 1px 0 rgba(255, 255, 255, 0.1);
+		var(--theme-button-hover-bg);
+	color: var(--text-h);
 }
 
 button.active {
@@ -2534,6 +2588,37 @@ button.active {
 button:disabled {
 	opacity: 0.7;
 	cursor: not-allowed;
+}
+
+.primary-button {
+	border-color: var(--theme-button-border);
+	background: var(--theme-button-bg);
+	color: var(--text-soft);
+	font-weight: 600;
+	box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.primary-button:hover {
+	border-color: var(--theme-button-hover-border);
+	background: var(--theme-button-hover-bg);
+	color: var(--text-h);
+}
+
+.secondary-button {
+	border-color: var(--danger-border);
+	background:
+		linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0) 100%),
+		var(--danger-bg);
+	color: var(--danger-text);
+	box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.secondary-button:hover {
+	border-color: var(--danger-border-strong);
+	background:
+		linear-gradient(180deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0) 100%),
+		var(--danger-hover);
+	color: var(--danger-text);
 }
 
 .danger-button {
@@ -2550,9 +2635,6 @@ button:disabled {
 	background:
 		linear-gradient(180deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0) 100%),
 		var(--danger-hover);
-	box-shadow:
-		0 12px 24px rgba(244, 63, 94, 0.14),
-		inset 0 1px 0 rgba(255, 255, 255, 0.12);
 }
 
 .error-text {
@@ -2597,6 +2679,26 @@ button:disabled {
 	width: 24px;
 	height: 24px;
 
+}
+
+.button-icon svg {
+	color: currentColor;
+}
+
+.button-icon svg[fill="white"],
+.button-icon svg [fill="white"] {
+	fill: currentColor;
+}
+
+.button-icon svg [stroke="white"] {
+	stroke: currentColor;
+}
+
+.button-icon-drag svg,
+.button-icon-drag svg * {
+	color: currentColor;
+	fill: currentColor;
+	stroke: currentColor;
 }
 
 .button-icon-edit {

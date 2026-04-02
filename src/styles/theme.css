@@ -16,12 +16,24 @@
 	--accent-bg: rgba(170, 59, 255, 0.1);
 	--accent-border: rgba(170, 59, 255, 0.45);
 	--social-bg: rgba(244, 243, 236, 0.5);
-	--button-bg: linear-gradient(135deg, #c084fc 0%, #aa3bff 100%);
-	--button-hover: linear-gradient(135deg, #d09cff 0%, #b85aff 100%);
+	--button-bg: linear-gradient(
+		135deg,
+		color-mix(in srgb, var(--color-primary) 60%, white) 0%,
+		var(--color-primary) 100%
+	);
+	--button-hover: linear-gradient(
+		135deg,
+		color-mix(in srgb, var(--color-primary) 72%, white) 0%,
+		color-mix(in srgb, var(--color-primary) 92%, black) 100%
+	);
 	--button-text: #ffffff;
 	--button-muted-bg: rgba(15, 17, 21, 0.05);
 	--button-muted-hover: rgba(15, 17, 21, 0.08);
 	--button-muted-border: rgba(15, 17, 21, 0.1);
+	--theme-button-bg: color-mix(in srgb, var(--color-primary) 12%, rgba(255, 255, 255, 0.72));
+	--theme-button-hover-bg: color-mix(in srgb, var(--color-primary) 18%, rgba(255, 255, 255, 0.8));
+	--theme-button-border: color-mix(in srgb, var(--color-primary) 28%, rgba(21, 18, 32, 0.12));
+	--theme-button-hover-border: color-mix(in srgb, var(--color-primary) 42%, rgba(21, 18, 32, 0.14));
 	--surface-elevated: rgba(255, 255, 255, 0.88);
 	--glass-surface: rgba(255, 255, 255, 0.62);
 	--glass-surface-strong: rgba(255, 255, 255, 0.74);
@@ -30,12 +42,12 @@
 	--glass-border-strong: rgba(255, 255, 255, 0.68);
 	--glass-divider: rgba(8, 6, 13, 0.08);
 	--input-surface: rgba(255, 255, 255, 0.58);
-	--input-border: rgba(21, 18, 32, 0.12);
-	--input-border-strong: rgba(21, 18, 32, 0.18);
-	--input-text: #16111d;
+	--input-border: color-mix(in srgb, var(--color-primary) 24%, rgba(21, 18, 32, 0.12));
+	--input-border-strong: color-mix(in srgb, var(--color-primary) 40%, rgba(21, 18, 32, 0.16));
+	--input-text: #6b6375;
 	--input-placeholder: rgba(84, 73, 97, 0.72);
-	--input-focus-border: rgba(170, 59, 255, 0.62);
-	--input-focus-ring: rgba(170, 59, 255, 0.18);
+	--input-focus-border: color-mix(in srgb, var(--color-primary) 58%, rgba(21, 18, 32, 0.16));
+	--input-focus-ring: color-mix(in srgb, var(--color-primary) 20%, transparent);
 	--input-disabled-bg: rgba(241, 236, 247, 0.68);
 	--select-surface: linear-gradient(180deg, rgba(255, 255, 255, 0.88) 0%, color-mix(in srgb, var(--color-primary) 8%, rgba(255, 255, 255, 0.82)) 100%);
 	--select-surface-hover: linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, color-mix(in srgb, var(--color-primary) 12%, rgba(255, 255, 255, 0.88)) 100%);
@@ -46,19 +58,19 @@
 		inset 0 1px 0 rgba(255, 255, 255, 0.7),
 		0 10px 24px color-mix(in srgb, var(--color-primary) 12%, rgba(8, 6, 13, 0.04));
 	--select-option-bg: color-mix(in srgb, var(--color-primary) 10%, #ffffff);
-	--select-option-text: #16111d;
+	--select-option-text: #6b6375;
 	--select-option-hover-bg: color-mix(in srgb, var(--color-primary) 14%, #ffffff);
 	--select-option-selected-bg: color-mix(in srgb, var(--color-primary) 22%, #ffffff);
-	--select-option-selected-text: #08060d;
+	--select-option-selected-text: #5f566b;
 	--validation-error-bg: rgba(220, 38, 38, 0.12);
 	--validation-error-border: rgba(220, 38, 38, 0.78);
 	--validation-error-text: #b42318;
 	--validation-error-ring: rgba(220, 38, 38, 0.18);
 	--button-shadow:
-		0 18px 32px rgba(170, 59, 255, 0.2),
+		0 18px 32px color-mix(in srgb, var(--color-primary) 22%, transparent),
 		0 6px 14px rgba(8, 6, 13, 0.08);
 	--button-shadow-hover:
-		0 22px 36px rgba(170, 59, 255, 0.25),
+		0 22px 36px color-mix(in srgb, var(--color-primary) 28%, transparent),
 		0 8px 18px rgba(8, 6, 13, 0.1);
 	--danger-bg: rgba(239, 68, 68, 0.1);
 	--danger-hover: rgba(239, 68, 68, 0.14);
@@ -88,12 +100,24 @@
 	--accent-bg: rgba(192, 132, 252, 0.15);
 	--accent-border: rgba(192, 132, 252, 0.5);
 	--social-bg: rgba(47, 48, 58, 0.5);
-	--button-bg: linear-gradient(135deg, #d7a5ff 0%, #c084fc 100%);
-	--button-hover: linear-gradient(135deg, #dfb7ff 0%, #cb93fd 100%);
+	--button-bg: linear-gradient(
+		135deg,
+		color-mix(in srgb, var(--color-primary) 64%, white) 0%,
+		var(--color-primary) 100%
+	);
+	--button-hover: linear-gradient(
+		135deg,
+		color-mix(in srgb, var(--color-primary) 76%, white) 0%,
+		color-mix(in srgb, var(--color-primary) 88%, black) 100%
+	);
 	--button-text: #0f1115;
 	--button-muted-bg: rgba(255, 255, 255, 0.06);
 	--button-muted-hover: rgba(255, 255, 255, 0.1);
 	--button-muted-border: rgba(255, 255, 255, 0.12);
+	--theme-button-bg: color-mix(in srgb, var(--color-primary) 14%, rgba(23, 25, 32, 0.76));
+	--theme-button-hover-bg: color-mix(in srgb, var(--color-primary) 20%, rgba(23, 25, 32, 0.84));
+	--theme-button-border: color-mix(in srgb, var(--color-primary) 28%, rgba(255, 255, 255, 0.12));
+	--theme-button-hover-border: color-mix(in srgb, var(--color-primary) 42%, rgba(255, 255, 255, 0.14));
 	--surface-elevated: rgba(22, 23, 29, 0.88);
 	--glass-surface: rgba(23, 25, 32, 0.68);
 	--glass-surface-strong: rgba(23, 25, 32, 0.82);
@@ -102,12 +126,12 @@
 	--glass-border-strong: rgba(255, 255, 255, 0.12);
 	--glass-divider: rgba(255, 255, 255, 0.08);
 	--input-surface: rgba(19, 20, 27, 0.72);
-	--input-border: rgba(255, 255, 255, 0.1);
-	--input-border-strong: rgba(255, 255, 255, 0.16);
+	--input-border: color-mix(in srgb, var(--color-primary) 20%, rgba(255, 255, 255, 0.1));
+	--input-border-strong: color-mix(in srgb, var(--color-primary) 38%, rgba(255, 255, 255, 0.14));
 	--input-text: #f3f4f6;
 	--input-placeholder: rgba(197, 204, 215, 0.7);
-	--input-focus-border: rgba(192, 132, 252, 0.72);
-	--input-focus-ring: rgba(192, 132, 252, 0.2);
+	--input-focus-border: color-mix(in srgb, var(--color-primary) 62%, rgba(255, 255, 255, 0.14));
+	--input-focus-ring: color-mix(in srgb, var(--color-primary) 24%, transparent);
 	--input-disabled-bg: rgba(255, 255, 255, 0.06);
 	--select-surface: linear-gradient(180deg, color-mix(in srgb, var(--color-primary) 10%, rgba(33, 35, 45, 0.96)) 0%, rgba(24, 25, 33, 0.94) 100%);
 	--select-surface-hover: linear-gradient(180deg, color-mix(in srgb, var(--color-primary) 14%, rgba(41, 43, 56, 0.98)) 0%, rgba(28, 29, 39, 0.96) 100%);
@@ -127,10 +151,10 @@
 	--validation-error-text: #fecaca;
 	--validation-error-ring: rgba(248, 113, 113, 0.2);
 	--button-shadow:
-		0 18px 32px rgba(192, 132, 252, 0.18),
+		0 18px 32px color-mix(in srgb, var(--color-primary) 20%, transparent),
 		0 8px 20px rgba(0, 0, 0, 0.28);
 	--button-shadow-hover:
-		0 22px 36px rgba(192, 132, 252, 0.22),
+		0 22px 36px color-mix(in srgb, var(--color-primary) 24%, transparent),
 		0 10px 22px rgba(0, 0, 0, 0.32);
 	--danger-bg: rgba(248, 113, 113, 0.12);
 	--danger-hover: rgba(248, 113, 113, 0.18);

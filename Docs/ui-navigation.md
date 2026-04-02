@@ -39,6 +39,9 @@ Visual direction:
 * form dropdowns should inherit the active light/dark theme instead of browser default colors
 * shared dropdown behavior should come from the reusable Vue select component
 * dropdown selected state must use the current theme color chosen by the user
+* inputs, cards, and list rows should share the same themed border language
+* modal primary actions should follow the same softer contrast language used by the bottom tab buttons
+* cancel and destructive actions should stay in red tones
 * required fields inside modals should show a strong red validation state again
 * layout changes should continue mobile first, with desktop refinements handled separately
 

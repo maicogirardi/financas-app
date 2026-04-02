@@ -16,7 +16,7 @@ defineEmits(["click"])
 	width: 60px;
 	height: 60px;
 	border: 1px solid var(--theme-fab-border);
-	border-radius: 22px;
+	border-radius: 50%;
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;

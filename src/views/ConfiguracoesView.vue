@@ -125,11 +125,12 @@ function handleThemeToggle(event) {
 				</button>
 				<button
 					v-else
+					class="logout-button"
 					:disabled="isSubmitting"
 					type="button"
 					@click="$emit('logout')"
 				>
-					Sair
+					Encerrar sessão
 				</button>
 			</div>
 		</div>
@@ -156,7 +157,7 @@ function handleThemeToggle(event) {
 	display: grid;
 	gap: 12px;
 	padding: 16px;
-	border: 1px solid var(--glass-border);
+	border: 1px solid var(--input-border);
 	border-radius: 20px;
 	background: var(--glass-surface-strong);
 	backdrop-filter: blur(22px);
@@ -181,31 +182,54 @@ function handleThemeToggle(event) {
 
 .settings-actions button {
 	padding: 10px 14px;
-	border: 1px solid transparent;
+	border: 1px solid var(--theme-button-border);
 	border-radius: 16px;
-	background: var(--button-bg);
-	color: var(--button-text);
+	background:
+		linear-gradient(180deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0) 100%),
+		var(--theme-button-bg);
+	color: var(--text-soft);
 	font: inherit;
 	font-weight: 600;
 	cursor: pointer;
-	box-shadow: var(--button-shadow);
+	box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
 	transition:
 		transform 0.18s ease,
 		background 0.18s ease,
-		box-shadow 0.18s ease,
+		border-color 0.18s ease,
+		color 0.18s ease,
 		opacity 0.18s ease;
 }
 
 .settings-actions button:hover {
 	transform: translateY(-1px);
-	background: var(--button-hover);
-	box-shadow: var(--button-shadow-hover);
+	border-color: var(--theme-button-hover-border);
+	background:
+		linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0) 100%),
+		var(--theme-button-hover-bg);
+	color: var(--text-h);
 }
 
 .settings-actions button:disabled {
 	opacity: 0.7;
 	cursor: not-allowed;
 	transform: none;
+}
+
+.settings-actions .logout-button {
+	border-color: var(--danger-border);
+	background:
+		linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0) 100%),
+		var(--danger-bg);
+	color: var(--danger-text);
+	box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.settings-actions .logout-button:hover {
+	background:
+		linear-gradient(180deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0) 100%),
+		var(--danger-hover);
+	border-color: var(--danger-border-strong);
+	box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
 }
 
 .settings-label {
@@ -237,14 +261,33 @@ function handleThemeToggle(event) {
 }
 
 .color-picker {
-	width: 48px;
-	min-width: 48px;
-	height: 40px;
+	width: 46px;
+	min-width: 46px;
+	height: 46px;
 	padding: 0;
-	border: 0;
-	border-radius: 12px;
-	background: transparent;
+	border: 1px solid color-mix(in srgb, var(--color-primary) 22%, var(--glass-border-strong));
+	border-radius: 999px;
+	background: color-mix(in srgb, var(--color-primary) 10%, var(--glass-surface-strong));
 	cursor: pointer;
+	box-shadow:
+		inset 0 1px 0 rgba(255, 255, 255, 0.3),
+		0 0 0 4px color-mix(in srgb, var(--color-primary) 10%, transparent);
+	overflow: hidden;
+}
+
+.color-picker::-webkit-color-swatch-wrapper {
+	padding: 3px;
+	border-radius: 999px;
+}
+
+.color-picker::-webkit-color-swatch {
+	border: 0;
+	border-radius: 999px;
+}
+
+.color-picker::-moz-color-swatch {
+	border: 0;
+	border-radius: 999px;
 }
 
 .color-code-input {
