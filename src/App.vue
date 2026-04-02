@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue"
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue"
 import BottomTabs from "@/components/navigation/BottomTabs.vue"
 import AppSelect from "@/components/ui/AppSelect.vue"
 import ConfiguracoesView from "@/views/ConfiguracoesView.vue"
@@ -30,6 +30,12 @@ const isSubmitting = ref(false)
 const currentPage = ref("dashboard")
 const theme = ref("light")
 const themeColor = ref("#aa3bff")
+const walletSummarySentinelRef = ref(null)
+const walletSummaryShellRef = ref(null)
+const walletSummaryCardRef = ref(null)
+const isWalletSummaryCompact = ref(false)
+const walletSummaryCompactStart = ref(0)
+const walletSummaryReservedHeight = ref(0)
 
 const selectedYear = ref(new Date().getFullYear())
 const selectedMonth = ref(new Date().getMonth() + 1)
@@ -231,6 +237,7 @@ const totalWalletBalance = computed(() =>
 
 let stopAuthListener = null
 let unsubscribeThemePreference = null
+let walletSummaryResizeObserver = null
 
 const navigationTabs = [
 	{ value: "dashboard", label: "Home", icon: "home" },
@@ -242,6 +249,14 @@ const navigationTabs = [
 onMounted(() => {
 	applyTheme("light")
 	window.addEventListener("keydown", handleModalKeydown)
+	window.addEventListener("scroll", updateWalletSummaryCompact, { passive: true })
+	window.addEventListener("resize", handleWalletSummaryLayoutChange)
+	void nextTick().then(() => {
+		measureWalletSummaryCompactStart()
+		setupWalletSummaryResizeObserver()
+		syncWalletSummaryReservedHeight()
+		updateWalletSummaryCompact()
+	})
 
 	stopAuthListener = onUserChanged(currentUser => {
 		user.value = currentUser
@@ -281,6 +296,9 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
 	window.removeEventListener("keydown", handleModalKeydown)
+	window.removeEventListener("scroll", updateWalletSummaryCompact)
+	window.removeEventListener("resize", handleWalletSummaryLayoutChange)
+	teardownWalletSummaryResizeObserver()
 
 	if (unsubscribeThemePreference) {
 		unsubscribeThemePreference()
@@ -362,6 +380,94 @@ watch(entryType, nextType => {
 		entryCategoryId.value = getPreferredEntryCategoryId()
 	}
 })
+
+watch(currentPage, async () => {
+	await nextTick()
+	measureWalletSummaryCompactStart()
+	setupWalletSummaryResizeObserver()
+	syncWalletSummaryReservedHeight()
+	updateWalletSummaryCompact()
+})
+
+function teardownWalletSummaryResizeObserver() {
+	if (walletSummaryResizeObserver) {
+		walletSummaryResizeObserver.disconnect()
+		walletSummaryResizeObserver = null
+	}
+}
+
+function measureWalletSummaryCompactStart() {
+	if (currentPage.value !== "dashboard" || !walletSummarySentinelRef.value) {
+		walletSummaryCompactStart.value = 0
+		return
+	}
+
+	const bounds = walletSummarySentinelRef.value.getBoundingClientRect()
+	walletSummaryCompactStart.value = Math.max(0, Math.round(bounds.top + window.scrollY))
+}
+
+function syncWalletSummaryReservedHeight() {
+	if (currentPage.value !== "dashboard" || !walletSummaryCardRef.value) {
+		walletSummaryReservedHeight.value = 0
+		return
+	}
+
+	const nextHeight = Math.ceil(walletSummaryCardRef.value.offsetHeight || 0)
+	if (!nextHeight) return
+	walletSummaryReservedHeight.value = nextHeight
+}
+
+function setupWalletSummaryResizeObserver() {
+	teardownWalletSummaryResizeObserver()
+
+	if (currentPage.value !== "dashboard" || !walletSummaryCardRef.value) {
+		isWalletSummaryCompact.value = false
+		walletSummaryReservedHeight.value = 0
+		return
+	}
+
+	syncWalletSummaryReservedHeight()
+
+	if (typeof ResizeObserver !== "undefined") {
+		walletSummaryResizeObserver = new ResizeObserver(() => {
+			if (!isWalletSummaryCompact.value) {
+				walletSummaryReservedHeight.value = 0
+			}
+
+			syncWalletSummaryReservedHeight()
+		})
+
+		walletSummaryResizeObserver.observe(walletSummaryCardRef.value)
+	}
+}
+
+function updateWalletSummaryCompact() {
+	if (currentPage.value !== "dashboard") {
+		isWalletSummaryCompact.value = false
+		return
+	}
+
+	if (!walletSummaryCompactStart.value) {
+		measureWalletSummaryCompactStart()
+	}
+
+	const stickyTop = 16
+	const currentScroll = window.scrollY + stickyTop
+	isWalletSummaryCompact.value = currentScroll >= walletSummaryCompactStart.value
+}
+
+function handleWalletSummaryLayoutChange() {
+	void nextTick().then(() => {
+		if (!isWalletSummaryCompact.value) {
+			walletSummaryReservedHeight.value = 0
+		}
+
+		measureWalletSummaryCompactStart()
+		setupWalletSummaryResizeObserver()
+		syncWalletSummaryReservedHeight()
+		updateWalletSummaryCompact()
+	})
+}
 
 function closeAllModals() {
 	closeWalletModal()
@@ -1525,10 +1631,14 @@ async function toggleTransactionPaid(transaction) {
 				{{ appError }}
 			</div>
 
-			<ResumoView v-if="currentPage === 'dashboard'" :show-fab="true" @fab-click="handleFabClick">
-				<div class="wallet-summary-card">
+			<div v-if="currentPage === 'dashboard'" ref="walletSummarySentinelRef" class="wallet-summary-sentinel"
+				aria-hidden="true" />
+			<section v-if="currentPage === 'dashboard'" ref="walletSummaryShellRef" class="wallet-summary-section"
+				:style="walletSummaryReservedHeight ? { minHeight: `${walletSummaryReservedHeight}px` } : undefined">
+				<div ref="walletSummaryCardRef" class="wallet-summary-card"
+					:class="{ 'is-compact': isWalletSummaryCompact }">
 					<div class="wallet-summary-hero">
-						<span class="summary-eyebrow">Saldo total</span>
+						<span v-if="!isWalletSummaryCompact" class="summary-eyebrow">Saldo total</span>
 						<strong class="wallet-summary-total">{{ formatCurrency(totalWalletBalance) }}</strong>
 					</div>
 
@@ -1543,7 +1653,9 @@ async function toggleTransactionPaid(transaction) {
 						</div>
 					</div>
 				</div>
+			</section>
 
+			<ResumoView v-if="currentPage === 'dashboard'" :show-fab="true" @fab-click="handleFabClick">
 				<div class="transaction-sections">
 					<div v-for="group in groupedTransactions" :key="group.id" class="transaction-section">
 						<div class="section-header">
@@ -2059,7 +2171,22 @@ async function toggleTransactionPaid(transaction) {
 	text-align: center;
 }
 
+.wallet-summary-sentinel {
+	height: 1px;
+	margin-top: -1px;
+	pointer-events: none;
+}
+
+.wallet-summary-section {
+	position: relative;
+	position: sticky;
+	top: 16px;
+	z-index: 2;
+	align-self: start;
+}
+
 .wallet-summary-card {
+	align-self: start;
 	display: grid;
 	gap: 18px;
 	padding: 25px;
@@ -2067,10 +2194,32 @@ async function toggleTransactionPaid(transaction) {
 	border: 1px solid var(--glass-border-strong);
 	border-radius: 28px;
 	background:
+		radial-gradient(circle at top center, color-mix(in srgb, var(--color-primary) 14%, transparent) 0%, transparent 58%),
 		linear-gradient(180deg, var(--glass-highlight) 0%, transparent 100%),
 		var(--glass-surface-strong);
-	box-shadow: var(--shadow), inset 0 1px 0 rgba(255, 255, 255, 0.18);
+	box-shadow:
+		var(--shadow),
+		inset 0 1px 0 rgba(255, 255, 255, 0.18),
+		inset 0 0 0 1px color-mix(in srgb, var(--color-primary) 12%, transparent),
+		inset 0 18px 36px color-mix(in srgb, var(--color-primary) 10%, transparent);
 	backdrop-filter: blur(26px);
+	transition:
+		padding 0.2s ease,
+		gap 0.2s ease,
+		border-radius 0.2s ease,
+		box-shadow 0.2s ease,
+		background 0.2s ease;
+}
+
+.wallet-summary-card.is-compact {
+	gap: 12px;
+	padding: 16px 18px;
+	border-radius: 22px;
+	box-shadow:
+		var(--shadow),
+		inset 0 1px 0 rgba(255, 255, 255, 0.16),
+		inset 0 0 0 1px color-mix(in srgb, var(--color-primary) 14%, transparent),
+		inset 0 10px 22px color-mix(in srgb, var(--color-primary) 9%, transparent);
 }
 
 .wallet-summary-hero {
@@ -2080,7 +2229,13 @@ async function toggleTransactionPaid(transaction) {
 	text-align: center;
 	padding: 8px 0 12px;
 	width: 100%;
-	max-width: 992px;
+	max-width: none;
+	margin: 0 auto;
+}
+
+.wallet-summary-card.is-compact .wallet-summary-hero {
+	gap: 4px;
+	padding: 0;
 }
 
 .summary-eyebrow {
@@ -2098,24 +2253,34 @@ async function toggleTransactionPaid(transaction) {
 	color: var(--text-h);
 }
 
+.wallet-summary-card.is-compact .wallet-summary-total {
+	font-size: clamp(1.4rem, 3.2vw, 2.2rem);
+}
+
 .summary-subtitle {
 	font-size: 13px;
 	color: var(--text-soft);
 }
 
 .wallet-summary-list {
-	width: 100%;
-	max-width: 992px;
+	max-width: none;
 	margin: 0 auto;
+	box-sizing: border-box;
 }
 
 .wallet-summary-row {
 	display: grid;
 	grid-template-columns: 1fr auto;
+	width: 100%;
 	align-items: center;
 	padding: 9px 0 11px;
 	gap: 12px;
 	margin: 0 auto;
+	box-sizing: border-box;
+}
+
+.wallet-summary-card.is-compact .wallet-summary-row {
+	padding: 2px 0 3px;
 }
 
 .wallet-summary-row> :last-child {
@@ -2136,6 +2301,11 @@ async function toggleTransactionPaid(transaction) {
 	gap: 10px;
 	font-size: 0.94rem;
 	color: var(--text-soft);
+}
+
+.wallet-summary-card.is-compact .wallet-summary-meta {
+	gap: 8px;
+	font-size: 0.88rem;
 }
 
 .wallet-summary-dot {
@@ -2850,13 +3020,17 @@ button:disabled {
 
 /* DESKTOP */
 @media (min-width: 1024px) {
-	.wallet-summary-row {
-		width: 75%;
-		padding: 12px 0 13px;
+	.wallet-summary-hero,
+	.wallet-summary-list {
+		width: min(50%, 450px);
 	}
 
 	.wallet-summary-list {
-		width: 75%;
+		max-width: none;
+	}
+
+	.wallet-summary-row {
+		padding: 12px 0 13px;
 	}
 
 	.filter-card {

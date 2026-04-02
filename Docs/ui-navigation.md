@@ -28,6 +28,9 @@ Resumo-specific top controls:
 * month removal action must use a red `-` button on the same row
 * the first summary card below the filters must highlight the total balance of all wallets in large centered text
 * the same summary card must list each wallet below the total using smaller text
+* the wallet summary card may stay sticky while scrolling the dashboard list
+* the sticky wallet summary card may switch to a compact state after reaching the top offset
+* the compact summary must keep the same content width as the regular state and allow the next section to move up with it
 
 Mobile-first layout.
 

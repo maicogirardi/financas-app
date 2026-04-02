@@ -41,3 +41,4 @@ Current implementation status:
 - UI styling is centralized in theme tokens plus App-level form styles for modals and filters
 - dropdown UI now uses a shared `AppSelect.vue` component for consistent theming and mobile behavior
 - modal backdrops must stay above cards, sections, and dropdown menus via z-index layering
+- dashboard summary uses a dedicated sticky section outside `ResumoView`, with compact-on-scroll behavior handled in `App.vue`

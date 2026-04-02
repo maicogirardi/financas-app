@@ -25,6 +25,7 @@ Aplicativo de controle financeiro em Vue 3 + Vite com Firebase Authentication e 
 * campos obrigatórios em modais devem ter estado visual de erro
 * selects, inputs e listas devem compartilhar a mesma linguagem de borda temática
 * dropdowns usam um componente Vue customizado para garantir consistência entre temas
+* o card de resumo do dashboard pode ficar sticky e entrar em modo compacto ao encostar no topo
 
 ## Documentação
 
