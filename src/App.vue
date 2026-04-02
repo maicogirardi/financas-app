@@ -1,6 +1,7 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue"
 import BottomTabs from "@/components/navigation/BottomTabs.vue"
+import AppSelect from "@/components/ui/AppSelect.vue"
 import ConfiguracoesView from "@/views/ConfiguracoesView.vue"
 import ResumoView from "@/views/ResumoView.vue"
 import {
@@ -122,6 +123,50 @@ const availableMonths = computed(() => {
 
 	return monthOptions.filter(option => months.includes(option.value))
 })
+
+const yearFilterOptions = computed(() =>
+	availableYears.value.map(year => ({
+		value: year,
+		label: String(year)
+	}))
+)
+
+const entryTypeOptions = computed(() => {
+	const options = [
+		{ value: "expense", label: "Despesa" },
+		{ value: "income", label: "Entrada" },
+		{ value: "transfer", label: "Transferência" }
+	]
+
+	if (editingTransactionId.value) {
+		options.push({ value: "adjustment", label: "Ajuste" })
+	}
+
+	return options
+})
+
+const entryCategoryOptions = computed(() =>
+	categoryStore.entryCategories.map(category => ({
+		value: category.id,
+		label: category.name
+	}))
+)
+
+const incomeCategoryOptions = computed(() => [
+	{ value: getIncomeEntryCategoryId(), label: "Entradas" }
+])
+
+const walletOptions = computed(() =>
+	walletStore.wallets.map(wallet => ({
+		value: wallet.id,
+		label: wallet.name
+	}))
+)
+
+const adjustmentDirectionOptions = [
+	{ value: "increase", label: "Aumenta saldo" },
+	{ value: "decrease", label: "Diminui saldo" }
+]
 
 const selectedPeriodId = computed(() => buildPeriodId(selectedYear.value, selectedMonth.value))
 const selectedPeriod = computed(() => periodStore.getPeriodById(selectedPeriodId.value))
@@ -742,10 +787,6 @@ function isEntryDateMissing() {
 	return !entryDate.value
 }
 
-function isEntryAmountMissing() {
-	return entryAmount.value <= 0
-}
-
 function isEntryDescriptionMissing() {
 	return !hasText(entryDescription.value)
 }
@@ -1308,7 +1349,7 @@ async function saveEntry() {
 	entryFormError.value = ""
 
 	if (isEntryDescriptionMissing()) return
-	if (!entryWalletId.value || entryAmount.value <= 0) return
+	if (!entryWalletId.value) return
 	if (!normalizedDate) {
 		entryFormError.value = "Selecione uma data valida."
 		return
@@ -1444,17 +1485,9 @@ async function toggleTransactionPaid(transaction) {
 			<section v-if="currentPage === 'dashboard'" class="filter-card">
 				<div class="filter-row">
 					<div class="filter-selects">
-						<select v-model.number="selectedYear" class="year-filter">
-							<option v-for="year in availableYears" :key="year" :value="year">
-								{{ year }}
-							</option>
-						</select>
+						<AppSelect v-model="selectedYear" :options="yearFilterOptions" class="year-filter" />
 
-						<select v-model.number="selectedMonth">
-							<option v-for="month in availableMonths" :key="month.value" :value="month.value">
-								{{ month.label }}
-							</option>
-						</select>
+						<AppSelect v-model="selectedMonth" :options="availableMonths" class="month-filter" />
 					</div>
 
 					<div class="filter-spacer" />
@@ -1786,11 +1819,12 @@ async function toggleTransactionPaid(transaction) {
 
 				<div class="field-group">
 					<label class="field-label">Mês</label>
-					<select v-model.number="periodModalMonth" :class="{ 'required-empty': !periodModalMonth }">
-						<option v-for="month in monthOptions" :key="month.value" :value="month.value">
-							{{ month.label }}
-						</option>
-					</select>
+					<AppSelect
+						v-model="periodModalMonth"
+						:options="monthOptions"
+						:invalid="!periodModalMonth"
+						placeholder="Selecione o mês"
+					/>
 				</div>
 
 				<div class="toolbar">
@@ -1817,57 +1851,49 @@ async function toggleTransactionPaid(transaction) {
 
 				<div class="field-group">
 					<label class="field-label">Tipo de entrada</label>
-					<select v-model="entryType">
-						<option value="expense">Despesa</option>
-						<option value="income">Entrada</option>
-						<option value="transfer">Transferência</option>
-						<option v-if="editingTransactionId" value="adjustment">Ajuste</option>
-					</select>
+					<AppSelect v-model="entryType" :options="entryTypeOptions" />
 				</div>
 
 				<div v-if="entryType !== 'adjustment' && entryType !== 'transfer'" class="field-group">
 					<label class="field-label">Categoria</label>
-					<select v-if="entryType === 'expense'" v-model="entryCategoryId"
-						:class="{ 'required-empty': isEntryCategoryMissing() }">
-						<option disabled value="">Selecione a categoria</option>
-						<option v-for="category in categoryStore.entryCategories" :key="category.id"
-							:value="category.id">
-							{{ category.name }}
-						</option>
-					</select>
-					<select v-else-if="entryType === 'income'" v-model="entryCategoryId" disabled>
-						<option :value="getIncomeEntryCategoryId()">
-							Entradas
-						</option>
-					</select>
+					<AppSelect
+						v-if="entryType === 'expense'"
+						v-model="entryCategoryId"
+						:options="entryCategoryOptions"
+						:invalid="isEntryCategoryMissing()"
+						placeholder="Selecione a categoria"
+					/>
+					<AppSelect
+						v-else-if="entryType === 'income'"
+						v-model="entryCategoryId"
+						:options="incomeCategoryOptions"
+						disabled
+					/>
 				</div>
 
 				<div class="field-group">
 					<label class="field-label">Carteira</label>
-					<select v-model="entryWalletId" :class="{ 'required-empty': isEntryWalletMissing() }">
-						<option disabled value="">Selecione a carteira</option>
-						<option v-for="wallet in walletStore.wallets" :key="wallet.id" :value="wallet.id">
-							{{ wallet.name }}
-						</option>
-					</select>
+					<AppSelect
+						v-model="entryWalletId"
+						:options="walletOptions"
+						:invalid="isEntryWalletMissing()"
+						placeholder="Selecione a carteira"
+					/>
 				</div>
 
 				<div v-if="entryType === 'transfer'" class="field-group">
 					<label class="field-label">Carteira de destino</label>
-					<select v-model="entryTargetWalletId" :class="{ 'required-empty': isEntryTargetWalletMissing() }">
-						<option disabled value="">Selecione a carteira de destino</option>
-						<option v-for="wallet in walletStore.wallets" :key="wallet.id" :value="wallet.id">
-							{{ wallet.name }}
-						</option>
-					</select>
+					<AppSelect
+						v-model="entryTargetWalletId"
+						:options="walletOptions"
+						:invalid="isEntryTargetWalletMissing()"
+						placeholder="Selecione a carteira de destino"
+					/>
 				</div>
 
 				<div v-if="entryType === 'adjustment'" class="field-group">
 					<label class="field-label">Direção do ajuste</label>
-					<select v-model="entryAdjustmentDirection">
-						<option value="increase">Aumenta saldo</option>
-						<option value="decrease">Diminui saldo</option>
-					</select>
+					<AppSelect v-model="entryAdjustmentDirection" :options="adjustmentDirectionOptions" />
 				</div>
 
 				<div class="field-group">
@@ -1877,8 +1903,8 @@ async function toggleTransactionPaid(transaction) {
 				</div>
 				<div class="field-group">
 					<label class="field-label">Valor</label>
-					<input :class="{ 'required-empty': isEntryAmountMissing() }" :value="entryAmountInput" type="text"
-						inputmode="decimal" placeholder="R$ 0,00" @keydown="handleCurrencyKeydown($event)"
+					<input :value="entryAmountInput" type="text" inputmode="decimal" placeholder="R$ 0,00"
+						@keydown="handleCurrencyKeydown($event)"
 						@focus="handleCurrencyFieldFocus('entry', $event)"
 						@input="syncCurrencyFieldInput('entry', $event)" @blur="handleCurrencyFieldBlur('entry')" />
 				</div>
@@ -1998,6 +2024,8 @@ async function toggleTransactionPaid(transaction) {
 .transaction-section,
 .simple-list,
 .error-box {
+	position: relative;
+	z-index: 1;
 	display: grid;
 	gap: 12px;
 	padding: 18px;
@@ -2230,7 +2258,9 @@ async function toggleTransactionPaid(transaction) {
 .field-label {
 	font-size: 12px;
 	line-height: 1.2;
-	color: var(--text-muted, #9ca3af);
+	color: var(--text-soft);
+	font-weight: 600;
+	letter-spacing: 0.02em;
 }
 
 .field-note {
@@ -2244,10 +2274,14 @@ async function toggleTransactionPaid(transaction) {
 	align-items: center;
 	gap: 12px;
 	padding: 10px 12px;
-	border: 1px solid var(--glass-border);
+	border: 1px solid var(--input-border);
 	border-radius: 16px;
 	background: var(--input-surface);
 	box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+	transition:
+		border-color 0.18s ease,
+		box-shadow 0.18s ease,
+		background-color 0.18s ease;
 }
 
 .color-picker {
@@ -2277,6 +2311,9 @@ async function toggleTransactionPaid(transaction) {
 }
 
 .filter-card {
+	position: relative;
+	z-index: 12;
+	overflow: visible;
 	display: grid;
 	padding: 16px;
 	border: 1px solid var(--glass-border);
@@ -2287,6 +2324,8 @@ async function toggleTransactionPaid(transaction) {
 }
 
 .filter-row {
+	position: relative;
+	z-index: 2;
 	display: flex;
 	gap: 12px;
 	align-items: center;
@@ -2295,6 +2334,8 @@ async function toggleTransactionPaid(transaction) {
 }
 
 .filter-selects {
+	position: relative;
+	z-index: 3;
 	display: flex;
 	gap: 12px;
 	align-items: center;
@@ -2335,7 +2376,7 @@ async function toggleTransactionPaid(transaction) {
 	height: 36px;
 }
 
-.filter-selects select:not(.year-filter) {
+.month-filter {
 	flex: 1;
 	min-width: 0;
 	height: 36px;
@@ -2382,27 +2423,76 @@ async function toggleTransactionPaid(transaction) {
 
 textarea,
 button,
-select,
 input {
 	font: inherit;
 }
 
 textarea,
-select,
 input:not([type="checkbox"]):not([type="color"]) {
 	width: 100%;
 	padding: 10px 12px;
-	border: 1px solid var(--glass-border);
+	border: 1px solid var(--input-border);
 	border-radius: 12px;
 	box-sizing: border-box;
 	background: var(--input-surface);
-	color: var(--text);
+	color: var(--input-text);
 	box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+	transition:
+		border-color 0.18s ease,
+		box-shadow 0.18s ease,
+		background-color 0.18s ease,
+		color 0.18s ease;
+}
+
+textarea::placeholder,
+input::placeholder {
+	color: var(--input-placeholder);
+}
+
+textarea:focus-visible,
+input:not([type="checkbox"]):not([type="color"]):focus-visible,
+.color-field:focus-within {
+	outline: none;
+	border-color: var(--input-focus-border);
+	box-shadow:
+		0 0 0 3px var(--input-focus-ring),
+		inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+input:disabled,
+textarea:disabled {
+	cursor: not-allowed;
+	background: var(--input-disabled-bg);
+	color: var(--text-soft);
+	opacity: 0.88;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+	cursor: pointer;
+	filter: opacity(0.72);
 }
 
 .required-empty {
-	background: rgba(220, 38, 38, 0.12);
-	border-color: rgba(220, 38, 38, 0.8);
+	background: var(--validation-error-bg);
+	border: 1px solid var(--validation-error-border) !important;
+	box-shadow: 0 0 0 2px var(--validation-error-ring);
+}
+
+.required-empty::placeholder {
+	color: var(--validation-error-text);
+	font-style: italic;
+}
+
+.field-group:has(.required-empty, .app-select.is-invalid) .field-label {
+	color: var(--validation-error-text);
+}
+
+.required-empty:focus-visible,
+.color-field.required-empty:focus-within {
+	border-color: var(--validation-error-border);
+	box-shadow:
+		0 0 0 3px var(--validation-error-ring),
+		inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
 button {
@@ -2472,6 +2562,7 @@ button:disabled {
 .modal-backdrop {
 	position: fixed;
 	inset: 0;
+	z-index: 120;
 	background: rgba(0, 0, 0, 0.4);
 	display: grid;
 	place-items: center;
@@ -2479,6 +2570,8 @@ button:disabled {
 }
 
 .modal {
+	position: relative;
+	z-index: 121;
 	width: min(100%, 520px);
 	max-width: 520px;
 	display: grid;
@@ -2489,6 +2582,11 @@ button:disabled {
 	background: var(--glass-surface-strong);
 	box-shadow: var(--shadow);
 	backdrop-filter: blur(26px);
+}
+
+.modal textarea {
+	resize: vertical;
+	min-height: 96px;
 }
 
 .button-icon-delete {
@@ -2599,22 +2697,34 @@ button:disabled {
 	}
 
 	/* ANO menor */
-	.filter-selects select.year-filter {
+	.filter-selects > .year-filter {
 		flex: 0 0 72px;
 		width: 72px;
 		min-width: 72px;
 		height: 32px;
 		font-size: 12px;
-		padding: 4px 6px;
+		--app-select-min-height: 32px;
 	}
 
 	/* MÊS ocupa tudo */
-	.filter-selects select:not(.year-filter) {
+	.filter-selects > .month-filter {
 		flex: 1;
 		min-width: 0;
 		height: 32px;
 		font-size: 12px;
-		padding: 4px 6px;
+		--app-select-min-height: 32px;
+	}
+
+	.filter-selects :deep(.app-select__trigger) {
+		height: 100%;
+		min-height: var(--app-select-min-height, 32px);
+		padding: 4px 32px 4px 8px;
+		font-size: inherit;
+	}
+
+	.filter-selects :deep(.app-select__chevron) {
+		width: 14px;
+		height: 14px;
 	}
 
 	/* BOTÕES redondos */
@@ -2689,18 +2799,25 @@ button:disabled {
 		gap: 8px;
 	}
 
-	.filter-selects select.year-filter {
+	.filter-selects > .year-filter {
 		width: 280px !important;
 		flex: 0 0 280px !important;
 		min-width: 280px !important;
 		height: 48px;
+		--app-select-min-height: 48px;
 	}
 
 	/* MÊS */
-	.filter-selects select:not(.year-filter) {
+	.filter-selects > .month-filter {
 		flex: 1;
 		min-width: 320px;
 		height: 48px;
+		--app-select-min-height: 48px;
+	}
+
+	.filter-selects :deep(.app-select__trigger) {
+		height: 100%;
+		min-height: var(--app-select-min-height, 48px);
 	}
 
 	/* BOTÕES */

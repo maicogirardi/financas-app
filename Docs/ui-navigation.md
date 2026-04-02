@@ -36,6 +36,11 @@ Visual direction:
 * cards should follow a frosted glass / glassmorphism style
 * action buttons should use the same premium gradient style across the app
 * the active bottom tab should have the strongest visual emphasis
+* form dropdowns should inherit the active light/dark theme instead of browser default colors
+* shared dropdown behavior should come from the reusable Vue select component
+* dropdown selected state must use the current theme color chosen by the user
+* required fields inside modals should show a strong red validation state again
+* layout changes should continue mobile first, with desktop refinements handled separately
 
 ## Floating Action Button (FAB)
 
