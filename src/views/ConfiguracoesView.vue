@@ -140,6 +140,7 @@ function handleThemeToggle(event) {
 <style scoped>
 .settings-view {
 	display: grid;
+	width: 100%;
 	gap: 16px;
 	padding: 16px;
 	border: 1px solid var(--glass-border);
@@ -147,6 +148,7 @@ function handleThemeToggle(event) {
 	background: var(--glass-surface);
 	box-shadow: var(--shadow);
 	backdrop-filter: blur(22px);
+	box-sizing: border-box;
 }
 
 .settings-header h2 {

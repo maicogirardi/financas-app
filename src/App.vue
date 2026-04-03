@@ -750,12 +750,41 @@ function getActiveModalActions() {
 	return null
 }
 
+function isKeyboardShortcutTargetBlocked() {
+	const activeElement = document.activeElement
+
+	if (!(activeElement instanceof HTMLElement)) return false
+
+	const tagName = activeElement.tagName
+
+	return (
+		activeElement.isContentEditable ||
+		tagName === "INPUT" ||
+		tagName === "TEXTAREA" ||
+		tagName === "SELECT" ||
+		tagName === "BUTTON" ||
+		tagName === "A"
+	)
+}
+
 function handleModalKeydown(event) {
 	if (isSubmitting.value) return
 
 	const modalActions = getActiveModalActions()
 
-	if (!modalActions) return
+	if (!modalActions) {
+		if (
+			event.key === "Enter" &&
+			!event.shiftKey &&
+			currentPage.value === "dashboard" &&
+			selectedPeriod.value &&
+			!isKeyboardShortcutTargetBlocked()
+		) {
+			event.preventDefault()
+			handleFabClick()
+		}
+		return
+	}
 
 	if (event.key === "Escape") {
 		event.preventDefault()
@@ -1927,7 +1956,7 @@ async function toggleTransactionPaid(transaction) {
 				</div>
 			</ResumoView>
 
-			<section v-if="currentPage === 'wallets'" class="page-section">
+			<section v-if="currentPage === 'wallets'" class="page-section management-page-section">
 				<div class="toolbar">
 					<button :disabled="isSubmitting" @click="openWalletModal">
 						<span class="button-icon button-icon-plus" aria-hidden="true" />
@@ -1973,7 +2002,7 @@ async function toggleTransactionPaid(transaction) {
 				</div>
 			</section>
 
-			<section v-if="currentPage === 'categories'" class="page-section">
+			<section v-if="currentPage === 'categories'" class="page-section management-page-section">
 				<div class="toolbar">
 					<button :disabled="isSubmitting" @click="openCategoryModal()">
 						<span class="button-icon button-icon-plus" aria-hidden="true" />
@@ -2023,7 +2052,7 @@ async function toggleTransactionPaid(transaction) {
 				</div>
 			</section>
 
-			<ConfiguracoesView v-if="currentPage === 'settings'" :theme="theme" :theme-color="themeColor"
+			<ConfiguracoesView v-if="currentPage === 'settings'" class="management-page-section" :theme="theme" :theme-color="themeColor"
 				:user-email="user?.email || ''" :is-authenticated="Boolean(user)" :is-submitting="isSubmitting"
 				@update-theme="updateTheme" @update-theme-color="updateThemeColor" @login="handleLogin"
 				@logout="handleLogout" />
@@ -2303,6 +2332,8 @@ async function toggleTransactionPaid(transaction) {
 <style scoped>
 .app-page {
 	display: grid;
+	grid-template-columns: minmax(0, 1fr);
+	justify-items: stretch;
 	gap: 16px;
 	padding: 24px 24px 120px;
 	max-width: 1180px;
@@ -2332,6 +2363,7 @@ async function toggleTransactionPaid(transaction) {
 	position: relative;
 	z-index: 1;
 	display: grid;
+	width: 100%;
 	gap: 12px;
 	padding: 18px;
 	border: 1px solid var(--glass-border);
@@ -2339,6 +2371,41 @@ async function toggleTransactionPaid(transaction) {
 	background: var(--glass-surface);
 	box-shadow: var(--shadow);
 	backdrop-filter: blur(22px);
+	box-sizing: border-box;
+}
+
+.management-page-section {
+	width: min(50vw, 560px);
+	max-width: 100%;
+	justify-self: center;
+}
+
+.management-page-section .simple-list {
+	width: 100%;
+	min-width: 0;
+	box-sizing: border-box;
+	overflow: hidden;
+}
+
+.management-page-section .simple-list-row {
+	width: 100%;
+	min-width: 0;
+	grid-template-columns: minmax(0, 1fr) auto auto;
+	box-sizing: border-box;
+}
+
+.management-page-section .category-row {
+	grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.management-page-section .simple-list-row > :first-child {
+	min-width: 0;
+	text-align: left;
+}
+
+.management-page-section .simple-list-row > :nth-child(2) {
+	justify-self: end;
+	text-align: right;
 }
 
 .equal-section {

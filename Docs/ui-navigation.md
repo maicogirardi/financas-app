@@ -32,6 +32,12 @@ Resumo-specific top controls:
 * the sticky wallet summary card may switch to a compact state after reaching the top offset
 * the compact summary must keep the same content width as the regular state and allow the next section to move up with it
 
+Desktop width behavior:
+
+* Resumo should keep the broader desktop layout used by the dashboard
+* Carteiras, Categorias, and Configuracoes should stay centered and use a narrower management column
+* management pages should avoid list overflow inside the section card, even with action buttons
+
 Mobile-first layout.
 
 Visual direction:
