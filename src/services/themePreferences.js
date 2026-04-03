@@ -26,6 +26,16 @@ function normalizeColor(value) {
 	return /^#[0-9A-Fa-f]{6}$/.test(normalized) ? normalized : DEFAULT_THEME_COLOR
 }
 
+function normalizeStoredYear(value) {
+	const normalized = Number(value)
+	return Number.isInteger(normalized) && normalized >= 2000 ? normalized : null
+}
+
+function normalizeStoredMonth(value) {
+	const normalized = Number(value)
+	return Number.isInteger(normalized) && normalized >= 1 && normalized <= 12 ? normalized : null
+}
+
 export function subscribeThemePreference(callback, onError) {
 	const themeDocRef = getThemeDocRef()
 
@@ -35,7 +45,9 @@ export function subscribeThemePreference(callback, onError) {
 			const data = snapshot.data() || {}
 			const theme = data.theme === "dark" ? "dark" : DEFAULT_THEME
 			const primaryColor = normalizeColor(data.primaryColor)
-			callback({ theme, primaryColor })
+			const selectedYear = normalizeStoredYear(data.selectedYear)
+			const selectedMonth = normalizeStoredMonth(data.selectedMonth)
+			callback({ theme, primaryColor, selectedYear, selectedMonth })
 		},
 		onError
 	)
@@ -51,6 +63,12 @@ export async function saveThemePreference(preferences) {
 		payload.theme = preferences.theme === "dark" ? "dark" : DEFAULT_THEME
 		if (preferences.primaryColor) {
 			payload.primaryColor = normalizeColor(preferences.primaryColor)
+		}
+		if (preferences.selectedYear !== undefined) {
+			payload.selectedYear = normalizeStoredYear(preferences.selectedYear)
+		}
+		if (preferences.selectedMonth !== undefined) {
+			payload.selectedMonth = normalizeStoredMonth(preferences.selectedMonth)
 		}
 	}
 

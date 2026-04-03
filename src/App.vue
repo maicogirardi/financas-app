@@ -36,9 +36,12 @@ const walletSummaryCardRef = ref(null)
 const isWalletSummaryCompact = ref(false)
 const walletSummaryCompactStart = ref(0)
 const walletSummaryReservedHeight = ref(0)
+const hasLoadedUiPreferences = ref(false)
+const hasAppliedStoredPeriodPreference = ref(false)
 
 const selectedYear = ref(new Date().getFullYear())
 const selectedMonth = ref(new Date().getMonth() + 1)
+const transactionSortState = ref({})
 
 const walletName = ref("")
 const walletColor = ref("#aa3bff")
@@ -210,7 +213,7 @@ const groupedTransactions = computed(() => {
 				transaction.categoryId
 					? transaction.categoryId === category.id
 					: transaction.category === category.name
-			)
+			).sort((left, right) => compareTransactionsForSummary(left, right, category.id))
 
 			return {
 				id: category.id,
@@ -269,13 +272,20 @@ onMounted(() => {
 
 		if (currentUser) {
 			unsubscribeThemePreference = subscribeThemePreference(
-				({ theme: nextTheme, primaryColor }) => {
+				({ theme: nextTheme, primaryColor, selectedYear: storedYear, selectedMonth: storedMonth }) => {
 					applyTheme(nextTheme)
 					applyThemeColor(primaryColor)
+					if (!hasAppliedStoredPeriodPreference.value && storedYear && storedMonth) {
+						selectedYear.value = storedYear
+						selectedMonth.value = storedMonth
+						hasAppliedStoredPeriodPreference.value = true
+					}
+					hasLoadedUiPreferences.value = true
 				},
 				() => {
 					applyTheme("light")
 					applyThemeColor(themeColor.value)
+					hasLoadedUiPreferences.value = true
 				}
 			)
 			walletStore.startWalletsSync()
@@ -286,6 +296,8 @@ onMounted(() => {
 		}
 
 		applyTheme("light")
+		hasLoadedUiPreferences.value = false
+		hasAppliedStoredPeriodPreference.value = false
 		walletStore.clearWallets()
 		transactionStore.clearTransactions()
 		categoryStore.clearCategories()
@@ -366,6 +378,24 @@ watch(selectedYear, year => {
 		selectedMonth.value = firstMonth.value
 	}
 })
+
+watch(
+	() => [selectedYear.value, selectedMonth.value, Boolean(user.value), hasLoadedUiPreferences.value],
+	async ([year, month, hasUser, preferencesLoaded]) => {
+		if (!hasUser || !preferencesLoaded) return
+
+		try {
+			await saveThemePreference({
+				theme: theme.value,
+				primaryColor: themeColor.value,
+				selectedYear: year,
+				selectedMonth: month
+			})
+		} catch (error) {
+			console.error("Failed to save selected period preference", error)
+		}
+	}
+)
 
 watch(entryType, nextType => {
 	if (nextType === "income") {
@@ -1070,6 +1100,110 @@ function getTransactionWallets(transaction) {
 	return [{ id: fallbackWalletId, name: getWalletName(fallbackWalletId), color: getWalletColor(fallbackWalletId) }]
 }
 
+function getDefaultTransactionSort(sortKey = "description") {
+	return {
+		key: sortKey,
+		direction: "asc"
+	}
+}
+
+function getTransactionSortState(categoryId) {
+	const currentState = transactionSortState.value[categoryId]
+
+	if (currentState) {
+		return currentState
+	}
+
+	return getDefaultTransactionSort()
+}
+
+function toggleTransactionSort(categoryId, sortKey) {
+	const currentState = getTransactionSortState(categoryId)
+
+	transactionSortState.value = {
+		...transactionSortState.value,
+		[categoryId]: currentState.key === sortKey
+			? {
+				key: sortKey,
+				direction: currentState.direction === "asc" ? "desc" : "asc"
+			}
+			: getDefaultTransactionSort(sortKey)
+	}
+}
+
+function isTransactionSortActive(categoryId, sortKey) {
+	return getTransactionSortState(categoryId).key === sortKey
+}
+
+function getTransactionSortDirection(categoryId, sortKey) {
+	return isTransactionSortActive(categoryId, sortKey)
+		? getTransactionSortState(categoryId).direction
+		: "asc"
+}
+
+function getTransactionSortMultiplier(categoryId) {
+	return getTransactionSortState(categoryId).direction === "asc" ? 1 : -1
+}
+
+function compareTransactionsForSummary(left, right, categoryId) {
+	const multiplier = getTransactionSortMultiplier(categoryId)
+	const activeSort = getTransactionSortState(categoryId).key
+
+	if (activeSort === "wallet") {
+		const comparison = getPrimaryWalletLabel(left).localeCompare(getPrimaryWalletLabel(right), "pt-BR", {
+			sensitivity: "base"
+		})
+		return finalizeTransactionComparison(comparison, left, right, multiplier)
+	}
+
+	if (activeSort === "date") {
+		const comparison = getComparableTime(left.date) - getComparableTime(right.date)
+		return finalizeTransactionComparison(comparison, left, right, multiplier)
+	}
+
+	if (activeSort === "amount") {
+		const comparison = Number(left.amount || 0) - Number(right.amount || 0)
+		return finalizeTransactionComparison(comparison, left, right, multiplier)
+	}
+
+	if (activeSort === "paid") {
+		const comparison = Number(Boolean(left.paid)) - Number(Boolean(right.paid))
+		return finalizeTransactionComparison(comparison, left, right, multiplier)
+	}
+
+	const comparison = getComparableTime(left.createdAt) - getComparableTime(right.createdAt)
+	return finalizeTransactionComparison(comparison, left, right, multiplier)
+}
+
+function finalizeTransactionComparison(comparison, left, right, multiplier) {
+	if (comparison !== 0) {
+		return comparison * multiplier
+	}
+
+	const fallbackByCreatedAt = getComparableTime(left.createdAt) - getComparableTime(right.createdAt)
+
+	if (fallbackByCreatedAt !== 0) {
+		return fallbackByCreatedAt * multiplier
+	}
+
+	return String(left.id || "").localeCompare(String(right.id || ""), "pt-BR", { sensitivity: "base" }) * multiplier
+}
+
+function getPrimaryWalletLabel(transaction) {
+	return getTransactionWallets(transaction)
+		.map(wallet => wallet.name || "")
+		.join(" ")
+}
+
+function getComparableTime(value) {
+	if (value instanceof Date) {
+		return value.getTime()
+	}
+
+	const parsedValue = new Date(value)
+	return Number.isNaN(parsedValue.getTime()) ? 0 : parsedValue.getTime()
+}
+
 function handleCategoryDragStart(categoryId, event) {
 	draggedCategoryId.value = categoryId
 
@@ -1675,6 +1809,64 @@ async function toggleTransactionPaid(transaction) {
 
 						<div class="entry-list">
 							<div class="entry-list-head">
+								<span
+									class="entry-sort-button entry-sort-button-start"
+									@click="toggleTransactionSort(group.id, 'description')">
+									<span>Descrição</span>
+									<span class="sort-icon" :class="[getTransactionSortDirection(group.id, 'description'), { active: isTransactionSortActive(group.id, 'description') }]">
+										<svg viewBox="0 0 16 16" aria-hidden="true">
+											<path d="M8 3 12 7H4z" />
+											<path d="M8 13 4 9h8z" />
+										</svg>
+									</span>
+								</span>
+								<span
+									class="entry-sort-button centerTittle"
+									@click="toggleTransactionSort(group.id, 'wallet')">
+									<span>Carteira</span>
+									<span class="sort-icon" :class="[getTransactionSortDirection(group.id, 'wallet'), { active: isTransactionSortActive(group.id, 'wallet') }]">
+										<svg viewBox="0 0 16 16" aria-hidden="true">
+											<path d="M8 3 12 7H4z" />
+											<path d="M8 13 4 9h8z" />
+										</svg>
+									</span>
+								</span>
+								<span
+									class="entry-sort-button centerTittle"
+									@click="toggleTransactionSort(group.id, 'date')">
+									<span>Data</span>
+									<span class="sort-icon" :class="[getTransactionSortDirection(group.id, 'date'), { active: isTransactionSortActive(group.id, 'date') }]">
+										<svg viewBox="0 0 16 16" aria-hidden="true">
+											<path d="M8 3 12 7H4z" />
+											<path d="M8 13 4 9h8z" />
+										</svg>
+									</span>
+								</span>
+								<span
+									class="entry-sort-button centerTittle"
+									@click="toggleTransactionSort(group.id, 'amount')">
+									<span>Valor</span>
+									<span class="sort-icon" :class="[getTransactionSortDirection(group.id, 'amount'), { active: isTransactionSortActive(group.id, 'amount') }]">
+										<svg viewBox="0 0 16 16" aria-hidden="true">
+											<path d="M8 3 12 7H4z" />
+											<path d="M8 13 4 9h8z" />
+										</svg>
+									</span>
+								</span>
+								<span
+									class="entry-sort-button centerTittle"
+									@click="toggleTransactionSort(group.id, 'paid')">
+									<span>Pago</span>
+									<span class="sort-icon" :class="[getTransactionSortDirection(group.id, 'paid'), { active: isTransactionSortActive(group.id, 'paid') }]">
+										<svg viewBox="0 0 16 16" aria-hidden="true">
+											<path d="M8 3 12 7H4z" />
+											<path d="M8 13 4 9h8z" />
+										</svg>
+									</span>
+								</span>
+								<span class="centerTittle">Ações</span>
+							</div>
+							<div v-if="false" class="entry-list-head">
 								<span>Descrição</span>
 								<span class="centerTittle">Carteira</span>
 								<span class="centerTittle">Data</span>
@@ -2343,6 +2535,59 @@ async function toggleTransactionPaid(transaction) {
 	padding-left: 12px;
 	padding-right: 12px;
 	border-bottom: 1px solid var(--glass-divider);
+}
+
+.entry-sort-button {
+	display: inline-flex;
+	align-items: flex-end;
+	justify-content: center;
+	gap: px;
+	width: fit-content;
+	padding: 0;
+	background: transparent;
+	color: inherit;
+	font: inherit;
+	font-weight: inherit;
+	cursor: pointer;
+	user-select: none;
+}
+
+.entry-sort-button-start {
+	justify-self: start;
+	align-items: flex-end;
+}
+
+.entry-sort-button:hover {
+	color: inherit;
+}
+
+.sort-icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 24px;
+	height: 24px;
+	align-self: flex-end;
+	color: #ffffff;
+	transition: transform 0.18s ease;
+}
+
+.sort-icon svg {
+	width: 18px;
+	height: 18px;
+	fill: currentColor;
+}
+
+.sort-icon.active {
+	color: var(--color-primary);
+}
+
+.sort-icon.asc {
+	transform: rotate(0deg);
+}
+
+.sort-icon.desc {
+	transform: rotate(180deg);
 }
 
 .entry-row,
