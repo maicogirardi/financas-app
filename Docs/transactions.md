@@ -28,8 +28,15 @@ Transaction list rules:
 - transaction list must be grouped by category sections
 - each category creates a visible section title
 - adjustment transactions must be saved in "Ajuste de Saldo" section
-- transfer transactions must appear in "Transferências" section
-- transaction rows must stay ordered by creation order, with older entries first and newer entries appended below
+- transfer transactions must appear in "Transferencias" section
+- transaction rows must support per-category sorting without affecting other category sections
+- the default sort for "Descricao" must follow creation order
+- "Descricao" sorting is not alphabetical; it uses creation order and toggles direction on click
+- "Carteira" sorting must be alphabetical
+- "Data" sorting must use the transaction date
+- "Valor" sorting must compare numeric value
+- "Pago" sorting must compare paid and unpaid states
+- sort icons must stay visually subtle and only the active svg should adopt the current theme color
 - each transaction row must support edit and delete actions
 - transaction list must support year and month filtering
 - each transaction row must include paid checkbox
@@ -37,7 +44,7 @@ Transaction list rules:
 - only paid transactions must affect balances and totals
 - wallet balance adjustments must use hidden category "Ajuste de Saldo"
 - each transaction must belong to a monthly period
-- "Transferências" and "Ajuste de Saldo" sections should only be rendered when there is at least one transaction in the selected period
+- "Transferencias" and "Ajuste de Saldo" sections should only be rendered when there is at least one transaction in the selected period
 - dates in transaction rows must display as DD/MM/AAAA
 - values in transaction rows must display as Brazilian Real with 2 decimal places
 
