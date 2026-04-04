@@ -3451,12 +3451,16 @@ button:disabled {
 		padding-inline: 24px;
 	}
 
+	.wallet-summary-card.is-compact .wallet-summary-row {
+		padding-inline: 24px;
+	}
+
 	.simple-list-row,
 	.entry-list-head,
 	.entry-row {
 		grid-template-columns: minmax(0, 1fr);
 		padding: 12px;
-		gap: 10px;
+		gap: 5px;
 		min-height: auto;
 	}
 
@@ -3471,6 +3475,14 @@ button:disabled {
 		gap: 10px;
 		align-items: center;
 		width: 100%;
+		max-width: 100%;
+		box-sizing: border-box;
+	}
+
+	.entry-row > * {
+		padding: 6px 8px;
+		border-radius: 12px;
+		background: rgba(255, 255, 255, 0.04);
 	}
 
 	.simple-list-row > *::before,
@@ -3486,15 +3498,29 @@ button:disabled {
 	.entry-wallets {
 		display: grid;
 		gap: 6px;
-		justify-items: start;
+		justify-items: end;
+	}
+
+	.entry-row > .entry-wallets::before {
+		justify-self: start;
+		text-align: left;
 	}
 
 	.entry-wallet-meta {
 		width: fit-content;
+		justify-self: end;
 	}
 
 	.entry-wallet-arrow {
 		display: none;
+	}
+
+	.entry-row > :not(.row-actions) {
+		text-align: right;
+	}
+
+	.entry-row > :not(.row-actions)::before {
+		text-align: left;
 	}
 
 	.entry-row > span:has(input[type="checkbox"]) {
@@ -3502,7 +3528,7 @@ button:disabled {
 	}
 
 	.entry-row > span:has(input[type="checkbox"]) input[type="checkbox"] {
-		justify-self: start;
+		justify-self: center;
 	}
 
 	.row-actions {
@@ -3534,8 +3560,8 @@ button:disabled {
 
 	/* FILTER MOBILE */
 	.filter-row {
-		align-items: stretch;
-		flex-wrap: wrap;
+		align-items: center;
+		flex-wrap: nowrap;
 		gap: 6px;
 	}
 
@@ -3547,7 +3573,7 @@ button:disabled {
 		display: flex;
 		flex-wrap: nowrap;
 		gap: 6px;
-		flex: 1 1 100%;
+		flex: 1 1 auto;
 		min-width: 0;
 	}
 
