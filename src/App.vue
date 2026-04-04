@@ -1732,6 +1732,22 @@ async function toggleTransactionPaid(transaction) {
 		isSubmitting.value = false
 	}
 }
+
+function isMobileViewport() {
+	if (typeof window === "undefined") return false
+	return window.innerWidth <= 480
+}
+
+async function handlePaidFieldClick(transaction, event) {
+	if (!isMobileViewport() || isSubmitting.value) return
+
+	const target = event?.target
+	if (target instanceof HTMLElement && target.closest('input[type="checkbox"]')) {
+		return
+	}
+
+	await toggleTransactionPaid(transaction)
+}
 </script>
 
 <template>
@@ -1925,9 +1941,14 @@ async function toggleTransactionPaid(transaction) {
 								</span>
 								<span data-label="Data">{{ formatDateDisplay(transaction.date) }}</span>
 								<span data-label="Valor">{{ formatCurrency(transaction.amount) }}</span>
-								<span data-label="Pago">
+								<span
+									class="paid-field"
+									data-label="Pago"
+									@click="handlePaidFieldClick(transaction, $event)"
+								>
 									<input type="checkbox" :checked="transaction.paid" :disabled="isSubmitting"
-										@change="toggleTransactionPaid(transaction)" />
+										@change="toggleTransactionPaid(transaction)"
+										@click.stop />
 								</span>
 								<span class="row-actions" data-label="Ações">
 									<button :disabled="isSubmitting" @click="openEditEntryModal(transaction)">
@@ -3527,8 +3548,28 @@ button:disabled {
 		align-items: center;
 	}
 
+	.paid-field {
+		cursor: pointer;
+		-webkit-tap-highlight-color: transparent;
+		transition: background-color 0.18s ease, box-shadow 0.18s ease;
+	}
+
+	.paid-field:active {
+		background: color-mix(in srgb, var(--color-primary) 12%, rgba(255, 255, 255, 0.04));
+		box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-primary) 18%, transparent);
+	}
+
 	.entry-row > span:has(input[type="checkbox"]) input[type="checkbox"] {
-		justify-self: center;
+		justify-self: end;
+		width: 18px;
+		height: 18px;
+		min-width: 18px;
+		min-height: 18px;
+	}
+
+	.entry-row > span:has(input[type="checkbox"]) input[type="checkbox"]::before {
+		width: 10px;
+		height: 10px;
 	}
 
 	.row-actions {

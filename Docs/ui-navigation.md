@@ -31,6 +31,7 @@ Resumo-specific top controls:
 * the wallet summary card may stay sticky while scrolling the dashboard list
 * the sticky wallet summary card may switch to a compact state after reaching the top offset
 * the compact summary must keep the same content width as the regular state and allow the next section to move up with it
+* on mobile, wallet rows inside the regular and compact summary card should keep the same horizontal padding so the content width stays consistent while scrolling
 
 Desktop width behavior:
 
@@ -53,6 +54,7 @@ Visual direction:
 * cancel and destructive actions should stay in red tones
 * required fields inside modals should show a strong red validation state again
 * layout changes should continue mobile first, with desktop refinements handled separately
+* mobile-only adjustments must stay isolated in mobile media queries unless a broader change is explicitly requested
 
 ## Floating Action Button (FAB)
 

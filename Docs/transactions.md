@@ -47,6 +47,9 @@ Transaction list rules:
 - "Transferencias" and "Ajuste de Saldo" sections should only be rendered when there is at least one transaction in the selected period
 - dates in transaction rows must display as DD/MM/AAAA
 - values in transaction rows must display as Brazilian Real with 2 decimal places
+- on mobile, transaction rows may collapse into stacked field groups with labels while keeping actions available
+- on mobile, the paid field row should toggle the checkbox when the user taps anywhere inside that paid area
+- on mobile, the paid field tap feedback should use the current theme styling instead of the default system highlight
 
 Manual entry modal:
 
