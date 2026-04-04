@@ -1,4 +1,35 @@
 <script setup>
+function getIconPaths(iconName) {
+	switch (iconName) {
+		case "wallet":
+			return [
+				"M3.75 7.5A2.25 2.25 0 0 1 6 5.25h11.25A1.5 1.5 0 0 1 18.75 6.75v10.5A1.5 1.5 0 0 1 17.25 18.75H6A2.25 2.25 0 0 1 3.75 16.5v-9Z",
+				"M3.75 8.25h13.5",
+				"M15.75 12h3",
+				"M16.875 12a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z"
+			]
+		case "grid":
+			return [
+				"M4.5 4.5h6v6h-6z",
+				"M13.5 4.5h6v6h-6z",
+				"M4.5 13.5h6v6h-6z",
+				"M13.5 13.5h6v6h-6z"
+			]
+		case "settings":
+			return [
+				"M10.343 3.94c.09-.542.56-.94 1.11-.94h1.094c.55 0 1.02.398 1.11.94l.1.602c.062.37.313.681.657.82.344.138.736.084 1.033-.125l.484-.34a1.125 1.125 0 0 1 1.454.133l.773.773c.39.39.444.997.133 1.454l-.34.484c-.209.297-.263.689-.125 1.033.139.344.45.595.82.657l.602.1c.542.09.94.56.94 1.11v1.094c0 .55-.398 1.02-.94 1.11l-.602.1a1.125 1.125 0 0 0-.82.657c-.138.344-.084.736.125 1.033l.34.484c.311.457.257 1.064-.133 1.454l-.773.773a1.125 1.125 0 0 1-1.454.133l-.484-.34a1.125 1.125 0 0 0-1.033-.125c-.344.139-.595.45-.657.82l-.1.602c-.09.542-.56.94-1.11.94h-1.094c-.55 0-1.02-.398-1.11-.94l-.1-.602a1.125 1.125 0 0 0-.657-.82 1.125 1.125 0 0 0-1.033.125l-.484.34a1.125 1.125 0 0 1-1.454-.133l-.773-.773a1.125 1.125 0 0 1-.133-1.454l.34-.484c.209-.297.263-.689.125-1.033a1.125 1.125 0 0 0-.82-.657l-.602-.1a1.125 1.125 0 0 1-.94-1.11v-1.094c0-.55.398-1.02.94-1.11l.602-.1c.37-.062.681-.313.82-.657.138-.344.084-.736-.125-1.033l-.34-.484a1.125 1.125 0 0 1 .133-1.454l.773-.773a1.125 1.125 0 0 1 1.454-.133l.484.34c.297.209.689.263 1.033.125.344-.139.595-.45.657-.82l.1-.602Z",
+				"M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"
+			]
+		case "home":
+		default:
+			return [
+				"M3.75 10.5 12 3.75l8.25 6.75",
+				"M5.25 9.75v9h13.5v-9",
+				"M10.125 18.75v-4.5h3.75v4.5"
+			]
+	}
+}
+
 defineProps({
 	tabs: {
 		type: Array,
@@ -21,10 +52,19 @@ defineEmits(["select"])
 			class="tab-button"
 			:class="{ active: currentTab === tab.value }"
 			type="button"
+			:aria-label="tab.label"
+			:title="tab.label"
 			@click="$emit('select', tab.value)"
 		>
-			<span class="tab-icon" :class="`tab-icon-${tab.icon || 'home'}`" aria-hidden="true" />
-			<span class="tab-label">{{ tab.label }}</span>
+			<span class="tab-icon" aria-hidden="true">
+				<svg viewBox="0 0 24 24" fill="none" class="tab-icon-svg">
+					<path
+						v-for="iconPath in getIconPaths(tab.icon || 'home')"
+						:key="iconPath"
+						:d="iconPath"
+					/>
+				</svg>
+			</span>
 		</button>
 	</nav>
 </template>
@@ -36,7 +76,7 @@ defineEmits(["select"])
 	right: 0;
 	bottom: 0;
 	display: flex;
-	gap: 8px;
+	gap: 12px;
 	padding: 10px 16px calc(10px + env(safe-area-inset-bottom, 0px));
 	background: color-mix(in srgb, var(--surface-elevated) 84%, transparent);
 	border-top: 1px solid var(--glass-border);
@@ -47,15 +87,14 @@ defineEmits(["select"])
 }
 
 .tab-button {
-	min-width: 102px;
-	display: inline-grid;
-	justify-items: center;
-	align-content: center;
+	width: 56px;
+	height: 56px;
+	display: inline-flex;
+	align-items: center;
 	justify-content: center;
-	gap: 6px;
-	padding: 10px 14px;
+	padding: 0;
 	border: 1px solid var(--theme-button-border);
-	border-radius: 22px;
+	border-radius: 999px;
 	background: var(--theme-button-bg);
 	color: var(--text-soft);
 	font: inherit;
@@ -88,97 +127,35 @@ defineEmits(["select"])
 	transform: translateY(-1px);
 }
 
-.tab-label {
-	line-height: 1;
-	font-size: 0.72rem;
-}
-
 .tab-icon {
-	position: relative;
-	width: 18px;
-	height: 18px;
-	display: inline-block;
-	flex: 0 0 18px;
+	width: 28px;
+	height: 28px;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	flex: 0 0 28px;
 }
 
-.tab-icon::before,
-.tab-icon::after {
-	content: "";
-	position: absolute;
-	inset: 0;
-	margin: auto;
-}
-
-.tab-icon-home::before {
-	width: 12px;
-	height: 9px;
-	border: 2px solid currentColor;
-	border-top: 0;
-	border-radius: 0 0 3px 3px;
-	transform: translateY(3px);
-}
-
-.tab-icon-home::after {
-	width: 10px;
-	height: 10px;
-	border-top: 2px solid currentColor;
-	border-left: 2px solid currentColor;
-	transform: translateY(-2px) rotate(45deg);
-}
-
-.tab-icon-wallet::before {
-	width: 14px;
-	height: 10px;
-	border: 2px solid currentColor;
-	border-radius: 4px;
-}
-
-.tab-icon-wallet::after {
-	width: 4px;
-	height: 4px;
-	border-radius: 999px;
-	background: currentColor;
-	transform: translateX(4px);
-}
-
-.tab-icon-grid::before {
-	width: 14px;
-	height: 14px;
-	background:
-		linear-gradient(currentColor, currentColor) 0 0 / 5px 5px no-repeat,
-		linear-gradient(currentColor, currentColor) 100% 0 / 5px 5px no-repeat,
-		linear-gradient(currentColor, currentColor) 0 100% / 5px 5px no-repeat,
-		linear-gradient(currentColor, currentColor) 100% 100% / 5px 5px no-repeat;
-}
-
-.tab-icon-settings::before {
-	width: 14px;
-	height: 14px;
-	border-radius: 999px;
-	border: 2px solid currentColor;
-}
-
-.tab-icon-settings::after {
-	width: 4px;
-	height: 4px;
-	border-radius: 999px;
-	background: currentColor;
+.tab-icon-svg {
+	width: 28px;
+	height: 28px;
+	stroke: currentColor;
+	stroke-width: 2;
+	stroke-linecap: round;
+	stroke-linejoin: round;
 }
 
 @media (max-width: 640px) {
 	.bottom-tabs {
-		gap: 6px;
+		gap: 10px;
 		padding-inline: 12px;
+		justify-content: space-between;
 	}
 
 	.tab-button {
-		min-width: 0;
-		flex: 1 1 0;
-		padding: 12px 10px;
-	}
-
-	.tab-label {
-		font-size: 0.82rem;
+		width: 54px;
+		height: 54px;
+		flex: 0 0 auto;
 	}
 }
 </style>
