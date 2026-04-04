@@ -3008,7 +3008,8 @@ async function toggleTransactionPaid(transaction) {
 
 	.entry-list-head,
 	.entry-row {
-		grid-template-columns: minmax(140px, 2fr) minmax(120px, 1.2fr) minmax(84px, 0.9fr) minmax(96px, 1fr) 56px minmax(108px, 1.1fr);
+		grid-template-columns: minmax(110px, 1.8fr) minmax(96px, 1.1fr) minmax(68px, 0.78fr) minmax(82px, 0.9fr) 40px minmax(84px, 0.9fr);
+		gap: 8px;
 		align-items: center;
 	}
 
@@ -3056,9 +3057,9 @@ async function toggleTransactionPaid(transaction) {
 	}
 
 	.row-actions button {
-		width: 40px;
-		height: 40px;
-		min-width: 40px;
+		width: 36px;
+		height: 36px;
+		min-width: 36px;
 	}
 }
 
