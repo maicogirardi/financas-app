@@ -149,7 +149,7 @@ defineEmits(["select"])
 	.bottom-tabs {
 		gap: 10px;
 		padding-inline: 12px;
-		justify-content: space-between;
+		justify-content: center;
 	}
 
 	.tab-button {

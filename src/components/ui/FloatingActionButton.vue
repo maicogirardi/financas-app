@@ -57,7 +57,7 @@ defineEmits(["click"])
 @media (max-width: 640px) {
 	.fab {
 		right: 16px;
-		bottom: calc(84px + env(safe-area-inset-bottom, 0px));
+		bottom: calc(92px + env(safe-area-inset-bottom, 0px));
 	}
 }
 </style>

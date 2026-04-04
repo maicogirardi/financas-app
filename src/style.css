@@ -121,3 +121,10 @@ code {
   overflow-x: clip;
   background: transparent;
 }
+
+@media (max-width: 480px) {
+  #app {
+    width: 100%;
+    border-inline: 0;
+  }
+}

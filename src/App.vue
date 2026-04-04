@@ -1909,8 +1909,8 @@ async function toggleTransactionPaid(transaction) {
 
 							<div v-for="transaction in group.items" :key="transaction.id" class="entry-row"
 								:class="{ 'paid-row': transaction.paid }">
-								<span>{{ transaction.description || transaction.type }}</span>
-								<span class="entry-wallets">
+								<span data-label="Descrição">{{ transaction.description || transaction.type }}</span>
+								<span class="entry-wallets" data-label="Carteira">
 									<template v-for="(wallet, index) in getTransactionWallets(transaction)"
 										:key="`${transaction.id}-${wallet.id || index}`">
 										<span class="wallet-summary-meta entry-wallet-meta">
@@ -1923,13 +1923,13 @@ async function toggleTransactionPaid(transaction) {
 										</span>
 									</template>
 								</span>
-								<span>{{ formatDateDisplay(transaction.date) }}</span>
-								<span>{{ formatCurrency(transaction.amount) }}</span>
-								<span>
+								<span data-label="Data">{{ formatDateDisplay(transaction.date) }}</span>
+								<span data-label="Valor">{{ formatCurrency(transaction.amount) }}</span>
+								<span data-label="Pago">
 									<input type="checkbox" :checked="transaction.paid" :disabled="isSubmitting"
 										@change="toggleTransactionPaid(transaction)" />
 								</span>
-								<span class="row-actions">
+								<span class="row-actions" data-label="Ações">
 									<button :disabled="isSubmitting" @click="openEditEntryModal(transaction)">
 										<span class="button-icon button-icon-edit">
 											<svg width="24" height="24" viewBox="0 0 24 24" fill="white">
@@ -1966,9 +1966,9 @@ async function toggleTransactionPaid(transaction) {
 
 				<div class="simple-list">
 					<div v-for="wallet in walletStore.wallets" :key="wallet.id" class="simple-list-row">
-						<span>{{ wallet.name }}</span>
-						<span>{{ formatCurrency(getWalletBalanceForPeriod(wallet)) }}</span>
-						<span class="row-actions">
+						<span data-label="Carteira">{{ wallet.name }}</span>
+						<span data-label="Saldo">{{ formatCurrency(getWalletBalanceForPeriod(wallet)) }}</span>
+						<span class="row-actions" data-label="Ações">
 							<button :disabled="isSubmitting" @click="openWalletModal(wallet)">
 								<span class="button-icon button-icon-edit" aria-hidden="true">
 									<svg width="24" height="24" viewBox="0 0 24 24" fill="white">
@@ -2016,8 +2016,8 @@ async function toggleTransactionPaid(transaction) {
 						:class="{ 'drag-over-row': dragOverCategoryId === category.id }"
 						@dragover="handleCategoryDragOver(category.id, $event)"
 						@drop.prevent="handleCategoryDrop(category.id)">
-						<span>{{ category.name }}</span>
-						<span class="row-actions">
+						<span data-label="Categoria">{{ category.name }}</span>
+						<span class="row-actions" data-label="Ações">
 							<button class="icon-button button-icon-drag" :disabled="isSubmitting" draggable="true"
 								title="Arrastar categoria" @dragstart="handleCategoryDragStart(category.id, $event)"
 								@dragend="handleCategoryDragEnd">
@@ -3329,7 +3329,6 @@ button:disabled {
 	height: 24px;
 
 }
-
 .button-icon svg {
 	color: currentColor;
 }
@@ -3394,7 +3393,22 @@ button:disabled {
 /* MOBILE */
 @media (max-width: 480px) {
 	.app-page {
-		padding: 16px 12px 100px;
+		gap: 14px;
+		padding: 14px 12px 118px;
+	}
+
+	.tittle {
+		font-size: clamp(2rem, 10vw, 2.6rem);
+		line-height: 1.02;
+		margin-bottom: 6px;
+	}
+
+	.page-section,
+	.transaction-section,
+	.simple-list,
+	.error-box,
+	.filter-card {
+		padding: 16px;
 	}
 
 	.wallet-summary-card,
@@ -3412,23 +3426,105 @@ button:disabled {
 		min-height: 320px;
 	}
 
+	.management-page-section {
+		width: 100%;
+	}
+
+	.wallet-summary-section {
+		top: 12px;
+	}
+
+	.wallet-summary-card {
+		padding: 18px 16px;
+		gap: 14px;
+		align-items: stretch;
+	}
+
+	.wallet-summary-list {
+		width: 100%;
+	}
+
+	.wallet-summary-row {
+		grid-template-columns: minmax(0, 1fr) auto;
+		gap: 10px;
+		width: 100%;
+		padding-inline: 24px;
+	}
+
 	.simple-list-row,
 	.entry-list-head,
 	.entry-row {
-		grid-template-columns: minmax(110px, 1fr) auto;
-		padding: 9px 0 11px;
-		gap: 6px;
+		grid-template-columns: minmax(0, 1fr);
+		padding: 12px;
+		gap: 10px;
+		min-height: auto;
 	}
 
-	.row-actions,
-	.toolbar {
+	.entry-list-head {
+		display: none;
+	}
+
+	.simple-list-row > *,
+	.entry-row > * {
+		display: grid;
+		grid-template-columns: minmax(76px, 92px) minmax(0, 1fr);
+		gap: 10px;
+		align-items: center;
 		width: 100%;
+	}
+
+	.simple-list-row > *::before,
+	.entry-row > *::before {
+		content: attr(data-label);
+		font-size: 11px;
+		font-weight: 700;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		color: var(--text-soft);
+	}
+
+	.entry-wallets {
+		display: grid;
+		gap: 6px;
+		justify-items: start;
+	}
+
+	.entry-wallet-meta {
+		width: fit-content;
+	}
+
+	.entry-wallet-arrow {
+		display: none;
+	}
+
+	.entry-row > span:has(input[type="checkbox"]) {
+		align-items: center;
+	}
+
+	.entry-row > span:has(input[type="checkbox"]) input[type="checkbox"] {
+		justify-self: start;
 	}
 
 	.row-actions {
 		display: flex;
 		min-width: 0;
 		justify-self: stretch;
+		gap: 8px;
+	}
+
+	.row-actions::before {
+		content: attr(data-label);
+		width: 100%;
+		font-size: 11px;
+		font-weight: 700;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		color: var(--text-soft);
+	}
+
+	.row-actions,
+	.toolbar {
+		width: 100%;
 	}
 
 	.row-actions button,
@@ -3438,7 +3534,8 @@ button:disabled {
 
 	/* FILTER MOBILE */
 	.filter-row {
-		flex-wrap: nowrap;
+		align-items: stretch;
+		flex-wrap: wrap;
 		gap: 6px;
 	}
 
@@ -3448,8 +3545,9 @@ button:disabled {
 
 	.filter-selects {
 		display: flex;
+		flex-wrap: nowrap;
 		gap: 6px;
-		flex: 1;
+		flex: 1 1 100%;
 		min-width: 0;
 	}
 
@@ -3489,6 +3587,7 @@ button:disabled {
 		display: flex;
 		gap: 6px;
 		flex: 0 0 auto;
+		margin-left: auto;
 	}
 
 	.filter-row button {
