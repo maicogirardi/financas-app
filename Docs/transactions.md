@@ -50,6 +50,8 @@ Transaction list rules:
 - on mobile, transaction rows may collapse into stacked field groups with labels while keeping actions available
 - on mobile, the paid field row should toggle the checkbox when the user taps anywhere inside that paid area
 - on mobile, the paid field tap feedback should use the current theme styling instead of the default system highlight
+- on mobile, the inline edit/delete action row may stay hidden and the description field should open a small action modal with Editar and Excluir
+- on mobile, the small action modal must close when the user taps outside it
 
 Manual entry modal:
 
@@ -75,6 +77,7 @@ Manual entry UX:
 - form modals must show a small title label above each field
 - Enter should confirm modal actions
 - Esc should cancel modal actions
+- on mobile, the entry create/edit modal may use a narrower edge spacing than desktop while staying inside the viewport
 
 Edit transaction rules:
 

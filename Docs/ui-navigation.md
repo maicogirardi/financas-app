@@ -55,6 +55,7 @@ Visual direction:
 * required fields inside modals should show a strong red validation state again
 * layout changes should continue mobile first, with desktop refinements handled separately
 * mobile-only adjustments must stay isolated in mobile media queries unless a broader change is explicitly requested
+* on mobile, small contextual action modals may use a compact frosted glass layout and close on outside tap
 
 ## Floating Action Button (FAB)
 

@@ -82,6 +82,7 @@ const entryAmountInput = ref("")
 const entryDate = ref("")
 const entryAdjustmentDirection = ref("increase")
 const entryFormError = ref("")
+const mobileEntryActionTransactionId = ref("")
 
 const isDataReady = computed(() =>
 	authReady.value &&
@@ -504,6 +505,7 @@ function closeAllModals() {
 	closeAdjustmentModal()
 	closeCategoryModal()
 	closeEntryModal()
+	closeMobileEntryActionModal()
 	closeDeleteWalletModal()
 	closeDeleteCategoryModal()
 	closeDeleteTransactionModal()
@@ -1748,6 +1750,41 @@ async function handlePaidFieldClick(transaction, event) {
 
 	await toggleTransactionPaid(transaction)
 }
+
+function openMobileEntryActionModal(transaction) {
+	mobileEntryActionTransactionId.value = transaction?.id || ""
+}
+
+function closeMobileEntryActionModal() {
+	mobileEntryActionTransactionId.value = ""
+}
+
+function getTransactionById(transactionId) {
+	return transactionStore.transactions.find(transaction => transaction.id === transactionId) || null
+}
+
+function handleEntryRowClick(transaction, event) {
+	if (!isMobileViewport() || isSubmitting.value) return
+
+	const target = event?.target
+	if (!(target instanceof HTMLElement)) return
+	if (target.closest(".paid-field")) return
+	if (target.closest("button")) return
+
+	openMobileEntryActionModal(transaction)
+}
+
+function handleMobileEntryEdit(transaction) {
+	if (!transaction) return
+	closeMobileEntryActionModal()
+	openEditEntryModal(transaction)
+}
+
+function handleMobileEntryDelete(transaction) {
+	if (!transaction) return
+	closeMobileEntryActionModal()
+	openDeleteTransactionModal(transaction)
+}
 </script>
 
 <template>
@@ -1923,9 +1960,13 @@ async function handlePaidFieldClick(transaction, event) {
 								Sem entradas
 							</div>
 
-							<div v-for="transaction in group.items" :key="transaction.id" class="entry-row"
-								:class="{ 'paid-row': transaction.paid }">
-								<span data-label="Descrição">{{ transaction.description || transaction.type }}</span>
+							<div
+								v-for="transaction in group.items"
+								:key="transaction.id"
+								class="entry-row"
+								:class="{ 'paid-row': transaction.paid }"
+							>
+								<span class="description-field" data-label="Descrição" @click="handleEntryRowClick(transaction, $event)">{{ transaction.description || transaction.type }}</span>
 								<span class="entry-wallets" data-label="Carteira">
 									<template v-for="(wallet, index) in getTransactionWallets(transaction)"
 										:key="`${transaction.id}-${wallet.id || index}`">
@@ -1976,6 +2017,29 @@ async function handlePaidFieldClick(transaction, event) {
 					</div>
 				</div>
 			</ResumoView>
+
+			<div
+				v-if="mobileEntryActionTransactionId"
+				class="mobile-entry-action-backdrop"
+				@click="closeMobileEntryActionModal"
+			>
+				<div class="mobile-entry-action-modal" @click.stop>
+					<button
+						class="primary-button"
+						:disabled="isSubmitting"
+						@click="handleMobileEntryEdit(getTransactionById(mobileEntryActionTransactionId))"
+					>
+						Editar
+					</button>
+					<button
+						class="danger-button"
+						:disabled="isSubmitting"
+						@click="handleMobileEntryDelete(getTransactionById(mobileEntryActionTransactionId))"
+					>
+						Excluir
+					</button>
+				</div>
+			</div>
 
 			<section v-if="currentPage === 'wallets'" class="page-section management-page-section">
 				<div class="toolbar">
@@ -2163,7 +2227,7 @@ async function handlePaidFieldClick(transaction, event) {
 		</div>
 
 		<div v-if="isPeriodModalOpen" class="modal-backdrop">
-			<div class="modal" @keydown.enter="handleModalEnter('period', $event)">
+			<div class="modal narrow-mobile-modal" @keydown.enter="handleModalEnter('period', $event)">
 				<h3>Criar mês</h3>
 
 				<div class="field-group">
@@ -2194,8 +2258,8 @@ async function handlePaidFieldClick(transaction, event) {
 			</div>
 		</div>
 
-		<div v-if="isEntryModalOpen" class="modal-backdrop">
-			<div class="modal" @keydown.enter="handleModalEnter('entry', $event)">
+		<div v-if="isEntryModalOpen" class="modal-backdrop entry-modal-backdrop">
+			<div class="modal entry-modal" @keydown.enter="handleModalEnter('entry', $event)">
 				<h3>{{ editingTransactionId ? "Editar entrada" : "Nova entrada" }}</h3>
 
 				<div class="field-group">
@@ -2315,7 +2379,7 @@ async function handlePaidFieldClick(transaction, event) {
 		</div>
 
 		<div v-if="deleteTransactionId" class="modal-backdrop">
-			<div class="modal" @keydown.enter="handleModalEnter('delete-transaction', $event)">
+			<div class="modal narrow-mobile-modal" @keydown.enter="handleModalEnter('delete-transaction', $event)">
 				<h3>Excluir entrada</h3>
 				<p>Tem certeza que deseja excluir esta entrada?</p>
 
@@ -2332,7 +2396,7 @@ async function handlePaidFieldClick(transaction, event) {
 		</div>
 
 		<div v-if="deletePeriodId" class="modal-backdrop">
-			<div class="modal" @keydown.enter="handleModalEnter('delete-period', $event)">
+			<div class="modal narrow-mobile-modal" @keydown.enter="handleModalEnter('delete-period', $event)">
 				<h3>Excluir mês</h3>
 				<p>Tem certeza que deseja excluir este mês e todas as entradas dele?</p>
 
@@ -3577,6 +3641,61 @@ button:disabled {
 		min-width: 0;
 		justify-self: stretch;
 		gap: 8px;
+	}
+
+	.description-field {
+		cursor: pointer;
+		-webkit-tap-highlight-color: transparent;
+		transition: background-color 0.18s ease, box-shadow 0.18s ease;
+	}
+
+	.description-field:active {
+		background: color-mix(in srgb, var(--color-primary) 12%, rgba(255, 255, 255, 0.04));
+		box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-primary) 18%, transparent);
+	}
+
+	.entry-row .row-actions {
+		display: none;
+	}
+
+	.mobile-entry-action-backdrop {
+		position: fixed;
+		inset: 0;
+		z-index: 125;
+		background: rgba(3, 8, 20, 0.16);
+		display: grid;
+		place-items: center;
+		padding: 20px;
+		-webkit-tap-highlight-color: transparent;
+	}
+
+	.entry-modal-backdrop {
+		padding: 12px;
+	}
+
+	.entry-modal {
+		width: min(88%, 520px);
+	}
+
+	.narrow-mobile-modal {
+		width: min(88%, 520px);
+	}
+
+	.mobile-entry-action-modal {
+		width: min(88%, 220px);
+		display: grid;
+		gap: 10px;
+		padding: 14px;
+		border-radius: 22px;
+		border: 1px solid var(--glass-border-strong);
+		background: var(--glass-surface-strong);
+		box-shadow: var(--shadow);
+		backdrop-filter: blur(24px);
+	}
+
+	.mobile-entry-action-modal button {
+		width: 100%;
+		min-height: 44px;
 	}
 
 	.row-actions::before {
