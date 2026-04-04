@@ -3047,6 +3047,17 @@ function handleMobileEntryDelete(transaction) {
 		padding: 16px;
 	}
 
+	.wallet-summary-list {
+		width: min(70%, 100%);
+		margin-inline: auto;
+	}
+
+	.wallet-summary-row,
+	.wallet-summary-card.is-compact .wallet-summary-row {
+		width: 100%;
+		padding-inline: 24px;
+	}
+
 	.management-page-section {
 		width: min(100%, 560px);
 	}

@@ -32,6 +32,7 @@ Resumo-specific top controls:
 * the sticky wallet summary card may switch to a compact state after reaching the top offset
 * the compact summary must keep the same content width as the regular state and allow the next section to move up with it
 * on mobile, wallet rows inside the regular and compact summary card should keep the same horizontal padding so the content width stays consistent while scrolling
+* on tablet, the wallet list inside the summary card may use a centered narrower content width while each row still keeps full width within that inner block
 
 Desktop width behavior:
 
