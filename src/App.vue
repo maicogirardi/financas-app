@@ -2847,7 +2847,8 @@ async function toggleTransactionPaid(transaction) {
 	display: flex;
 	gap: 12px;
 	align-items: center;
-	flex: 0 1 auto;
+	flex: 1 1 auto;
+	min-width: 0;
 }
 
 .filter-row select {
@@ -2911,6 +2912,48 @@ async function toggleTransactionPaid(transaction) {
 
 .month-remove-button {
 	background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+}
+
+@media (min-width: 481px) and (max-width: 1023px) {
+	.filter-row {
+		gap: 10px;
+	}
+
+	.filter-selects {
+		gap: 10px;
+		flex: 1 1 auto;
+		min-width: 0;
+	}
+
+	.filter-selects > .year-filter {
+		flex: 0 0 112px;
+		min-width: 112px;
+		max-width: 128px;
+		--app-select-min-height: 40px;
+	}
+
+	.filter-selects > .month-filter {
+		flex: 1 1 180px;
+		min-width: 180px;
+		max-width: 240px;
+		--app-select-min-height: 40px;
+	}
+
+	.filter-selects :deep(.app-select__trigger) {
+		min-height: var(--app-select-min-height, 40px);
+		padding-inline: 12px 38px;
+	}
+
+	.filter-actions {
+		gap: 10px;
+	}
+
+	.filter-row button {
+		width: 40px;
+		height: 40px;
+		min-width: 40px;
+		flex: 0 0 40px;
+	}
 }
 
 .section-header {
