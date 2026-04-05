@@ -1,5 +1,22 @@
 ## Persistence
 
+## Publishing Workflow
+
+When the user asks to publish, the default meaning must be:
+
+- review pending relevant changes
+- update `.md` documentation when the publishing flow, environment links, or app behavior changed
+- create a commit
+- push to the main remote branch
+- deploy to GitHub Pages
+- deploy to Firebase Hosting
+
+Primary Firebase Hosting URL for real desktop/mobile testing:
+
+- https://minhas-financas-maico.web.app
+
+GitHub Pages remains available as a secondary development publish target.
+
 Use Firebase Firestore as primary database
 
 Data must be stored in:

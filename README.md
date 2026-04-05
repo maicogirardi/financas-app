@@ -39,8 +39,8 @@ Aplicativo de controle financeiro em Vue 3 + Vite com Firebase Authentication e 
 
 * o app pode ser instalado no Android como PWA
 * o `manifest.webmanifest` e o `service worker` ficam em `public/`
-* o deploy usa base `/financas-app/`, entao `start_url` e `scope` do manifest devem continuar apontando para `/financas-app/`
-* o login Google em modo instalado usa redirect em vez de popup para maior compatibilidade
+* o manifest usa caminhos relativos para funcionar tanto no GitHub Pages quanto no Firebase Hosting
+* o login Google no PWA instalado pode falhar no GitHub Pages por limitacoes do Firebase Auth fora do Firebase Hosting
 * a sincronizacao de dados continua via Firebase em tempo real entre desktop e app instalado quando ambos estao online
 
 Assets esperados em `public/`:
@@ -53,6 +53,28 @@ Assets esperados em `public/`:
 * `icon-512x512.png`
 * `icon-maskable-512x512.png`
 
+## Deploy
+
+Fluxo atual de deploy duplo:
+
+* `npm run build` gera a versao do GitHub Pages com base `/financas-app/`
+* `npm run deploy` publica no GitHub Pages
+* `scripts/build-firebase.ps1` gera a versao para Firebase Hosting ajustando temporariamente o `base` para `/`
+* `scripts/deploy-firebase.ps1` executa o build do Firebase e depois chama `firebase-tools deploy --only hosting`
+
+Observacao:
+
+* o Firebase Hosting agora e o ambiente principal para testes reais de auth e PWA
+* o site principal publicado e `https://minhas-financas-maico.web.app`
+* o GitHub Pages continua como ambiente secundario durante o desenvolvimento
+
+Arquivos de configuracao:
+
+* `firebase.json`
+* `.firebaserc`
+* `scripts/build-firebase.ps1`
+* `scripts/deploy-firebase.ps1`
+
 ## Documentacao
 
 * [AGENTS.md](./AGENTS.md)
@@ -60,3 +82,4 @@ Assets esperados em `public/`:
 * [Docs/theme.md](./Docs/theme.md)
 * [Docs/ui-navigation.md](./Docs/ui-navigation.md)
 * [Docs/transactions.md](./Docs/transactions.md)
+* [Docs/publishing.md](./Docs/publishing.md)
