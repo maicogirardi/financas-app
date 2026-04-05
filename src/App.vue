@@ -27,6 +27,7 @@ const periodStore = usePeriodStore()
 const user = ref(null)
 const authReady = ref(false)
 const authError = ref("")
+const isUpdateAvailable = ref(false)
 const isSubmitting = ref(false)
 const currentPage = ref("dashboard")
 const theme = ref("light")
@@ -247,6 +248,7 @@ const totalWalletBalance = computed(() =>
 let stopAuthListener = null
 let unsubscribeThemePreference = null
 let walletSummaryResizeObserver = null
+let triggerAppUpdate = null
 
 const navigationTabs = [
 	{ value: "dashboard", label: "Home", icon: "home" },
@@ -260,6 +262,7 @@ onMounted(() => {
 	window.addEventListener("keydown", handleModalKeydown)
 	window.addEventListener("scroll", updateWalletSummaryCompact, { passive: true })
 	window.addEventListener("resize", handleWalletSummaryLayoutChange)
+	window.addEventListener("app-update-available", handleAppUpdateAvailable)
 	void resolveRedirectLogin().catch(error => {
 		console.error("Failed to resolve redirect login", error)
 		authError.value = getAuthErrorMessage(error)
@@ -320,6 +323,7 @@ onBeforeUnmount(() => {
 	window.removeEventListener("keydown", handleModalKeydown)
 	window.removeEventListener("scroll", updateWalletSummaryCompact)
 	window.removeEventListener("resize", handleWalletSummaryLayoutChange)
+	window.removeEventListener("app-update-available", handleAppUpdateAvailable)
 	teardownWalletSummaryResizeObserver()
 
 	if (unsubscribeThemePreference) {
@@ -1611,6 +1615,20 @@ function getAuthErrorMessage(error) {
 	return "Não foi possível entrar com Google agora. Tente novamente."
 }
 
+function handleAppUpdateAvailable(event) {
+	triggerAppUpdate = typeof event.detail?.update === "function" ? event.detail.update : null
+	isUpdateAvailable.value = true
+}
+
+function reloadWithNewVersion() {
+	if (!triggerAppUpdate) {
+		window.location.reload()
+		return
+	}
+
+	triggerAppUpdate()
+}
+
 function openPeriodModal() {
 	const nextPeriod = selectedPeriod.value
 		? buildNextPeriodDate(selectedYear.value, selectedMonth.value)
@@ -2094,6 +2112,13 @@ function handleMobileEntryDelete(transaction) {
 
 <template>
 	<div class="app-page">
+		<section v-if="isUpdateAvailable" class="update-banner">
+			<div class="update-banner-copy">
+				<strong>Nova versÃ£o disponÃ­vel</strong>
+				<span>Atualize o app para carregar as mudanÃ§as mais recentes.</span>
+			</div>
+			<button class="primary-button" @click="reloadWithNewVersion">Recarregar</button>
+		</section>
 		<h1 class="tittle">Minhas Finanças</h1>
 
 		<div v-if="!authReady">
@@ -2888,6 +2913,35 @@ function handleMobileEntryDelete(transaction) {
 	width: min(50vw, 560px);
 	max-width: 100%;
 	justify-self: center;
+}
+
+.update-banner {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 16px;
+	padding: 16px 18px;
+	border: 1px solid color-mix(in srgb, var(--color-primary) 32%, var(--glass-border-strong));
+	border-radius: 20px;
+	background:
+		linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0) 100%),
+		color-mix(in srgb, var(--color-primary) 14%, var(--glass-surface-strong));
+	box-shadow: var(--shadow);
+	backdrop-filter: blur(18px);
+}
+
+.update-banner-copy {
+	display: grid;
+	gap: 4px;
+}
+
+.update-banner-copy strong {
+	color: var(--text-h);
+}
+
+.update-banner-copy span {
+	font-size: 14px;
+	color: var(--text);
 }
 
 .management-page-section .simple-list {

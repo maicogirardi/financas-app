@@ -10,8 +10,41 @@ if ("serviceWorker" in navigator && import.meta.env.PROD) {
 	window.addEventListener("load", async () => {
 		try {
 			const baseUrl = import.meta.env.BASE_URL
-			await navigator.serviceWorker.register(`${baseUrl}sw.js`, {
+			let hasRefreshingController = false
+			const registration = await navigator.serviceWorker.register(`${baseUrl}sw.js`, {
 				scope: baseUrl
+			})
+
+			navigator.serviceWorker.addEventListener("controllerchange", () => {
+				if (hasRefreshingController) return
+				hasRefreshingController = true
+				window.location.reload()
+			})
+
+			const notifyUpdate = worker => {
+				window.dispatchEvent(new CustomEvent("app-update-available", {
+					detail: {
+						update: () => worker?.postMessage({ type: "SKIP_WAITING" })
+					}
+				}))
+			}
+
+			if (registration.waiting) {
+				notifyUpdate(registration.waiting)
+			}
+
+			registration.addEventListener("updatefound", () => {
+				const installingWorker = registration.installing
+				if (!installingWorker) return
+
+				installingWorker.addEventListener("statechange", () => {
+					if (
+						installingWorker.state === "installed" &&
+						navigator.serviceWorker.controller
+					) {
+						notifyUpdate(installingWorker)
+					}
+				})
 			})
 		} catch (error) {
 			console.error("Falha ao registrar o service worker", error)

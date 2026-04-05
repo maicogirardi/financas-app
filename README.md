@@ -41,6 +41,7 @@ Aplicativo de controle financeiro em Vue 3 + Vite com Firebase Authentication e 
 * o `manifest.webmanifest` e o `service worker` ficam em `public/`
 * o manifest usa caminhos relativos para funcionar tanto no GitHub Pages quanto no Firebase Hosting
 * o login Google no PWA instalado pode falhar no GitHub Pages por limitacoes do Firebase Auth fora do Firebase Hosting
+* quando uma nova versao do app fica disponivel, a interface mostra um aviso com botao para recarregar
 * a sincronizacao de dados continua via Firebase em tempo real entre desktop e app instalado quando ambos estao online
 
 Assets esperados em `public/`:
