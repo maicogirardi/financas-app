@@ -3151,6 +3151,10 @@ function handleMobileEntryDelete(transaction) {
 		flex: 0 0 40px;
 	}
 
+	.month-remove-button svg {
+		transform: translateX(1px);
+	}
+
 	.entry-list-head,
 	.entry-row {
 		grid-template-columns: minmax(110px, 1.8fr) minmax(96px, 1.1fr) minmax(68px, 0.78fr) minmax(82px, 0.9fr) 40px minmax(84px, 0.9fr);
@@ -4346,6 +4350,10 @@ button:disabled {
 		padding: 0;
 		border-radius: 50%;
 		aspect-ratio: 1 / 1;
+	}
+
+	.month-remove-button svg {
+		transform: translateX(1px);
 	}
 
 	.centerTittle {
