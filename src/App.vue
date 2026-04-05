@@ -1290,6 +1290,27 @@ function handleCategoryDragEnd() {
 	dragOverCategoryId.value = ""
 }
 
+function canMoveCategory(categoryId, direction) {
+	const orderedIds = categoryStore.manageableCategories.map(category => category.id)
+	const currentIndex = orderedIds.findIndex(id => id === categoryId)
+
+	if (currentIndex < 0) return false
+
+	return direction === "up" ? currentIndex > 0 : currentIndex < orderedIds.length - 1
+}
+
+async function moveCategory(categoryId, direction) {
+	if (!canMoveCategory(categoryId, direction)) return
+
+	isSubmitting.value = true
+
+	try {
+		await categoryStore.moveCategory(categoryId, direction)
+	} finally {
+		isSubmitting.value = false
+	}
+}
+
 async function handleLogin() {
 	isSubmitting.value = true
 
@@ -2050,8 +2071,14 @@ function handleMobileEntryDelete(transaction) {
 				</div>
 
 				<div class="simple-list">
-					<div v-for="wallet in walletStore.wallets" :key="wallet.id" class="simple-list-row">
-						<span data-label="Carteira">{{ wallet.name }}</span>
+					<div v-for="wallet in walletStore.wallets" :key="wallet.id" class="simple-list-row wallet-list-row">
+						<span data-label="Carteira">
+							<span class="wallet-summary-meta">
+								<span class="wallet-summary-dot"
+									:style="{ background: wallet.color || 'var(--color-primary)' }" />
+								<span>{{ wallet.name }}</span>
+							</span>
+						</span>
 						<span data-label="Saldo">{{ formatCurrency(getWalletBalanceForPeriod(wallet)) }}</span>
 						<span class="row-actions" data-label="Ações">
 							<button :disabled="isSubmitting" @click="openWalletModal(wallet)">
@@ -2101,14 +2128,36 @@ function handleMobileEntryDelete(transaction) {
 						:class="{ 'drag-over-row': dragOverCategoryId === category.id }"
 						@dragover="handleCategoryDragOver(category.id, $event)"
 						@drop.prevent="handleCategoryDrop(category.id)">
-						<span data-label="Categoria">{{ category.name }}</span>
-						<span class="row-actions" data-label="Ações">
-							<button class="icon-button button-icon-drag" :disabled="isSubmitting" draggable="true"
+						<span class="category-row-name" data-label="Categoria">{{ category.name }}</span>
+						<span class="row-actions category-row-actions" data-label="Ações">
+							<button class="icon-button button-icon-drag desktop-category-drag" :disabled="isSubmitting" draggable="true"
 								title="Arrastar categoria" @dragstart="handleCategoryDragStart(category.id, $event)"
 								@dragend="handleCategoryDragEnd">
 								<span>
 									<svg width="24" height="24" viewBox="0 0 24 24" fill="white">
 										<path d="M7 14l5 5 5-5H7zM7 10l5-5 5 5H7z" />
+									</svg>
+								</span>
+							</button>
+
+							<button class="icon-button category-move-touch-button"
+								:disabled="isSubmitting || !canMoveCategory(category.id, 'up')"
+								title="Mover categoria para cima" @click="moveCategory(category.id, 'up')">
+								<span class="button-icon category-move-icon" aria-hidden="true">
+									<svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+										<path d="M7 14l5-5 5 5" stroke="white" stroke-width="2.4" stroke-linecap="round"
+											stroke-linejoin="round" />
+									</svg>
+								</span>
+							</button>
+
+							<button class="icon-button category-move-touch-button"
+								:disabled="isSubmitting || !canMoveCategory(category.id, 'down')"
+								title="Mover categoria para baixo" @click="moveCategory(category.id, 'down')">
+								<span class="button-icon category-move-icon" aria-hidden="true">
+									<svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+										<path d="M7 10l5 5 5-5" stroke="white" stroke-width="2.4" stroke-linecap="round"
+											stroke-linejoin="round" />
 									</svg>
 								</span>
 							</button>
@@ -2144,7 +2193,7 @@ function handleMobileEntryDelete(transaction) {
 		</template>
 
 		<div v-if="isWalletModalOpen" class="modal-backdrop">
-			<div class="modal" @keydown.enter="handleModalEnter('wallet', $event)">
+			<div class="modal narrow-mobile-modal" @keydown.enter="handleModalEnter('wallet', $event)">
 				<h3>{{ isEditingWallet ? "Editar carteira" : "Criar carteira" }}</h3>
 
 				<div class="field-group">
@@ -2174,7 +2223,7 @@ function handleMobileEntryDelete(transaction) {
 		</div>
 
 		<div v-if="adjustingWalletId" class="modal-backdrop">
-			<div class="modal" @keydown.enter="handleModalEnter('adjustment', $event)">
+			<div class="modal narrow-mobile-modal" @keydown.enter="handleModalEnter('adjustment', $event)">
 				<h3>Ajustar saldo</h3>
 
 				<div class="field-group">
@@ -2205,7 +2254,7 @@ function handleMobileEntryDelete(transaction) {
 		</div>
 
 		<div v-if="isCategoryModalOpen" class="modal-backdrop">
-			<div class="modal" @keydown.enter="handleModalEnter('category', $event)">
+			<div class="modal narrow-mobile-modal" @keydown.enter="handleModalEnter('category', $event)">
 				<h3>{{ editingCategoryId ? "Editar categoria" : "Criar categoria" }}</h3>
 
 				<div class="field-group">
@@ -2345,7 +2394,7 @@ function handleMobileEntryDelete(transaction) {
 		</div>
 
 		<div v-if="deleteWalletId" class="modal-backdrop">
-			<div class="modal" @keydown.enter="handleModalEnter('delete-wallet', $event)">
+			<div class="modal narrow-mobile-modal" @keydown.enter="handleModalEnter('delete-wallet', $event)">
 				<h3>Excluir carteira</h3>
 				<p>Tem certeza que deseja excluir esta carteira?</p>
 
@@ -2362,7 +2411,7 @@ function handleMobileEntryDelete(transaction) {
 		</div>
 
 		<div v-if="deleteCategoryId" class="modal-backdrop">
-			<div class="modal" @keydown.enter="handleModalEnter('delete-category', $event)">
+			<div class="modal narrow-mobile-modal" @keydown.enter="handleModalEnter('delete-category', $event)">
 				<h3>Excluir categoria</h3>
 				<p>Tem certeza que deseja excluir esta categoria?</p>
 
@@ -2378,7 +2427,7 @@ function handleMobileEntryDelete(transaction) {
 			</div>
 		</div>
 
-		<div v-if="deleteTransactionId" class="modal-backdrop">
+			<div v-if="deleteTransactionId" class="modal-backdrop">
 			<div class="modal narrow-mobile-modal" @keydown.enter="handleModalEnter('delete-transaction', $event)">
 				<h3>Excluir entrada</h3>
 				<p>Tem certeza que deseja excluir esta entrada?</p>
@@ -3109,26 +3158,24 @@ function handleMobileEntryDelete(transaction) {
 		align-items: center;
 	}
 
-	.simple-list-row {
-		grid-template-columns: minmax(0, 1fr) auto;
-		grid-template-areas:
-			"name amount"
-			"actions actions";
+	.management-page-section .simple-list-row {
+		grid-template-columns: minmax(0, 1fr) auto auto;
+		grid-template-areas: none;
 		align-items: center;
 	}
 
-	.simple-list-row > :nth-child(1) {
-		grid-area: name;
+	.management-page-section .simple-list-row > :nth-child(1) {
+		grid-area: auto;
 	}
 
-	.simple-list-row > :nth-child(2) {
-		grid-area: amount;
+	.management-page-section .simple-list-row > :nth-child(2) {
+		grid-area: auto;
 		justify-self: end;
 		text-align: right;
 	}
 
-	.simple-list-row > :nth-child(3) {
-		grid-area: actions;
+	.management-page-section .simple-list-row > :nth-child(3) {
+		grid-area: auto;
 		justify-self: end;
 	}
 
@@ -3145,6 +3192,25 @@ function handleMobileEntryDelete(transaction) {
 		grid-area: actions;
 	}
 
+	.simple-list-row.category-row .category-row-actions {
+		display: flex;
+		width: 100%;
+		min-width: 0;
+		justify-self: stretch;
+		justify-content: center;
+		align-items: center;
+		gap: 10px;
+	}
+
+	.simple-list-row.category-row .category-row-actions button {
+		flex: 0 0 42px;
+		width: 42px;
+		height: 42px;
+		min-width: 42px;
+		max-width: 42px;
+		margin: 0;
+	}
+
 	.row-actions {
 		display: inline-flex;
 		width: auto;
@@ -3156,6 +3222,54 @@ function handleMobileEntryDelete(transaction) {
 		width: 36px;
 		height: 36px;
 		min-width: 36px;
+	}
+
+	.category-row .row-actions button,
+	.category-row .row-actions .icon-button {
+		border-radius: 50%;
+	}
+
+	.desktop-category-drag {
+		display: none !important;
+	}
+
+	.category-move-touch-button {
+		display: inline-flex !important;
+	}
+
+	.simple-list-row.category-row .category-move-touch-button .category-move-icon {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 100%;
+		height: 100%;
+	}
+
+	.simple-list-row.category-row .category-move-touch-button .category-move-icon svg {
+		display: block;
+		width: 22px;
+		height: 22px;
+		margin: auto;
+	}
+
+	.simple-list-row.category-row .category-move-touch-button .category-move-icon svg path {
+		vector-effect: non-scaling-stroke;
+	}
+
+	.simple-list-row.category-row .category-move-touch-button:disabled {
+		opacity: 1;
+		cursor: not-allowed;
+		border-color: color-mix(in srgb, var(--glass-border-strong) 72%, transparent);
+		background:
+			linear-gradient(180deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0) 100%),
+			color-mix(in srgb, var(--input-disabled-bg) 94%, var(--color-bg));
+		color: color-mix(in srgb, var(--text-soft) 72%, transparent);
+		box-shadow: none;
+		filter: saturate(0.25);
+	}
+
+	.simple-list-row.category-row .category-move-touch-button:disabled .category-move-icon svg {
+		opacity: 0.42;
 	}
 }
 
@@ -3575,6 +3689,93 @@ button:disabled {
 		box-sizing: border-box;
 	}
 
+	.wallet-list-row {
+		grid-template-columns: minmax(0, 1fr) auto;
+		grid-template-areas:
+			"name amount"
+			"actions actions";
+		gap: 10px;
+		align-items: center;
+	}
+
+	.wallet-list-row > :nth-child(1),
+	.wallet-list-row > :nth-child(2),
+	.wallet-list-row > :nth-child(3) {
+		display: block;
+		width: auto;
+	}
+
+	.wallet-list-row > :nth-child(1) {
+		grid-area: name;
+		align-self: center;
+	}
+
+	.wallet-list-row > :nth-child(2) {
+		grid-area: amount;
+		justify-self: end;
+		text-align: right;
+	}
+
+	.wallet-list-row > :nth-child(3) {
+		grid-area: actions;
+		justify-self: end;
+	}
+
+	.simple-list-row.wallet-list-row > *::before {
+		content: none;
+	}
+
+	.category-row {
+		grid-template-columns: minmax(0, 1fr);
+		grid-template-areas:
+			"name"
+			"actions";
+		gap: 10px;
+		align-items: stretch;
+	}
+
+	.category-row > :nth-child(1),
+	.category-row > :nth-child(2) {
+		display: block;
+	}
+
+	.category-row > :nth-child(1) {
+		grid-area: name;
+		width: 100%;
+		justify-self: stretch;
+	}
+
+	.category-row > :nth-child(2) {
+		grid-area: actions;
+		width: 100%;
+		justify-self: stretch;
+	}
+
+	.simple-list-row.category-row > *::before,
+	.category-row .row-actions::before {
+		content: none;
+	}
+
+	.category-row-name {
+		display: flex;
+		align-items: center;
+		width: 100%;
+		min-height: 38px;
+		padding: 10px 14px;
+		box-sizing: border-box;
+		border-radius: 16px;
+		/* border: 1px solid color-mix(in srgb, var(--color-primary) 18%, transparent); */
+		background:
+			linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0) 100%),
+			color-mix(in srgb, var(--color-primary) 26%, var(--input-surface));
+		box-shadow:
+			inset 0 1px 0 rgba(255, 255, 255, 0.08),
+			0 8px 18px rgba(4, 12, 24, 0.16);
+		color: var(--text-h);
+		font-weight: 600;
+		line-height: 1.2;
+	}
+
 	.entry-row > * {
 		padding: 6px 8px;
 		border-radius: 12px;
@@ -3654,6 +3855,137 @@ button:disabled {
 		gap: 8px;
 	}
 
+	.wallet-list-row .row-actions {
+		width: 100%;
+		justify-self: stretch;
+		justify-content: space-evenly;
+		flex-wrap: nowrap;
+		gap: 12px;
+	}
+
+	.category-row .row-actions {
+		width: 100%;
+		justify-self: stretch;
+		justify-content: center;
+		flex-wrap: nowrap;
+		gap: 10px;
+		align-items: center;
+		padding: 2px 0 0;
+		border: 0;
+		background: transparent;
+		box-shadow: none;
+	}
+
+	.wallet-list-row .row-actions button {
+		flex: 0 0 42px;
+		width: 42px;
+		height: 42px;
+		min-width: 42px;
+		border-radius: 50%;
+		padding: 0;
+	}
+
+	.category-row .row-actions button {
+		flex: 0 0 42px;
+		width: 42px;
+		height: 42px;
+		min-width: 42px;
+		border-radius: 50%;
+		padding: 0;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.category-row .row-actions .icon-button,
+	.category-row .row-actions button:not(.danger-button) {
+		border-color: color-mix(in srgb, var(--color-primary) 22%, var(--glass-border-strong));
+		background:
+			linear-gradient(180deg, rgba(255, 255, 255, 0.07) 0%, rgba(255, 255, 255, 0) 100%),
+			color-mix(in srgb, var(--color-primary) 14%, var(--input-surface));
+		color: var(--text-soft);
+	}
+
+	.category-row .row-actions .icon-button {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.category-move-touch-button {
+		display: none !important;
+	}
+
+	.category-move-icon {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 100%;
+		height: 100%;
+	}
+
+	.category-move-icon svg {
+		display: block;
+		width: 22px;
+		height: 22px;
+		margin: auto;
+	}
+
+	.category-move-icon svg path {
+		vector-effect: non-scaling-stroke;
+	}
+
+	.category-row .row-actions .category-move-touch-button:disabled {
+		opacity: 1;
+		cursor: not-allowed;
+		border-color: color-mix(in srgb, var(--glass-border-strong) 72%, transparent);
+		background:
+			linear-gradient(180deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0) 100%),
+			color-mix(in srgb, var(--input-disabled-bg) 94%, var(--color-bg));
+		color: color-mix(in srgb, var(--text-soft) 72%, transparent);
+		box-shadow: none;
+		filter: saturate(0.25);
+	}
+
+	.category-row .row-actions .category-move-touch-button:disabled .category-move-icon svg {
+		opacity: 0.42;
+	}
+
+	.category-row .button-icon-drag {
+		padding-top: 0;
+	}
+
+	.category-row .button-icon-drag > span {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 100%;
+		height: 100%;
+	}
+
+	.category-row .button-icon-drag svg {
+		display: block;
+		margin: auto;
+	}
+
+	.category-row .row-actions .button-icon-edit,
+	.category-row .row-actions .button-icon-delete,
+	.category-row .row-actions .button-icon-drag {
+		margin: 0;
+	}
+
+	.category-row .row-actions .button-icon-delete {
+		margin-left: 0;
+	}
+
+	.category-row .row-actions .danger-button {
+		border-color: color-mix(in srgb, var(--danger-border) 84%, transparent);
+		background:
+			linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0) 100%),
+			color-mix(in srgb, var(--danger-bg) 72%, transparent);
+		color: var(--danger-text);
+	}
+
 	.description-field {
 		cursor: pointer;
 		-webkit-tap-highlight-color: transparent;
@@ -3681,7 +4013,7 @@ button:disabled {
 	}
 
 	.entry-modal-backdrop {
-		padding: 12px;
+		padding: 20px;
 	}
 
 	.entry-modal {
@@ -3719,6 +4051,10 @@ button:disabled {
 		color: var(--text-soft);
 	}
 
+	.wallet-list-row .row-actions::before {
+		content: none;
+	}
+
 	.row-actions,
 	.toolbar {
 		width: 100%;
@@ -3727,6 +4063,50 @@ button:disabled {
 	.row-actions button,
 	.toolbar button {
 		flex: 1 1 auto;
+	}
+
+	.simple-list-row.wallet-list-row .row-actions {
+		display: flex;
+		width: 100%;
+		min-width: 0;
+		justify-self: stretch;
+		justify-content: center;
+		gap: 10px;
+	}
+
+	.simple-list-row.wallet-list-row .row-actions button {
+		flex: 0 0 42px;
+		width: 42px;
+		height: 42px;
+		min-width: 42px;
+	}
+
+	.simple-list-row.category-row .category-row-actions {
+		display: flex;
+		width: 100%;
+		min-width: 0;
+		justify-self: stretch;
+		justify-content: center !important;
+		align-items: center;
+		gap: 10px;
+		text-align: center;
+	}
+
+	.simple-list-row.category-row .category-row-actions button {
+		flex: 0 0 42px !important;
+		width: 42px !important;
+		height: 42px !important;
+		min-width: 42px !important;
+		max-width: 42px;
+		margin: 0 !important;
+	}
+
+	.simple-list-row.category-row .category-move-touch-button {
+		display: inline-flex !important;
+	}
+
+	.simple-list-row.category-row .desktop-category-drag {
+		display: none !important;
 	}
 
 	/* FILTER MOBILE */
@@ -3840,6 +4220,14 @@ button:disabled {
 
 	.category-row {
 		grid-template-columns: 1fr auto;
+	}
+
+	.desktop-category-drag {
+		display: inline-flex !important;
+	}
+
+	.category-move-touch-button {
+		display: none !important;
 	}
 
 	.entry-list-head,
@@ -3969,5 +4357,6 @@ button:disabled {
 		justify-content: flex-end;
 		justify-self: end;
 	}
+
 }
 </style>
