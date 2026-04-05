@@ -1,6 +1,5 @@
 import {
 	getRedirectResult,
-	signInWithRedirect,
 	signInWithPopup,
 	signOut,
 	onAuthStateChanged
@@ -8,19 +7,7 @@ import {
 
 import { auth, provider } from "../firebase"
 
-function isStandaloneMode() {
-	if (typeof window === "undefined") return false
-
-	return window.matchMedia?.("(display-mode: standalone)")?.matches === true ||
-		window.navigator.standalone === true
-}
-
 export async function loginWithGoogle() {
-	if (isStandaloneMode()) {
-		await signInWithRedirect(auth, provider)
-		return null
-	}
-
 	const result = await signInWithPopup(auth, provider)
 	return result.user
 }
