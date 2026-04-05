@@ -18,6 +18,9 @@ Aplicativo de controle financeiro em Vue 3 + Vite com Firebase Authentication e 
 * tema light/dark e cor primaria ficam em preferencias do usuario no Firebase
 * o ultimo mes/ano visualizado no resumo tambem fica salvo nas preferencias do usuario no Firebase
 * a ordenacao da lista de transacoes e independente por secao de categoria
+* filtros de mes/ano usam periodos salvos na colecao `periods`
+* criar um novo periodo carrega os saldos atuais como abertura e clona transacoes elegiveis como nao pagas
+* todas as modais principais aceitam `Enter`, `Esc` e clique fora para fechar quando nao ha envio em andamento
 
 ## Direcao de UI
 
@@ -28,6 +31,8 @@ Aplicativo de controle financeiro em Vue 3 + Vite com Firebase Authentication e 
 * selects, inputs e listas devem compartilhar a mesma linguagem de borda tematica
 * dropdowns usam um componente Vue customizado para garantir consistencia entre temas
 * o card de resumo do dashboard pode ficar sticky e entrar em modo compacto ao encostar no topo
+* BottomTabs inclui `Resumo`, `Carteiras`, `Categorias` e `Configuracoes`
+* o FAB de `Resumo` abre a modal de nova entrada
 
 ## Documentacao
 

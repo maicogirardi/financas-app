@@ -15,6 +15,7 @@ wallets/{walletId}
 transactions/{transactionId}
 categories/{categoryId}
 periods/{periodId}
+users/{uid}/preferences/ui
 
 Data flow:
 
@@ -30,15 +31,19 @@ Current implementation status:
 - wallet deletion asks for confirmation in modal
 - deleting a wallet also removes related Firebase transactions
 - categories are synced from Firebase in realtime
+- category ordering is stored online and can be changed from the categories page
 - manual entry modal creates online transactions
-- stores are now synced online and ready for future features
-- app has separate pages/tabs for dashboard, wallets, and categories
-- settings page owns theme mode and theme color preferences
+- transfers between wallets are stored online and marked paid immediately
+- stores are synced online and ready for future features
+- app has separate pages/tabs for dashboard, wallets, categories, and settings
+- settings page owns theme mode, theme color, auth controls, and user status
 - year/month filter controls visible data in dashboard
 - periods collection defines available monthly pages
 - periods can be created from a modal with custom year/month
+- creating a period carries opening balances forward and clones eligible transactions as unpaid
 - deleting a period also removes its period transactions
 - UI styling is centralized in theme tokens plus App-level form styles for modals and filters
 - dropdown UI now uses a shared `AppSelect.vue` component for consistent theming and mobile behavior
 - modal backdrops must stay above cards, sections, and dropdown menus via z-index layering
+- all major modals now support outside click close, while blocking accidental close during submit
 - dashboard summary uses a dedicated sticky section outside `ResumoView`, with compact-on-scroll behavior handled in `App.vue`

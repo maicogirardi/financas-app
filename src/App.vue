@@ -54,6 +54,10 @@ const adjustingWalletId = ref("")
 const adjustmentBalance = ref(0)
 const adjustmentBalanceInput = ref("")
 const adjustmentDescription = ref("")
+const activeCalculatorField = ref("")
+const calculatorExpression = ref("")
+const calculatorError = ref("")
+const calculatorExpressionInputRef = ref(null)
 
 const deleteWalletId = ref("")
 const deleteCategoryId = ref("")
@@ -622,6 +626,146 @@ function parseCurrencyInput(value) {
 	return integerValue + (fractionValue / 100)
 }
 
+function normalizeCalculatorExpression(value) {
+	return String(value ?? "")
+		.replace(/\s+/g, "")
+		.replace(/,/g, ".")
+}
+
+function tokenizeCalculatorExpression(expression) {
+	const tokens = []
+	let index = 0
+
+	while (index < expression.length) {
+		const character = expression[index]
+
+		if ("+-*/()".includes(character)) {
+			tokens.push(character)
+			index += 1
+			continue
+		}
+
+		if (/\d|\./.test(character)) {
+			let numberToken = character
+			index += 1
+
+			while (index < expression.length && /[\d.]/.test(expression[index])) {
+				numberToken += expression[index]
+				index += 1
+			}
+
+			if (!/^\d+(\.\d+)?$|^\.\d+$/.test(numberToken)) {
+				throw new Error("Use apenas números e uma casa decimal por valor.")
+			}
+
+			tokens.push(numberToken)
+			continue
+		}
+
+		throw new Error("Use apenas números, parênteses e + - * /.")
+	}
+
+	return tokens
+}
+
+function evaluateCalculatorExpression(expression) {
+	const normalized = normalizeCalculatorExpression(expression)
+
+	if (!normalized) {
+		throw new Error("Digite uma fórmula para calcular.")
+	}
+
+	const tokens = tokenizeCalculatorExpression(normalized)
+	let currentIndex = 0
+
+	function parseExpression() {
+		let value = parseTerm()
+
+		while (tokens[currentIndex] === "+" || tokens[currentIndex] === "-") {
+			const operator = tokens[currentIndex]
+			currentIndex += 1
+			const nextValue = parseTerm()
+			value = operator === "+" ? value + nextValue : value - nextValue
+		}
+
+		return value
+	}
+
+	function parseTerm() {
+		let value = parseFactor()
+
+		while (tokens[currentIndex] === "*" || tokens[currentIndex] === "/") {
+			const operator = tokens[currentIndex]
+			currentIndex += 1
+			const nextValue = parseFactor()
+
+			if (operator === "/") {
+				if (nextValue === 0) {
+					throw new Error("Não é possível dividir por zero.")
+				}
+
+				value /= nextValue
+				continue
+			}
+
+			value *= nextValue
+		}
+
+		return value
+	}
+
+	function parseFactor() {
+		const token = tokens[currentIndex]
+
+		if (token === "+") {
+			currentIndex += 1
+			return parseFactor()
+		}
+
+		if (token === "-") {
+			currentIndex += 1
+			return -parseFactor()
+		}
+
+		if (token === "(") {
+			currentIndex += 1
+			const value = parseExpression()
+
+			if (tokens[currentIndex] !== ")") {
+				throw new Error("Feche os parênteses da fórmula.")
+			}
+
+			currentIndex += 1
+			return value
+		}
+
+		if (token == null) {
+			throw new Error("Fórmula incompleta.")
+		}
+
+		const numericValue = Number(token)
+
+		if (!Number.isFinite(numericValue)) {
+			throw new Error("Fórmula inválida.")
+		}
+
+		currentIndex += 1
+		return numericValue
+	}
+
+	const result = parseExpression()
+
+	if (currentIndex !== tokens.length) {
+		throw new Error("Fórmula inválida.")
+	}
+
+	if (!Number.isFinite(result)) {
+		throw new Error("Não foi possível calcular esse valor.")
+	}
+
+	return result
+}
+
 function getCurrencyField(field) {
 	switch (field) {
 		case "wallet":
@@ -655,12 +799,114 @@ function syncCurrencyFieldInput(field, event) {
 
 	if (!currencyField) return
 
+	if (activeCalculatorField.value === field) {
+		calculatorExpression.value = ""
+		calculatorError.value = ""
+	}
+
 	syncCurrencyInput(currencyField.model, currencyField.input, event)
 }
 
 function setCurrencyInput(model, input, value) {
 	model.value = Number(value ?? 0)
 	input.value = formatCurrency(model.value)
+}
+
+function closeCalculator() {
+	activeCalculatorField.value = ""
+	calculatorExpression.value = ""
+	calculatorError.value = ""
+}
+
+function formatCalculatorInitialValue(value) {
+	const numericValue = Number(value ?? 0)
+
+	if (!Number.isFinite(numericValue)) return ""
+
+	return numericValue.toFixed(2).replace(".", ",")
+}
+
+const calculatorPreviewText = computed(() => {
+	if (!calculatorExpression.value.trim()) {
+		return "Resultado: R$ 0,00"
+	}
+
+	try {
+		const result = evaluateCalculatorExpression(calculatorExpression.value)
+
+		if (result < 0) {
+			return "Resultado: valor negativo"
+		}
+
+		return `Resultado: ${formatCurrency(result)}`
+	} catch {
+		return "Resultado: calculando..."
+	}
+})
+
+function toggleCalculator(field) {
+	if (activeCalculatorField.value === field) {
+		closeCalculator()
+		return
+	}
+
+	const currencyField = getCurrencyField(field)
+
+	if (!currencyField) return
+
+	activeCalculatorField.value = field
+	calculatorExpression.value = formatCalculatorInitialValue(currencyField.model.value)
+	calculatorError.value = ""
+
+	void nextTick(() => {
+		const input = calculatorExpressionInputRef.value
+		input?.focus?.()
+
+		if (input instanceof HTMLInputElement) {
+			if (input.value === "0,00") {
+				input.select()
+				return
+			}
+
+			const caretPosition = input.value.length
+			input.setSelectionRange(caretPosition, caretPosition)
+		}
+	})
+}
+
+function applyCalculatorResult(field) {
+	const currencyField = getCurrencyField(field)
+
+	if (!currencyField) return
+
+	try {
+		const result = evaluateCalculatorExpression(calculatorExpression.value)
+
+		if (result < 0) {
+			calculatorError.value = "O resultado precisa ser zero ou maior."
+			return
+		}
+
+		setCurrencyInput(currencyField.model, currencyField.input, result)
+		closeCalculator()
+	} catch (error) {
+		calculatorError.value = error instanceof Error ? error.message : "Não foi possível calcular."
+	}
+}
+
+function handleCalculatorExpressionKeydown(field, event) {
+	if (event.key === "Enter") {
+		event.preventDefault()
+		event.stopPropagation()
+		applyCalculatorResult(field)
+		return
+	}
+
+	if (event.key !== "Escape") return
+
+	event.preventDefault()
+	event.stopPropagation()
+	closeCalculator()
 }
 
 function parseDateInput(value) {
@@ -842,6 +1088,12 @@ function handleModalEnter(action, event) {
 		default:
 			return
 	}
+}
+
+function handleBackdropClose(closeAction) {
+	if (isSubmitting.value) return
+
+	closeAction()
 }
 
 function handleCurrencyFocus(model, input, event) {
@@ -1479,17 +1731,20 @@ function closeWalletModal() {
 	editingWalletId.value = ""
 	walletName.value = ""
 	walletColor.value = "#aa3bff"
+	closeCalculator()
 	setCurrencyInput(walletBalance, walletBalanceInput, 0)
 }
 
 function openAdjustmentModal(wallet) {
 	adjustingWalletId.value = wallet.id
+	closeCalculator()
 	setCurrencyInput(adjustmentBalance, adjustmentBalanceInput, getWalletBalanceForPeriod(wallet))
 	adjustmentDescription.value = ""
 }
 
 function closeAdjustmentModal() {
 	adjustingWalletId.value = ""
+	closeCalculator()
 	setCurrencyInput(adjustmentBalance, adjustmentBalanceInput, 0)
 	adjustmentDescription.value = ""
 }
@@ -1603,6 +1858,7 @@ function resetEntryForm() {
 	entryDate.value = formatDateValue(buildDefaultEntryDate())
 	entryAdjustmentDirection.value = "increase"
 	entryFormError.value = ""
+	closeCalculator()
 }
 
 function openCreateEntryModal() {
@@ -2192,8 +2448,8 @@ function handleMobileEntryDelete(transaction) {
 				@logout="handleLogout" />
 		</template>
 
-		<div v-if="isWalletModalOpen" class="modal-backdrop">
-			<div class="modal narrow-mobile-modal" @keydown.enter="handleModalEnter('wallet', $event)">
+		<div v-if="isWalletModalOpen" class="modal-backdrop" @click="handleBackdropClose(closeWalletModal)">
+			<div class="modal narrow-mobile-modal" @click.stop @keydown.enter="handleModalEnter('wallet', $event)">
 				<h3>{{ isEditingWallet ? "Editar carteira" : "Criar carteira" }}</h3>
 
 				<div class="field-group">
@@ -2222,17 +2478,61 @@ function handleMobileEntryDelete(transaction) {
 			</div>
 		</div>
 
-		<div v-if="adjustingWalletId" class="modal-backdrop">
-			<div class="modal narrow-mobile-modal" @keydown.enter="handleModalEnter('adjustment', $event)">
+		<div v-if="adjustingWalletId" class="modal-backdrop" @click="handleBackdropClose(closeAdjustmentModal)">
+			<div class="modal narrow-mobile-modal" @click.stop @keydown.enter="handleModalEnter('adjustment', $event)">
 				<h3>Ajustar saldo</h3>
 
 				<div class="field-group">
 					<label class="field-label">Valor</label>
-					<input :class="{ 'required-empty': isAdjustmentBalanceMissing() }" :value="adjustmentBalanceInput"
-						type="text" inputmode="decimal" placeholder="R$ 0,00" @keydown="handleCurrencyKeydown($event)"
-						@focus="handleCurrencyFieldFocus('adjustment', $event)"
-						@input="syncCurrencyFieldInput('adjustment', $event)"
-						@blur="handleCurrencyFieldBlur('adjustment')" />
+					<div class="currency-input-group">
+						<div class="currency-input-shell">
+							<input
+								:class="{ 'required-empty': isAdjustmentBalanceMissing() }"
+								:value="adjustmentBalanceInput"
+								type="text"
+								inputmode="decimal"
+								placeholder="R$ 0,00"
+								@keydown="handleCurrencyKeydown($event)"
+								@focus="handleCurrencyFieldFocus('adjustment', $event)"
+								@input="syncCurrencyFieldInput('adjustment', $event)"
+								@blur="handleCurrencyFieldBlur('adjustment')"
+							/>
+							<button
+								type="button"
+								class="calculator-toggle"
+								:class="{ 'is-open': activeCalculatorField === 'adjustment' }"
+								aria-label="Abrir calculadora"
+								@click="toggleCalculator('adjustment')"
+							>
+								<svg viewBox="0 0 24 24" aria-hidden="true">
+									<path d="M7 3.75h10A2.25 2.25 0 0 1 19.25 6v12A2.25 2.25 0 0 1 17 20.25H7A2.25 2.25 0 0 1 4.75 18V6A2.25 2.25 0 0 1 7 3.75Z" />
+									<path d="M8 7.5h8M8.75 11.25h1.5m4.5 0h1.5m-7.5 3h1.5m4.5 0h1.5m-7.5 3h1.5m4.5 0h1.5" />
+								</svg>
+							</button>
+							<div v-if="activeCalculatorField === 'adjustment'" class="calculator-popover">
+								<label class="field-label" for="adjustment-calculator-input">Fórmula</label>
+								<div class="calculator-preview" aria-live="polite">{{ calculatorPreviewText }}</div>
+								<input
+									id="adjustment-calculator-input"
+									ref="calculatorExpressionInputRef"
+									v-model="calculatorExpression"
+									type="text"
+									inputmode="decimal"
+									placeholder="Ex.: 1200+350,75-40"
+									@keydown="handleCalculatorExpressionKeydown('adjustment', $event)"
+								/>
+								<div v-if="calculatorError" class="error-text">{{ calculatorError }}</div>
+								<div class="calculator-popover-actions">
+									<button type="button" class="secondary-button" @click="closeCalculator">
+										Cancelar
+									</button>
+									<button type="button" class="primary-button calculator-apply-button" @click="applyCalculatorResult('adjustment')">
+										Aplicar
+									</button>
+								</div>
+							</div>
+						</div>
+					</div>
 				</div>
 				<div class="field-group">
 					<label class="field-label">Descrição</label>
@@ -2253,8 +2553,8 @@ function handleMobileEntryDelete(transaction) {
 			</div>
 		</div>
 
-		<div v-if="isCategoryModalOpen" class="modal-backdrop">
-			<div class="modal narrow-mobile-modal" @keydown.enter="handleModalEnter('category', $event)">
+		<div v-if="isCategoryModalOpen" class="modal-backdrop" @click="handleBackdropClose(closeCategoryModal)">
+			<div class="modal narrow-mobile-modal" @click.stop @keydown.enter="handleModalEnter('category', $event)">
 				<h3>{{ editingCategoryId ? "Editar categoria" : "Criar categoria" }}</h3>
 
 				<div class="field-group">
@@ -2275,8 +2575,8 @@ function handleMobileEntryDelete(transaction) {
 			</div>
 		</div>
 
-		<div v-if="isPeriodModalOpen" class="modal-backdrop">
-			<div class="modal narrow-mobile-modal" @keydown.enter="handleModalEnter('period', $event)">
+		<div v-if="isPeriodModalOpen" class="modal-backdrop" @click="handleBackdropClose(closePeriodModal)">
+			<div class="modal narrow-mobile-modal" @click.stop @keydown.enter="handleModalEnter('period', $event)">
 				<h3>Criar mês</h3>
 
 				<div class="field-group">
@@ -2307,8 +2607,8 @@ function handleMobileEntryDelete(transaction) {
 			</div>
 		</div>
 
-		<div v-if="isEntryModalOpen" class="modal-backdrop entry-modal-backdrop">
-			<div class="modal entry-modal" @keydown.enter="handleModalEnter('entry', $event)">
+		<div v-if="isEntryModalOpen" class="modal-backdrop entry-modal-backdrop" @click="handleBackdropClose(closeEntryModal)">
+			<div class="modal entry-modal" @click.stop @keydown.enter="handleModalEnter('entry', $event)">
 				<h3>{{ editingTransactionId ? "Editar entrada" : "Nova entrada" }}</h3>
 
 				<div class="field-group">
@@ -2371,10 +2671,54 @@ function handleMobileEntryDelete(transaction) {
 				</div>
 				<div class="field-group">
 					<label class="field-label">Valor</label>
-					<input :value="entryAmountInput" type="text" inputmode="decimal" placeholder="R$ 0,00"
-						@keydown="handleCurrencyKeydown($event)"
-						@focus="handleCurrencyFieldFocus('entry', $event)"
-						@input="syncCurrencyFieldInput('entry', $event)" @blur="handleCurrencyFieldBlur('entry')" />
+					<div class="currency-input-group">
+						<div class="currency-input-shell">
+							<input
+								:value="entryAmountInput"
+								type="text"
+								inputmode="decimal"
+								placeholder="R$ 0,00"
+								@keydown="handleCurrencyKeydown($event)"
+								@focus="handleCurrencyFieldFocus('entry', $event)"
+								@input="syncCurrencyFieldInput('entry', $event)"
+								@blur="handleCurrencyFieldBlur('entry')"
+							/>
+							<button
+								type="button"
+								class="calculator-toggle"
+								:class="{ 'is-open': activeCalculatorField === 'entry' }"
+								aria-label="Abrir calculadora"
+								@click="toggleCalculator('entry')"
+							>
+								<svg viewBox="0 0 24 24" aria-hidden="true">
+									<path d="M7 3.75h10A2.25 2.25 0 0 1 19.25 6v12A2.25 2.25 0 0 1 17 20.25H7A2.25 2.25 0 0 1 4.75 18V6A2.25 2.25 0 0 1 7 3.75Z" />
+									<path d="M8 7.5h8M8.75 11.25h1.5m4.5 0h1.5m-7.5 3h1.5m4.5 0h1.5m-7.5 3h1.5m4.5 0h1.5" />
+								</svg>
+							</button>
+							<div v-if="activeCalculatorField === 'entry'" class="calculator-popover">
+								<label class="field-label" for="entry-calculator-input">Fórmula</label>
+								<div class="calculator-preview" aria-live="polite">{{ calculatorPreviewText }}</div>
+								<input
+									id="entry-calculator-input"
+									ref="calculatorExpressionInputRef"
+									v-model="calculatorExpression"
+									type="text"
+									inputmode="decimal"
+									placeholder="Ex.: 450*3,5"
+									@keydown="handleCalculatorExpressionKeydown('entry', $event)"
+								/>
+								<div v-if="calculatorError" class="error-text">{{ calculatorError }}</div>
+								<div class="calculator-popover-actions">
+									<button type="button" class="secondary-button" @click="closeCalculator">
+										Cancelar
+									</button>
+									<button type="button" class="primary-button calculator-apply-button" @click="applyCalculatorResult('entry')">
+										Aplicar
+									</button>
+								</div>
+							</div>
+						</div>
+					</div>
 				</div>
 
 				<div v-if="entryFormError" class="error-text">
@@ -2393,8 +2737,8 @@ function handleMobileEntryDelete(transaction) {
 			</div>
 		</div>
 
-		<div v-if="deleteWalletId" class="modal-backdrop">
-			<div class="modal narrow-mobile-modal" @keydown.enter="handleModalEnter('delete-wallet', $event)">
+		<div v-if="deleteWalletId" class="modal-backdrop" @click="handleBackdropClose(closeDeleteWalletModal)">
+			<div class="modal narrow-mobile-modal" @click.stop @keydown.enter="handleModalEnter('delete-wallet', $event)">
 				<h3>Excluir carteira</h3>
 				<p>Tem certeza que deseja excluir esta carteira?</p>
 
@@ -2410,8 +2754,8 @@ function handleMobileEntryDelete(transaction) {
 			</div>
 		</div>
 
-		<div v-if="deleteCategoryId" class="modal-backdrop">
-			<div class="modal narrow-mobile-modal" @keydown.enter="handleModalEnter('delete-category', $event)">
+		<div v-if="deleteCategoryId" class="modal-backdrop" @click="handleBackdropClose(closeDeleteCategoryModal)">
+			<div class="modal narrow-mobile-modal" @click.stop @keydown.enter="handleModalEnter('delete-category', $event)">
 				<h3>Excluir categoria</h3>
 				<p>Tem certeza que deseja excluir esta categoria?</p>
 
@@ -2427,8 +2771,8 @@ function handleMobileEntryDelete(transaction) {
 			</div>
 		</div>
 
-			<div v-if="deleteTransactionId" class="modal-backdrop">
-			<div class="modal narrow-mobile-modal" @keydown.enter="handleModalEnter('delete-transaction', $event)">
+			<div v-if="deleteTransactionId" class="modal-backdrop" @click="handleBackdropClose(closeDeleteTransactionModal)">
+			<div class="modal narrow-mobile-modal" @click.stop @keydown.enter="handleModalEnter('delete-transaction', $event)">
 				<h3>Excluir entrada</h3>
 				<p>Tem certeza que deseja excluir esta entrada?</p>
 
@@ -2444,8 +2788,8 @@ function handleMobileEntryDelete(transaction) {
 			</div>
 		</div>
 
-		<div v-if="deletePeriodId" class="modal-backdrop">
-			<div class="modal narrow-mobile-modal" @keydown.enter="handleModalEnter('delete-period', $event)">
+		<div v-if="deletePeriodId" class="modal-backdrop" @click="handleBackdropClose(closeDeletePeriodModal)">
+			<div class="modal narrow-mobile-modal" @click.stop @keydown.enter="handleModalEnter('delete-period', $event)">
 				<h3>Excluir mês</h3>
 				<p>Tem certeza que deseja excluir este mês e todas as entradas dele?</p>
 
@@ -2914,6 +3258,92 @@ function handleMobileEntryDelete(transaction) {
 	font-size: 12px;
 	line-height: 1.4;
 	color: var(--text-soft);
+}
+
+.currency-input-group {
+	display: block;
+}
+
+.currency-input-shell {
+	position: relative;
+	display: flex;
+	align-items: center;
+}
+
+.currency-input-shell input {
+	padding-right: 54px;
+}
+
+.calculator-toggle {
+	position: absolute;
+	top: 50%;
+	right: 12px;
+	width: 18px;
+	height: 18px;
+	padding: 0;
+	border: 0;
+	background: transparent;
+	box-shadow: none;
+	transform: translateY(-50%);
+	color: color-mix(in srgb, var(--input-text) 72%, transparent);
+}
+
+.calculator-toggle:hover,
+.calculator-toggle.is-open {
+	transform: translateY(-50%);
+	color: var(--text-h);
+	border: 0;
+	background: transparent;
+	box-shadow: none;
+}
+
+.calculator-toggle svg {
+	width: 18px;
+	height: 18px;
+	fill: none;
+	stroke: currentColor;
+	stroke-width: 1.8;
+	stroke-linecap: round;
+	stroke-linejoin: round;
+}
+
+.calculator-popover {
+	position: absolute;
+	bottom: calc(100% + 10px);
+	left: 50%;
+	z-index: 30;
+	display: grid;
+	gap: 8px;
+	width: min(320px, calc(100vw - 56px));
+	padding: 14px;
+	border: 1px solid var(--glass-border-strong);
+	border-radius: 18px;
+	background:
+		linear-gradient(180deg, var(--glass-highlight) 0%, transparent 100%),
+		var(--glass-surface-strong);
+	box-shadow: var(--shadow);
+	backdrop-filter: blur(22px);
+	transform: translateX(-50%);
+}
+
+.calculator-preview {
+	padding-top: 2px;
+	padding-bottom: 2px;
+	border-top: 1px solid color-mix(in srgb, var(--glass-border-strong) 88%, transparent);
+	color: color-mix(in srgb, var(--text-soft) 78%, #000);
+	font-size: 13px;
+	font-style: italic;
+}
+
+.calculator-popover-actions {
+	display: flex;
+	justify-content: flex-end;
+	gap: 10px;
+	align-items: center;
+}
+
+.calculator-apply-button {
+	min-width: 96px;
 }
 
 .color-field {

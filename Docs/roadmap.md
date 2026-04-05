@@ -1,41 +1,20 @@
 # Roadmap
 
-Phase 1
-- Wallets
-- create
-- balance adjustment by modal
-- delete
-- delete confirmation modal
-- list
+Implemented
+- Wallet CRUD with dedicated create/edit modal
+- Wallet balance adjustment flow via transaction
+- Wallet delete confirmation with related transaction cleanup
+- Categories synced online with create, edit, delete, and reorder
+- Transaction list grouped by category with paid toggle, edit, delete, and per-section sorting
+- Manual transaction modal with wallet, category, type, date, value, transfer destination, and validation
+- Transfers between wallets
+- Monthly periods with saved filters, carry-over balances, cloning of eligible transactions, and delete flow
+- Bottom tab navigation with `Resumo`, `Carteiras`, `Categorias`, and `Configuracoes`
+- Firebase-backed UI preferences for theme, primary color, and selected period
+- Outside-click close behavior across app modals and mobile action sheets
 
-Phase 2
-- Transactions
-- income
-- expense
-- adjustment history UI
-- categories
-- grouped transaction sections
-- manual entry modal
-- transaction edit
-- transaction delete
-- year/month filter
-- separate pages for wallets and categories
-- monthly period pages
-- next month carry-over
-- custom create/remove period flow
-
-Phase 3
-- Transfers
-- between wallets
-
-Phase 4
-- Fixed expenses
-
-Phase 5
-- Tags
-
-Phase 6
-- Monthly overview
-
-Phase 7
-- Spreadsheet dashboard
+Next ideas
+- fixed expense automation beyond manual cloning
+- tags
+- monthly overview analytics
+- spreadsheet/dashboard export views

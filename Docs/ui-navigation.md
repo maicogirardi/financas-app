@@ -9,7 +9,7 @@ Tabs:
 * Resumo
 * Carteiras
 * Categorias
-* Configurações
+* Configuracoes
 
 The bottom tabs must always be visible.
 The current tab must have stronger visual emphasis than the others.
@@ -19,7 +19,7 @@ Resumo-specific top controls:
 
 * year filter visible only in Resumo
 * month filter visible only in Resumo
-* month select must display month names like Janeiro, Fevereiro, Março
+* month select must display month names like Janeiro, Fevereiro, Marco
 * year and month filters must stay on a single row inside a card section
 * year filter can be narrower and does not need to stretch across the row
 * dropdowns should stay aligned to the left and action buttons aligned to the right
@@ -57,6 +57,8 @@ Visual direction:
 * layout changes should continue mobile first, with desktop refinements handled separately
 * mobile-only adjustments must stay isolated in mobile media queries unless a broader change is explicitly requested
 * on mobile, small contextual action modals may use a compact frosted glass layout and close on outside tap
+* all app modals should close on outside click in every device size when there is no active submit
+* clicks inside modal content must not bubble and accidentally close the modal
 
 ## Floating Action Button (FAB)
 
@@ -95,11 +97,12 @@ Structure:
 
 ## Settings Navigation
 
-The Configurações screen must be available through BottomTabs navigation.
+The Configuracoes screen must be available through BottomTabs navigation.
 
-Configurações contains:
+Configuracoes contains:
 
-* screen title `Configurações`
+* screen title `Configuracoes`
 * dark mode switch
+* theme color picker
 * login/logout controls
 * "Logado como" status

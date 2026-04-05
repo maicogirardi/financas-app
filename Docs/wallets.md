@@ -33,7 +33,7 @@ UI:
 
 Current wallet actions:
 
-- create wallet with name, color, and initial balance
+- create wallet with name, color, and initial balance in Firestore
 - edit wallet name and color via modal
 - adjust balance via modal
 - delete wallet via confirmation modal
@@ -42,7 +42,8 @@ Current wallet actions:
 - wallet balances must display as Brazilian Real with 2 decimal places
 - wallet creation must happen in a dedicated modal
 - wallet creation modal must use the same required-field validation behavior as category creation
-- wallet creation modal must support Enter to confirm and Esc to cancel
+- wallet creation modal must support Enter to confirm, Esc to cancel, and outside click to close
+- wallet edit, adjustment, and delete modals must also close on outside click
 - wallet edit modal must not allow direct balance editing
 
 Rules:
@@ -53,6 +54,7 @@ Rules:
 - Balance adjustment must create adjustment transaction
 - Balance adjustment modal must ask new balance and description
 - Wallet delete must ask confirmation before removal
+- Deleting a wallet must also remove related online transactions
 - Wallet balance must consider only paid transactions
 - Wallet balance adjustment must use hidden category "Ajuste de Saldo"
 - Wallet balance per page must use the opening balance of the selected period

@@ -77,6 +77,7 @@ Manual entry UX:
 - form modals must show a small title label above each field
 - Enter should confirm modal actions
 - Esc should cancel modal actions
+- clicking outside any transaction-related modal should close it when no submit is in progress
 - on mobile, the entry create/edit modal may use a narrower edge spacing than desktop while staying inside the viewport
 
 Edit transaction rules:
@@ -88,6 +89,7 @@ Edit transaction rules:
 - toggling paid must update transaction online in Firebase
 - manual entry date must stay inside the selected monthly period
 - transfer transactions must be created as paid = true so wallet balances update immediately
+- transaction create, edit, and delete flows must remain Firebase-first
 
 Adjustment transaction rules:
 

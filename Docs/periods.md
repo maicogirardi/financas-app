@@ -23,3 +23,4 @@ Rules:
 - If there is no previous period, opening balances must start from wallet initial balances
 - Current period can be removed with confirmation modal
 - Removing a period must also remove all transactions linked to that period
+- Period create and delete modals must support Enter, Esc, and outside click to close when idle

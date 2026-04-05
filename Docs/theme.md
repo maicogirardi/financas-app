@@ -91,6 +91,7 @@ Behavior:
 * save in Firebase
 * restore from Firebase on mount/auth restore
 * login/logout controls are also hosted in `ConfiguracoesView.vue`
+* theme color picker is also hosted in `ConfiguracoesView.vue`
 * theme must apply across the whole app, not only bottom navigation
 * glass cards, inputs, buttons, and bottom navigation must all respond to the active theme
 * the selected dashboard period should also be restored from the same user preferences document
