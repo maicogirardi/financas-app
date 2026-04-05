@@ -1,4 +1,4 @@
-const APP_SHELL_CACHE = "financas-app-shell-v2"
+const APP_SHELL_CACHE = "financas-app-shell-v3"
 const RUNTIME_CACHE = "financas-app-runtime-v1"
 const APP_BASE = self.location.pathname.replace(/sw\.js$/, "")
 const OFFLINE_URLS = [
@@ -18,7 +18,6 @@ self.addEventListener("install", event => {
 	event.waitUntil(
 		caches.open(APP_SHELL_CACHE).then(cache => cache.addAll(OFFLINE_URLS))
 	)
-	self.skipWaiting()
 })
 
 self.addEventListener("activate", event => {
