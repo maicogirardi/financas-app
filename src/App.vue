@@ -3946,6 +3946,8 @@ button {
 	align-items: center;
 	justify-content: center;
 	padding: 11px 16px;
+	position: relative;
+	overflow: hidden;
 	border: 1px solid var(--theme-button-border);
 	border-radius: 18px;
 	background:
@@ -3953,12 +3955,17 @@ button {
 		var(--theme-button-bg);
 	color: var(--text-soft);
 	cursor: pointer;
+	outline: none;
+	appearance: none;
+	-webkit-appearance: none;
+	-webkit-tap-highlight-color: transparent;
 	box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
 	transition:
 		transform 0.18s ease,
 		background 0.18s ease,
 		border-color 0.18s ease,
 		color 0.18s ease,
+		box-shadow 0.18s ease,
 		opacity 0.18s ease;
 }
 
@@ -3971,8 +3978,26 @@ button:hover {
 	color: var(--text-h);
 }
 
+button:focus-visible {
+	border-color: color-mix(in srgb, var(--color-primary) 54%, var(--theme-button-hover-border));
+	box-shadow:
+		0 0 0 3px color-mix(in srgb, var(--color-primary) 18%, transparent),
+		inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+button:active:not(:disabled) {
+	transform: translateY(0);
+	border-color: color-mix(in srgb, var(--color-primary) 58%, var(--theme-button-hover-border));
+	box-shadow:
+		0 0 0 2px color-mix(in srgb, var(--color-primary) 14%, transparent),
+		inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
 button.active {
-	outline: 2px solid var(--accent-border);
+	border-color: color-mix(in srgb, var(--color-primary) 46%, var(--theme-button-hover-border));
+	box-shadow:
+		0 0 0 3px color-mix(in srgb, var(--color-primary) 16%, transparent),
+		inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
 button:disabled {
@@ -4011,6 +4036,14 @@ button:disabled {
 	color: var(--danger-text);
 }
 
+.secondary-button:focus-visible,
+.secondary-button:active:not(:disabled) {
+	border-color: var(--danger-border-strong);
+	box-shadow:
+		0 0 0 2px color-mix(in srgb, var(--danger-text) 14%, transparent),
+		inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
 .danger-button {
 	border-color: var(--danger-border);
 	background:
@@ -4025,6 +4058,14 @@ button:disabled {
 	background:
 		linear-gradient(180deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0) 100%),
 		var(--danger-hover);
+}
+
+.danger-button:focus-visible,
+.danger-button:active:not(:disabled) {
+	border-color: var(--danger-border-strong);
+	box-shadow:
+		0 0 0 2px color-mix(in srgb, var(--danger-text) 14%, transparent),
+		inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
 .error-text {

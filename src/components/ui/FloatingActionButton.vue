@@ -15,6 +15,7 @@ defineEmits(["click"])
 	bottom: calc(88px + env(safe-area-inset-bottom, 0px));
 	width: 60px;
 	height: 60px;
+	overflow: hidden;
 	border: 1px solid var(--theme-fab-border);
 	border-radius: 50%;
 	display: inline-flex;
@@ -28,6 +29,10 @@ defineEmits(["click"])
 		0 18px 36px rgba(15, 17, 21, 0.12),
 		inset 0 1px 0 rgba(255, 255, 255, 0.18);
 	cursor: pointer;
+	outline: none;
+	appearance: none;
+	-webkit-appearance: none;
+	-webkit-tap-highlight-color: transparent;
 	backdrop-filter: blur(18px);
 	z-index: 40;
 	transition:
@@ -35,6 +40,23 @@ defineEmits(["click"])
 		box-shadow 0.18s ease,
 		background 0.18s ease,
 		border-color 0.18s ease;
+}
+
+.fab:focus-visible {
+	border-color: color-mix(in srgb, var(--color-primary) 56%, var(--theme-fab-border));
+	box-shadow:
+		0 0 0 3px color-mix(in srgb, var(--color-primary) 18%, transparent),
+		0 18px 36px rgba(15, 17, 21, 0.12),
+		inset 0 1px 0 rgba(255, 255, 255, 0.18);
+}
+
+.fab:active {
+	transform: translateY(0) scale(0.98);
+	border-color: color-mix(in srgb, var(--color-primary) 60%, var(--theme-fab-border));
+	box-shadow:
+		0 12px 24px rgba(15, 17, 21, 0.14),
+		0 0 0 2px color-mix(in srgb, var(--color-primary) 14%, transparent),
+		inset 0 1px 0 rgba(255, 255, 255, 0.12);
 }
 
 .fab:hover {
