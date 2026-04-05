@@ -1,0 +1,30 @@
+{
+  "name": "Minhas Finanças",
+  "short_name": "Minhas Finanças",
+  "description": "App de finanças pessoais com controle de entradas, despesas, carteiras e períodos.",
+  "lang": "pt-BR",
+  "start_url": "/financas-app/",
+  "scope": "/financas-app/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0F172A",
+  "theme_color": "#12A9C7",
+  "icons": [
+    {
+      "src": "/financas-app/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/financas-app/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "/financas-app/icon-maskable-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

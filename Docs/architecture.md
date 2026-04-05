@@ -47,3 +47,8 @@ Current implementation status:
 - modal backdrops must stay above cards, sections, and dropdown menus via z-index layering
 - all major modals now support outside click close, while blocking accidental close during submit
 - dashboard summary uses a dedicated sticky section outside `ResumoView`, with compact-on-scroll behavior handled in `App.vue`
+- app shell is configured as a PWA for Android installation
+- PWA metadata lives in `index.html` and `public/manifest.webmanifest`
+- the service worker is registered from `src/main.js` in production builds
+- Firebase realtime listeners remain the primary sync path for desktop and installed app usage
+- Google login falls back to redirect mode when the app is running in standalone display mode

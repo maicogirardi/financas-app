@@ -8,6 +8,7 @@ Aplicativo de controle financeiro em Vue 3 + Vite com Firebase Authentication e 
 * Vite
 * Firebase Auth
 * Firestore realtime listeners
+* PWA installable no Android
 
 ## Regras atuais do projeto
 
@@ -33,6 +34,24 @@ Aplicativo de controle financeiro em Vue 3 + Vite com Firebase Authentication e 
 * o card de resumo do dashboard pode ficar sticky e entrar em modo compacto ao encostar no topo
 * BottomTabs inclui `Resumo`, `Carteiras`, `Categorias` e `Configuracoes`
 * o FAB de `Resumo` abre a modal de nova entrada
+
+## PWA
+
+* o app pode ser instalado no Android como PWA
+* o `manifest.webmanifest` e o `service worker` ficam em `public/`
+* o deploy usa base `/financas-app/`, entao `start_url` e `scope` do manifest devem continuar apontando para `/financas-app/`
+* o login Google em modo instalado usa redirect em vez de popup para maior compatibilidade
+* a sincronizacao de dados continua via Firebase em tempo real entre desktop e app instalado quando ambos estao online
+
+Assets esperados em `public/`:
+
+* `favicon.svg`
+* `favicon-16x16.png`
+* `favicon-32x32.png`
+* `apple-touch-icon.png`
+* `icon-192x192.png`
+* `icon-512x512.png`
+* `icon-maskable-512x512.png`
 
 ## Documentacao
 
