@@ -250,6 +250,13 @@ let unsubscribeThemePreference = null
 let walletSummaryResizeObserver = null
 let triggerAppUpdate = null
 
+function syncBrowserThemeColor(activeTheme) {
+	const themeColorMeta = document.querySelector('meta[name="theme-color"]')
+	if (!themeColorMeta) return
+
+	themeColorMeta.setAttribute("content", activeTheme === "dark" ? "#16171d" : "#ffffff")
+}
+
 const navigationTabs = [
 	{ value: "dashboard", label: "Home", icon: "home" },
 	{ value: "wallets", label: "Carteiras", icon: "wallet" },
@@ -496,8 +503,9 @@ function updateWalletSummaryCompact() {
 	}
 
 	const stickyTop = 16
-	const currentScroll = window.scrollY + stickyTop
-	isWalletSummaryCompact.value = currentScroll >= walletSummaryCompactStart.value
+	const currentScroll = Math.max(0, window.scrollY)
+	const compactTrigger = Math.max(24, walletSummaryCompactStart.value - stickyTop)
+	isWalletSummaryCompact.value = currentScroll > compactTrigger
 }
 
 function handleWalletSummaryLayoutChange() {
@@ -536,6 +544,7 @@ function formatDateDisplay(date) {
 function applyTheme(nextTheme) {
 	theme.value = nextTheme
 	document.documentElement.setAttribute("data-theme", nextTheme)
+	syncBrowserThemeColor(nextTheme)
 }
 
 function parseHexColor(value) {

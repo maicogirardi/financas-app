@@ -6,6 +6,7 @@ Theme is controlled globally with:
 
 * `data-theme="light"`
 * `data-theme="dark"`
+* `meta[name="theme-color"]` synchronized with the active theme for mobile browser/PWA top bar
 
 Applied on:
 
@@ -14,6 +15,7 @@ Applied on:
 Use:
 
 * `document.documentElement.setAttribute("data-theme", theme)`
+* update `meta[name="theme-color"]` when the active theme changes
 
 ## CSS Variables
 
