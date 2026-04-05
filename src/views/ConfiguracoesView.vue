@@ -21,6 +21,10 @@ const props = defineProps({
 	isSubmitting: {
 		type: Boolean,
 		default: false
+	},
+	authError: {
+		type: String,
+		default: ""
 	}
 })
 
@@ -112,6 +116,7 @@ function handleThemeToggle(event) {
 				<p class="settings-help">
 					{{ isAuthenticated ? `Logado como: ${userEmail}` : "Nenhuma conta conectada." }}
 				</p>
+				<p v-if="authError" class="settings-error">{{ authError }}</p>
 			</div>
 
 			<div class="settings-actions">
@@ -243,6 +248,12 @@ function handleThemeToggle(event) {
 .settings-help {
 	font-size: 12px;
 	color: var(--text);
+}
+
+.settings-error {
+	margin: 0;
+	font-size: 12px;
+	color: #b91c1c;
 }
 
 .field-group {

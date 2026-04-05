@@ -1,4 +1,5 @@
 import {
+	getRedirectResult,
 	signInWithRedirect,
 	signInWithPopup,
 	signOut,
@@ -30,4 +31,9 @@ export async function logout() {
 
 export function onUserChanged(callback) {
 	return onAuthStateChanged(auth, callback)
+}
+
+export async function resolveRedirectLogin() {
+	const result = await getRedirectResult(auth)
+	return result?.user ?? null
 }

@@ -16,7 +16,7 @@ import { buildPeriodId } from "@/services/periods"
 import { usePeriodStore } from "@/stores/periodStore"
 import { useTransactionStore } from "@/stores/transactionStore"
 import { useWalletStore } from "@/stores/walletStore"
-import { loginWithGoogle, logout, onUserChanged } from "@/services/auth"
+import { loginWithGoogle, logout, onUserChanged, resolveRedirectLogin } from "@/services/auth"
 import { saveThemePreference, subscribeThemePreference } from "@/services/themePreferences"
 
 const walletStore = useWalletStore()
@@ -26,6 +26,7 @@ const periodStore = usePeriodStore()
 
 const user = ref(null)
 const authReady = ref(false)
+const authError = ref("")
 const isSubmitting = ref(false)
 const currentPage = ref("dashboard")
 const theme = ref("light")
@@ -259,6 +260,10 @@ onMounted(() => {
 	window.addEventListener("keydown", handleModalKeydown)
 	window.addEventListener("scroll", updateWalletSummaryCompact, { passive: true })
 	window.addEventListener("resize", handleWalletSummaryLayoutChange)
+	void resolveRedirectLogin().catch(error => {
+		console.error("Failed to resolve redirect login", error)
+		authError.value = getAuthErrorMessage(error)
+	})
 	void nextTick().then(() => {
 		measureWalletSummaryCompactStart()
 		setupWalletSummaryResizeObserver()
@@ -1565,9 +1570,13 @@ async function moveCategory(categoryId, direction) {
 
 async function handleLogin() {
 	isSubmitting.value = true
+	authError.value = ""
 
 	try {
 		await loginWithGoogle()
+	} catch (error) {
+		console.error("Failed to sign in", error)
+		authError.value = getAuthErrorMessage(error)
 	} finally {
 		isSubmitting.value = false
 	}
@@ -1575,12 +1584,31 @@ async function handleLogin() {
 
 async function handleLogout() {
 	isSubmitting.value = true
+	authError.value = ""
 
 	try {
 		await logout()
 	} finally {
 		isSubmitting.value = false
 	}
+}
+
+function getAuthErrorMessage(error) {
+	const code = String(error?.code || "")
+
+	if (code === "auth/unauthorized-domain") {
+		return "O domínio deste app ainda não está autorizado no Firebase Auth."
+	}
+
+	if (code === "auth/popup-blocked" || code === "auth/popup-closed-by-user") {
+		return "O login com Google foi interrompido antes da conclusão."
+	}
+
+	if (code === "auth/network-request-failed") {
+		return "Não foi possível conectar ao login do Google. Verifique a internet e tente novamente."
+	}
+
+	return "Não foi possível entrar com Google agora. Tente novamente."
 }
 
 function openPeriodModal() {
@@ -2073,7 +2101,7 @@ function handleMobileEntryDelete(transaction) {
 		</div>
 
 		<template v-else-if="!user">
-			<ConfiguracoesView :theme="theme" :is-authenticated="false" :is-submitting="isSubmitting"
+			<ConfiguracoesView :theme="theme" :is-authenticated="false" :is-submitting="isSubmitting" :auth-error="authError"
 				@update-theme="updateTheme" @login="handleLogin" />
 		</template>
 
@@ -2443,7 +2471,7 @@ function handleMobileEntryDelete(transaction) {
 			</section>
 
 			<ConfiguracoesView v-if="currentPage === 'settings'" class="management-page-section" :theme="theme" :theme-color="themeColor"
-				:user-email="user?.email || ''" :is-authenticated="Boolean(user)" :is-submitting="isSubmitting"
+				:user-email="user?.email || ''" :is-authenticated="Boolean(user)" :is-submitting="isSubmitting" :auth-error="authError"
 				@update-theme="updateTheme" @update-theme-color="updateThemeColor" @login="handleLogin"
 				@logout="handleLogout" />
 		</template>
