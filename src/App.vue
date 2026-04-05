@@ -4172,10 +4172,30 @@ button:disabled {
 		height: 32px !important;
 		min-width: 32px !important;
 		flex: 0 0 32px !important;
-
 		padding: 0;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
 		border-radius: 50%;
 		font-size: 13px;
+	}
+
+	.filter-actions button svg {
+		display: block;
+		width: 16px;
+		height: 16px;
+		margin: auto;
+		flex: 0 0 auto;
+	}
+
+	.filter-actions button svg * {
+		vector-effect: non-scaling-stroke;
+	}
+
+	.month-remove-button svg {
+		width: 15px;
+		height: 15px;
+		transform: translateX(1px);
 	}
 }
 
