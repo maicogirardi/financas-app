@@ -2177,9 +2177,11 @@ function handleMobileEntryDelete(transaction) {
 
 						<button class="danger-button month-remove-button" :disabled="isSubmitting || !selectedPeriod"
 							@click="openDeletePeriodModal">
-							<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+							<svg class="delete-icon-svg" width="26" height="26" viewBox="124 86 10 16" aria-hidden="true">
 								<path
-									d="M18.3 5.71 12 12l6.3 6.29-1.41 1.42L10.59 13.4 4.29 19.71 2.88 18.29 9.17 12 2.88 5.71 4.29 4.29l6.3 6.3 6.29-6.3z" />
+									d="M 126.81 89.11 L 126.81 87.61 C 126.81 87.058 127.258 86.61 127.81 86.61 L 130.81 86.61 C 131.362 86.61 131.81 87.058 131.81 87.61 L 131.81 89.11 L 124.81 89.11 L 124.918 89.901 L 133.702 89.901 L 133.81 89.11 Z M 132.31 99.11 C 132.283 99.643 131.843 100.061 131.31 100.06 L 127.31 100.06 C 126.777 100.061 126.337 99.643 126.31 99.11 L 125.036 90.767 L 133.584 90.767 Z M 130.627 98.807 L 131.493 98.807 L 131.493 91.978 L 130.627 91.978 Z M 128.902 98.807 L 129.768 98.807 L 129.768 91.978 L 128.902 91.978 Z M 127.204 98.807 L 128.07 98.807 L 128.07 91.978 L 127.204 91.978 Z"
+									fill="currentColor"
+									style="stroke-width: 1;" />
 							</svg>
 						</button>
 					</div>
@@ -2350,9 +2352,11 @@ function handleMobileEntryDelete(transaction) {
 									<button class="danger-button" :disabled="isSubmitting"
 										@click="openDeleteTransactionModal(transaction)">
 										<span class="button-icon button-icon-delete" aria-hidden="true">
-											<svg width="24" height="24" viewBox="0 0 24 24" fill="white">
+											<svg class="delete-icon-svg" width="26" height="26" viewBox="124 86 10 16" aria-hidden="true">
 												<path
-													d="M18.3 5.71 12 12l6.3 6.29-1.41 1.42L10.59 13.4 4.29 19.71 2.88 18.29 9.17 12 2.88 5.71 4.29 4.29l6.3 6.3 6.29-6.3z" />
+													d="M 126.81 89.11 L 126.81 87.61 C 126.81 87.058 127.258 86.61 127.81 86.61 L 130.81 86.61 C 131.362 86.61 131.81 87.058 131.81 87.61 L 131.81 89.11 L 124.81 89.11 L 124.918 89.901 L 133.702 89.901 L 133.81 89.11 Z M 132.31 99.11 C 132.283 99.643 131.843 100.061 131.31 100.06 L 127.31 100.06 C 126.777 100.061 126.337 99.643 126.31 99.11 L 125.036 90.767 L 133.584 90.767 Z M 130.627 98.807 L 131.493 98.807 L 131.493 91.978 L 130.627 91.978 Z M 128.902 98.807 L 129.768 98.807 L 129.768 91.978 L 128.902 91.978 Z M 127.204 98.807 L 128.07 98.807 L 128.07 91.978 L 127.204 91.978 Z"
+													fill="currentColor"
+													style="stroke-width: 1;" />
 											</svg>
 										</span>
 									</button>
@@ -2427,9 +2431,11 @@ function handleMobileEntryDelete(transaction) {
 							<button class="danger-button" :disabled="isSubmitting"
 								@click="openDeleteWalletModal(wallet)">
 								<span class="button-icon button-icon-delete" aria-hidden="true">
-									<svg width="24" height="24" viewBox="0 0 24 24" fill="white">
+									<svg class="delete-icon-svg" width="26" height="26" viewBox="124 86 10 16" aria-hidden="true">
 										<path
-											d="M18.3 5.71 12 12l6.3 6.29-1.41 1.42L10.59 13.4 4.29 19.71 2.88 18.29 9.17 12 2.88 5.71 4.29 4.29l6.3 6.3 6.29-6.3z" />
+											d="M 126.81 89.11 L 126.81 87.61 C 126.81 87.058 127.258 86.61 127.81 86.61 L 130.81 86.61 C 131.362 86.61 131.81 87.058 131.81 87.61 L 131.81 89.11 L 124.81 89.11 L 124.918 89.901 L 133.702 89.901 L 133.81 89.11 Z M 132.31 99.11 C 132.283 99.643 131.843 100.061 131.31 100.06 L 127.31 100.06 C 126.777 100.061 126.337 99.643 126.31 99.11 L 125.036 90.767 L 133.584 90.767 Z M 130.627 98.807 L 131.493 98.807 L 131.493 91.978 L 130.627 91.978 Z M 128.902 98.807 L 129.768 98.807 L 129.768 91.978 L 128.902 91.978 Z M 127.204 98.807 L 128.07 98.807 L 128.07 91.978 L 127.204 91.978 Z"
+											fill="currentColor"
+											style="stroke-width: 1;" />
 									</svg>
 								</span>
 							</button>
@@ -2499,9 +2505,11 @@ function handleMobileEntryDelete(transaction) {
 							<button class="danger-button" :disabled="isSubmitting"
 								@click="openDeleteCategoryModal(category)">
 								<span class="button-icon button-icon-delete" aria-hidden="true">
-									<svg width="24" height="24" viewBox="0 0 24 24" fill="white">
+									<svg class="delete-icon-svg" width="26" height="26" viewBox="124 86 10 16" aria-hidden="true">
 										<path
-											d="M18.3 5.71 12 12l6.3 6.29-1.41 1.42L10.59 13.4 4.29 19.71 2.88 18.29 9.17 12 2.88 5.71 4.29 4.29l6.3 6.3 6.29-6.3z" />
+											d="M 126.81 89.11 L 126.81 87.61 C 126.81 87.058 127.258 86.61 127.81 86.61 L 130.81 86.61 C 131.362 86.61 131.81 87.058 131.81 87.61 L 131.81 89.11 L 124.81 89.11 L 124.918 89.901 L 133.702 89.901 L 133.81 89.11 Z M 132.31 99.11 C 132.283 99.643 131.843 100.061 131.31 100.06 L 127.31 100.06 C 126.777 100.061 126.337 99.643 126.31 99.11 L 125.036 90.767 L 133.584 90.767 Z M 130.627 98.807 L 131.493 98.807 L 131.493 91.978 L 130.627 91.978 Z M 128.902 98.807 L 129.768 98.807 L 129.768 91.978 L 128.902 91.978 Z M 127.204 98.807 L 128.07 98.807 L 128.07 91.978 L 127.204 91.978 Z"
+											fill="currentColor"
+											style="stroke-width: 1;" />
 									</svg>
 								</span>
 							</button>
@@ -3574,6 +3582,16 @@ function handleMobileEntryDelete(transaction) {
 	stroke: currentColor !important;
 }
 
+.filter-actions .delete-icon-svg,
+.filter-actions .delete-icon-svg * {
+	fill: currentColor !important;
+	stroke: none !important;
+}
+
+.filter-actions .month-remove-button .delete-icon-svg {
+	transform: translate(-0.75px, 0.5px);
+}
+
 .filter-row button {
 	width: 36px;
 	height: 36px;
@@ -4106,11 +4124,18 @@ button:disabled {
 	display: flex;
 	justify-content: center;
 	align-items: center;
-	margin-left: 3px;
-	width: 24px;
-	height: 24px;
-
+	width: 26px;
+	height: 26px;
 }
+
+.delete-icon-svg {
+	display: block;
+	width: 26px;
+	height: 26px;
+	flex: 0 0 26px;
+	margin: 0 auto;
+}
+
 .button-icon svg {
 	color: currentColor;
 }
@@ -4136,8 +4161,8 @@ button:disabled {
 	justify-content: center;
 	align-items: center;
 	/* padding-left: 3px; */
-	width: 24px;
-	height: 24px;
+	width: 26px;
+	height: 26px;
 
 }
 
@@ -4740,10 +4765,10 @@ button:disabled {
 	}
 
 	.filter-row button {
-		width: 32px !important;
-		height: 32px !important;
-		min-width: 32px !important;
-		flex: 0 0 32px !important;
+		width: 34px !important;
+		height: 34px !important;
+		min-width: 34px !important;
+		flex: 0 0 34px !important;
 		padding: 0;
 		display: inline-flex;
 		align-items: center;
@@ -4754,8 +4779,8 @@ button:disabled {
 
 	.filter-actions button svg {
 		display: block;
-		width: 16px;
-		height: 16px;
+		width: 18px;
+		height: 18px;
 		margin: auto;
 		flex: 0 0 auto;
 	}
