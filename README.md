@@ -60,7 +60,7 @@ Fluxo atual de deploy duplo:
 
 * `npm run build` gera a versao do GitHub Pages com base `/financas-app/`
 * `npm run deploy` publica no GitHub Pages
-* `scripts/build-firebase.ps1` gera a versao para Firebase Hosting ajustando temporariamente o `base` para `/`
+* `scripts/build-firebase.ps1` gera a versao para Firebase Hosting usando o modo `firebase` do Vite com base `/`
 * `scripts/deploy-firebase.ps1` executa o build do Firebase e depois chama `firebase-tools deploy --only hosting`
 
 Observacao:
@@ -73,6 +73,7 @@ Arquivos de configuracao:
 
 * `firebase.json`
 * `.firebaserc`
+* `vite.config.js`
 * `scripts/build-firebase.ps1`
 * `scripts/deploy-firebase.ps1`
 

@@ -37,3 +37,4 @@ Firebase Hosting:
 
 * Firebase Hosting should be treated as the primary environment for Google Auth and installed Android PWA tests.
 * GitHub Pages can still be used as a secondary deployment target during development.
+* `vite.config.js` switches the build base by mode: default keeps `/financas-app/` for GitHub Pages and `--mode firebase` uses `/` for Firebase Hosting.
