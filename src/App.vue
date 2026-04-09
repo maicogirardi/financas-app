@@ -2533,6 +2533,58 @@ function handleMobileEntryDelete(transaction) {
 					<input v-model="walletName" :class="{ 'required-empty': isWalletNameMissing() }"
 						placeholder="Nome" />
 				</div>
+				<div v-if="!isEditingWallet" class="field-group">
+					<label class="field-label">Saldo inicial</label>
+					<div class="currency-input-group">
+						<div class="currency-input-shell">
+							<input
+								:class="{ 'required-empty': isWalletBalanceMissing() }"
+								:value="walletBalanceInput"
+								type="text"
+								inputmode="decimal"
+								placeholder="R$ 0,00"
+								@keydown="handleCurrencyKeydown($event)"
+								@focus="handleCurrencyFieldFocus('wallet', $event)"
+								@input="syncCurrencyFieldInput('wallet', $event)"
+								@blur="handleCurrencyFieldBlur('wallet')"
+							/>
+							<button
+								type="button"
+								class="calculator-toggle"
+								:class="{ 'is-open': activeCalculatorField === 'wallet' }"
+								aria-label="Abrir calculadora"
+								@click="toggleCalculator('wallet')"
+							>
+								<svg viewBox="0 0 24 24" aria-hidden="true">
+									<path d="M7 3.75h10A2.25 2.25 0 0 1 19.25 6v12A2.25 2.25 0 0 1 17 20.25H7A2.25 2.25 0 0 1 4.75 18V6A2.25 2.25 0 0 1 7 3.75Z" />
+									<path d="M8 7.5h8M8.75 11.25h1.5m4.5 0h1.5m-7.5 3h1.5m4.5 0h1.5m-7.5 3h1.5m4.5 0h1.5" />
+								</svg>
+							</button>
+							<div v-if="activeCalculatorField === 'wallet'" class="calculator-popover">
+								<label class="field-label" for="wallet-calculator-input">FÃ³rmula</label>
+								<div class="calculator-preview" aria-live="polite">{{ calculatorPreviewText }}</div>
+								<input
+									id="wallet-calculator-input"
+									ref="calculatorExpressionInputRef"
+									v-model="calculatorExpression"
+									type="text"
+									inputmode="decimal"
+									placeholder="Ex.: 450*3,5"
+									@keydown="handleCalculatorExpressionKeydown('wallet', $event)"
+								/>
+								<div v-if="calculatorError" class="error-text">{{ calculatorError }}</div>
+								<div class="calculator-actions">
+									<button type="button" class="secondary-button" @click="closeCalculator">
+										Cancelar
+									</button>
+									<button type="button" class="primary-button" @click="applyCalculatorResult('wallet')">
+										Aplicar
+									</button>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
 				<div class="field-group">
 					<label class="field-label">Cor</label>
 					<div class="color-field" :class="{ 'required-empty': isWalletColorMissing() }">
