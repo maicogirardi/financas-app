@@ -1194,7 +1194,7 @@ function isWalletColorMissing() {
 }
 
 function isWalletBalanceMissing() {
-	return walletBalance.value <= 0
+	return walletBalance.value < 0
 }
 
 function isAdjustmentDescriptionMissing() {
@@ -2561,7 +2561,7 @@ function handleMobileEntryDelete(transaction) {
 								</svg>
 							</button>
 							<div v-if="activeCalculatorField === 'wallet'" class="calculator-popover">
-								<label class="field-label" for="wallet-calculator-input">FÃ³rmula</label>
+								<label class="field-label" for="wallet-calculator-input">F&oacute;rmula</label>
 								<div class="calculator-preview" aria-live="polite">{{ calculatorPreviewText }}</div>
 								<input
 									id="wallet-calculator-input"
@@ -2573,12 +2573,16 @@ function handleMobileEntryDelete(transaction) {
 									@keydown="handleCalculatorExpressionKeydown('wallet', $event)"
 								/>
 								<div v-if="calculatorError" class="error-text">{{ calculatorError }}</div>
-								<div class="calculator-actions">
+								<div class="calculator-popover-actions">
+									<button
+										type="button"
+										class="primary-button calculator-apply-button"
+										@click="applyCalculatorResult('wallet')"
+									>
+										Aplicar
+									</button>
 									<button type="button" class="secondary-button" @click="closeCalculator">
 										Cancelar
-									</button>
-									<button type="button" class="primary-button" @click="applyCalculatorResult('wallet')">
-										Aplicar
 									</button>
 								</div>
 							</div>
@@ -2651,11 +2655,11 @@ function handleMobileEntryDelete(transaction) {
 								/>
 								<div v-if="calculatorError" class="error-text">{{ calculatorError }}</div>
 								<div class="calculator-popover-actions">
-									<button type="button" class="secondary-button" @click="closeCalculator">
-										Cancelar
-									</button>
 									<button type="button" class="primary-button calculator-apply-button" @click="applyCalculatorResult('adjustment')">
 										Aplicar
+									</button>
+									<button type="button" class="secondary-button" @click="closeCalculator">
+										Cancelar
 									</button>
 								</div>
 							</div>
@@ -2837,11 +2841,11 @@ function handleMobileEntryDelete(transaction) {
 								/>
 								<div v-if="calculatorError" class="error-text">{{ calculatorError }}</div>
 								<div class="calculator-popover-actions">
-									<button type="button" class="secondary-button" @click="closeCalculator">
-										Cancelar
-									</button>
 									<button type="button" class="primary-button calculator-apply-button" @click="applyCalculatorResult('entry')">
 										Aplicar
+									</button>
+									<button type="button" class="secondary-button" @click="closeCalculator">
+										Cancelar
 									</button>
 								</div>
 							</div>
@@ -3435,19 +3439,18 @@ function handleMobileEntryDelete(transaction) {
 	position: absolute;
 	top: 50%;
 	right: 12px;
-	width: 18px;
-	height: 18px;
+	width: 22px;
+	height: 22px;
 	padding: 0;
 	border: 0;
 	background: transparent;
 	box-shadow: none;
-	transform: translateY(-50%);
+	margin-top: -11px;
 	color: color-mix(in srgb, var(--input-text) 72%, transparent);
 }
 
 .calculator-toggle:hover,
 .calculator-toggle.is-open {
-	transform: translateY(-50%);
 	color: var(--text-h);
 	border: 0;
 	background: transparent;
@@ -3455,8 +3458,8 @@ function handleMobileEntryDelete(transaction) {
 }
 
 .calculator-toggle svg {
-	width: 18px;
-	height: 18px;
+	width: 22px;
+	height: 22px;
 	fill: none;
 	stroke: currentColor;
 	stroke-width: 1.8;

@@ -60,14 +60,15 @@ Fluxo atual de deploy duplo:
 
 * `npm run build` gera a versao do GitHub Pages com base `/financas-app/`
 * `npm run deploy` publica no GitHub Pages
-* `scripts/build-firebase.ps1` gera a versao para Firebase Hosting usando o modo `firebase` do Vite com base `/`
-* `scripts/deploy-firebase.ps1` executa o build do Firebase e depois chama `firebase-tools deploy --only hosting`
+* `npm run build:firebase` gera a versao para Firebase Hosting usando o modo `firebase` do Vite com base `/`
+* `npm run deploy:firebase` executa o build do Firebase e depois chama `firebase-tools deploy --only hosting`
 
 Observacao:
 
 * o Firebase Hosting agora e o ambiente principal para testes reais de auth e PWA
 * o site principal publicado e `https://minhas-financas-maico.web.app`
 * o GitHub Pages continua como ambiente secundario durante o desenvolvimento
+* nao publique o build padrao do GitHub Pages no Firebase, porque a base `/financas-app/` quebra o carregamento dos assets no dominio raiz e pode deixar a tela em branco
 
 Arquivos de configuracao:
 

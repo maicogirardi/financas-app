@@ -30,11 +30,14 @@ GitHub Pages:
 
 Firebase Hosting:
 
-* `powershell -ExecutionPolicy Bypass -File scripts/build-firebase.ps1`
-* `powershell -ExecutionPolicy Bypass -File scripts/deploy-firebase.ps1`
+* `npm run build:firebase`
+* `npm run deploy:firebase`
+* alternativa em PowerShell: `powershell -ExecutionPolicy Bypass -File scripts/build-firebase.ps1`
+* alternativa em PowerShell: `powershell -ExecutionPolicy Bypass -File scripts/deploy-firebase.ps1`
 
 ## Notes
 
 * Firebase Hosting should be treated as the primary environment for Google Auth and installed Android PWA tests.
 * GitHub Pages can still be used as a secondary deployment target during development.
 * `vite.config.js` switches the build base by mode: default keeps `/financas-app/` for GitHub Pages and `--mode firebase` uses `/` for Firebase Hosting.
+* If Firebase Hosting receives the default GitHub Pages build, the generated asset URLs still point to `/financas-app/` and the app can render a blank page on `https://minhas-financas-maico.web.app`.
