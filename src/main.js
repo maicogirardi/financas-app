@@ -10,8 +10,9 @@ if ("serviceWorker" in navigator && import.meta.env.PROD) {
 	window.addEventListener("load", async () => {
 		try {
 			const baseUrl = import.meta.env.BASE_URL
+			const serviceWorkerUrl = `${baseUrl}sw.js?v=${encodeURIComponent(__APP_BUILD_ID__)}`
 			let hasRefreshingController = false
-			const registration = await navigator.serviceWorker.register(`${baseUrl}sw.js`, {
+			const registration = await navigator.serviceWorker.register(serviceWorkerUrl, {
 				scope: baseUrl
 			})
 
