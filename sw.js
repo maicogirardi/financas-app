@@ -1,10 +1,12 @@
-const APP_SHELL_CACHE = "financas-app-shell-v3"
+const APP_SHELL_CACHE = "financas-app-shell-v4"
 const RUNTIME_CACHE = "financas-app-runtime-v1"
+const MANIFEST_VERSION = "20260412-2"
 const APP_BASE = self.location.pathname.replace(/sw\.js$/, "")
 const OFFLINE_URLS = [
 	APP_BASE,
 	`${APP_BASE}index.html`,
 	`${APP_BASE}manifest.webmanifest`,
+	`${APP_BASE}manifest.webmanifest?v=${MANIFEST_VERSION}`,
 	`${APP_BASE}favicon.svg`,
 	`${APP_BASE}favicon-16x16.png`,
 	`${APP_BASE}favicon-32x32.png`,
