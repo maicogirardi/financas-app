@@ -104,5 +104,7 @@ Configuracoes contains:
 * screen title `Configuracoes`
 * dark mode switch
 * theme color picker
+* install app section with an explicit install button when the browser exposes the PWA install prompt
+* fallback install guidance for browsers that do not expose the prompt directly, especially Safari on iPhone/iPad
 * login/logout controls
 * "Logado como" status

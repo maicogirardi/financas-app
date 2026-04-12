@@ -29,6 +29,10 @@ const authReady = ref(false)
 const authError = ref("")
 const isUpdateAvailable = ref(false)
 const isSubmitting = ref(false)
+const isInstallSupported = ref(false)
+const canInstallApp = ref(false)
+const isAppInstalled = ref(false)
+const isInstallingApp = ref(false)
 const currentPage = ref("dashboard")
 const theme = ref("light")
 const themeColor = ref("#aa3bff")
@@ -249,6 +253,11 @@ let stopAuthListener = null
 let unsubscribeThemePreference = null
 let walletSummaryResizeObserver = null
 let triggerAppUpdate = null
+let deferredInstallPrompt = null
+
+function isRunningStandalone() {
+	return window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true
+}
 
 function syncBrowserThemeColor(activeTheme) {
 	const themeColorMeta = document.querySelector('meta[name="theme-color"]')
@@ -264,11 +273,32 @@ const navigationTabs = [
 	{ value: "settings", label: "Configurações", icon: "settings" }
 ]
 
+function syncInstallAvailability() {
+	isAppInstalled.value = isRunningStandalone()
+	canInstallApp.value = Boolean(deferredInstallPrompt) && !isAppInstalled.value
+}
+
+function handleBeforeInstallPrompt(event) {
+	event.preventDefault()
+	deferredInstallPrompt = event
+	syncInstallAvailability()
+}
+
+function handleAppInstalled() {
+	deferredInstallPrompt = null
+	isInstallingApp.value = false
+	syncInstallAvailability()
+}
+
 onMounted(() => {
 	applyTheme("light")
+	isInstallSupported.value = "BeforeInstallPromptEvent" in window || /iphone|ipad|ipod/i.test(window.navigator.userAgent)
+	syncInstallAvailability()
 	window.addEventListener("keydown", handleModalKeydown)
 	window.addEventListener("scroll", updateWalletSummaryCompact, { passive: true })
 	window.addEventListener("resize", handleWalletSummaryLayoutChange)
+	window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt)
+	window.addEventListener("appinstalled", handleAppInstalled)
 	window.addEventListener("app-update-available", handleAppUpdateAvailable)
 	void resolveRedirectLogin().catch(error => {
 		console.error("Failed to resolve redirect login", error)
@@ -330,6 +360,8 @@ onBeforeUnmount(() => {
 	window.removeEventListener("keydown", handleModalKeydown)
 	window.removeEventListener("scroll", updateWalletSummaryCompact)
 	window.removeEventListener("resize", handleWalletSummaryLayoutChange)
+	window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt)
+	window.removeEventListener("appinstalled", handleAppInstalled)
 	window.removeEventListener("app-update-available", handleAppUpdateAvailable)
 	teardownWalletSummaryResizeObserver()
 
@@ -594,6 +626,25 @@ async function updateThemeColor(nextColor) {
 		await saveThemePreference({ theme: theme.value, primaryColor: nextColor })
 	} catch (error) {
 		console.error("Failed to save theme preference", error)
+	}
+}
+
+async function handleInstallApp() {
+	if (!deferredInstallPrompt || isInstallingApp.value) return
+
+	isInstallingApp.value = true
+
+	try {
+		await deferredInstallPrompt.prompt()
+		const choice = await deferredInstallPrompt.userChoice
+		if (choice?.outcome !== "accepted") {
+			isInstallingApp.value = false
+		}
+		deferredInstallPrompt = null
+		syncInstallAvailability()
+	} catch (error) {
+		console.error("Failed to show install prompt", error)
+		isInstallingApp.value = false
 	}
 }
 
@@ -2142,7 +2193,8 @@ function handleMobileEntryDelete(transaction) {
 
 		<template v-else-if="!user">
 			<ConfiguracoesView :theme="theme" :is-authenticated="false" :is-submitting="isSubmitting" :auth-error="authError"
-				@update-theme="updateTheme" @login="handleLogin" />
+				:can-install-app="canInstallApp" :is-app-installed="isAppInstalled" :is-install-supported="isInstallSupported"
+				:is-installing-app="isInstallingApp" @update-theme="updateTheme" @login="handleLogin" @install-app="handleInstallApp" />
 		</template>
 
 		<template v-else-if="!isDataReady">
@@ -2520,7 +2572,9 @@ function handleMobileEntryDelete(transaction) {
 
 			<ConfiguracoesView v-if="currentPage === 'settings'" class="management-page-section" :theme="theme" :theme-color="themeColor"
 				:user-email="user?.email || ''" :is-authenticated="Boolean(user)" :is-submitting="isSubmitting" :auth-error="authError"
-				@update-theme="updateTheme" @update-theme-color="updateThemeColor" @login="handleLogin"
+				:can-install-app="canInstallApp" :is-app-installed="isAppInstalled" :is-install-supported="isInstallSupported"
+				:is-installing-app="isInstallingApp" @update-theme="updateTheme" @update-theme-color="updateThemeColor" @login="handleLogin"
+				@install-app="handleInstallApp"
 				@logout="handleLogout" />
 		</template>
 
