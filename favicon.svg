@@ -1,18 +1,19 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-	<defs>
-		<linearGradient id="bg" x1="8" y1="6" x2="56" y2="58" gradientUnits="userSpaceOnUse">
-			<stop offset="0%" stop-color="#7EDC3F"/>
-			<stop offset="55%" stop-color="#12A9C7"/>
-			<stop offset="100%" stop-color="#1449D8"/>
-		</linearGradient>
-	</defs>
-
-	<rect x="2" y="2" width="60" height="60" rx="14" fill="url(#bg)"/>
-	<rect x="12" y="36" width="6" height="12" rx="1.5" fill="#FFFFFF"/>
-	<rect x="21" y="28" width="6" height="20" rx="1.5" fill="#FFFFFF"/>
-	<rect x="30" y="20" width="6" height="28" rx="1.5" fill="#FFFFFF"/>
-
-	<path d="M10 45C18 42 23 39 28 35C34 30 41 23 48 14" stroke="#FFFFFF" stroke-width="3.2" stroke-linecap="round"/>
-	<path d="M44 15L49 13C50 12.5 50.8 13.3 50.5 14.2L49.4 19.2" stroke="#FFFFFF" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+<?xml version="1.0" encoding="utf-8"?>
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" xmlns:bx="https://boxy-svg.com">
+  <defs>
+    <linearGradient id="bg" x1="8" y1="6" x2="56" y2="58" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#7EDC3F"/>
+      <stop offset="0.55" stop-color="#12A9C7"/>
+      <stop offset="1" stop-color="#1449D8"/>
+    </linearGradient>
+    <style bx:fonts="ABeeZee">@import url(https://fonts.googleapis.com/css2?family=ABeeZee%3Aital%2Cwght%400%2C400%3B1%2C400&amp;display=swap);</style>
+  </defs>
+  <rect x="2" y="2" width="60" height="60" rx="14" fill="url(#bg)"/>
+  <rect x="12" y="36" width="6" height="12" rx="1.5" fill="#FFFFFF"/>
+  <rect x="21" y="28" width="6" height="20" rx="1.5" fill="#FFFFFF"/>
+  <rect x="30" y="20" width="6" height="28" rx="1.5" fill="#FFFFFF"/>
+  <path d="M 10 45 C 18 42 23 39 28 35 C 34 30 41.894 23.65 48.894 14.65" stroke="#FFFFFF" stroke-linecap="round" style="stroke-width: 2px;"/>
+  <path d="M44 15L49 13C50 12.5 50.8 13.3 50.5 14.2L49.4 19.2" stroke="#FFFFFF" stroke-linecap="round" stroke-linejoin="round" style="paint-order: fill; stroke-width: 2px;"/>
+  <ellipse style="fill: rgb(255, 255, 255);" cx="48.772" cy="40.975" rx="10.274" ry="10.274"/>
+  <text style="fill: rgb(20, 78, 215); font-family: ABeeZee; font-size: 12.6px; font-weight: 700; white-space: pre;" x="41.016" y="45.231">R$</text>
 </svg>
