@@ -33,6 +33,7 @@ const isInstallSupported = ref(false)
 const canInstallApp = ref(false)
 const isAppInstalled = ref(false)
 const isInstallingApp = ref(false)
+const hasInstalledApp = ref(false)
 const currentPage = ref("dashboard")
 const theme = ref("light")
 const themeColor = ref("#aa3bff")
@@ -254,9 +255,31 @@ let unsubscribeThemePreference = null
 let walletSummaryResizeObserver = null
 let triggerAppUpdate = null
 let deferredInstallPrompt = null
+const INSTALLED_APP_STORAGE_KEY = "financas-app-installed"
 
 function isRunningStandalone() {
 	return window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true
+}
+
+function readInstalledAppFlag() {
+	try {
+		return window.localStorage.getItem(INSTALLED_APP_STORAGE_KEY) === "true"
+	} catch {
+		return false
+	}
+}
+
+function writeInstalledAppFlag(value) {
+	try {
+		if (value) {
+			window.localStorage.setItem(INSTALLED_APP_STORAGE_KEY, "true")
+			return
+		}
+
+		window.localStorage.removeItem(INSTALLED_APP_STORAGE_KEY)
+	} catch {
+		// Ignore storage errors for install UI state.
+	}
 }
 
 function syncBrowserThemeColor(activeTheme) {
@@ -274,7 +297,7 @@ const navigationTabs = [
 ]
 
 function syncInstallAvailability() {
-	isAppInstalled.value = isRunningStandalone()
+	isAppInstalled.value = hasInstalledApp.value || isRunningStandalone()
 	canInstallApp.value = Boolean(deferredInstallPrompt) && !isAppInstalled.value
 }
 
@@ -284,6 +307,8 @@ function handleBeforeInstallPrompt(event) {
 }
 
 function handleAppInstalled() {
+	hasInstalledApp.value = true
+	writeInstalledAppFlag(true)
 	deferredInstallPrompt = null
 	isInstallingApp.value = false
 	syncInstallAvailability()
@@ -291,6 +316,7 @@ function handleAppInstalled() {
 
 onMounted(() => {
 	applyTheme("light")
+	hasInstalledApp.value = readInstalledAppFlag()
 	isInstallSupported.value = "BeforeInstallPromptEvent" in window || /iphone|ipad|ipod/i.test(window.navigator.userAgent)
 	syncInstallAvailability()
 	window.addEventListener("keydown", handleModalKeydown)
