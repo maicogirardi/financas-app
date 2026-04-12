@@ -50,5 +50,6 @@ Current implementation status:
 - app shell is configured as a PWA for Android installation
 - PWA metadata lives in `index.html` and `public/manifest.webmanifest`
 - the service worker is registered from `src/main.js` in production builds
+- the service worker registration triggers an immediate update check on startup and emits the in-app refresh banner when a newer worker is installed
 - Firebase realtime listeners remain the primary sync path for desktop and installed app usage
 - Google login falls back to redirect mode when the app is running in standalone display mode

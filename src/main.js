@@ -11,6 +11,8 @@ if ("serviceWorker" in navigator && import.meta.env.PROD) {
 		try {
 			const baseUrl = import.meta.env.BASE_URL
 			const serviceWorkerUrl = `${baseUrl}sw.js?v=${encodeURIComponent(__APP_BUILD_ID__)}`
+			const startupTime = Date.now()
+			const startupUpdateWindowMs = 15000
 			let hasRefreshingController = false
 			const registration = await navigator.serviceWorker.register(serviceWorkerUrl, {
 				scope: baseUrl
@@ -22,10 +24,20 @@ if ("serviceWorker" in navigator && import.meta.env.PROD) {
 				window.location.reload()
 			})
 
+			const shouldApplyUpdateImmediately = () => Date.now() - startupTime <= startupUpdateWindowMs
+			const activateUpdate = worker => {
+				worker?.postMessage({ type: "SKIP_WAITING" })
+			}
+
 			const notifyUpdate = worker => {
+				if (shouldApplyUpdateImmediately()) {
+					activateUpdate(worker)
+					return
+				}
+
 				window.dispatchEvent(new CustomEvent("app-update-available", {
 					detail: {
-						update: () => worker?.postMessage({ type: "SKIP_WAITING" })
+						update: () => activateUpdate(worker)
 					}
 				}))
 			}
@@ -33,6 +45,8 @@ if ("serviceWorker" in navigator && import.meta.env.PROD) {
 			if (registration.waiting) {
 				notifyUpdate(registration.waiting)
 			}
+
+			void registration.update()
 
 			registration.addEventListener("updatefound", () => {
 				const installingWorker = registration.installing

@@ -41,3 +41,4 @@ Firebase Hosting:
 * GitHub Pages can still be used as a secondary deployment target during development.
 * `vite.config.js` switches the build base by mode: default keeps `/financas-app/` for GitHub Pages and `--mode firebase` uses `/` for Firebase Hosting.
 * If Firebase Hosting receives the default GitHub Pages build, the generated asset URLs still point to `/financas-app/` and the app can render a blank page on `https://minhas-financas-maico.web.app`.
+* The production service worker registration now calls `registration.update()` during startup so the update banner can appear without requiring a manual refresh first.
