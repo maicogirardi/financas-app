@@ -279,7 +279,6 @@ function syncInstallAvailability() {
 }
 
 function handleBeforeInstallPrompt(event) {
-	event.preventDefault()
 	deferredInstallPrompt = event
 	syncInstallAvailability()
 }
