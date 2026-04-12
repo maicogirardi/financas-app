@@ -1,8 +1,8 @@
 {
-	"name": "Minhas Finanças",
-	"short_name": "Minhas Finanças",
+	"name": "Minhas FinanÃ§as",
+	"short_name": "Minhas FinanÃ§as",
 	"id": "./",
-	"description": "App de finanças pessoais com controle de entradas, despesas, carteiras e períodos.",
+	"description": "App de finanÃ§as pessoais com controle de entradas, despesas, carteiras e perÃ­odos.",
 	"lang": "pt-BR",
 	"start_url": "./",
 	"scope": "./",
