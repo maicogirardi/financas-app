@@ -202,6 +202,7 @@ function handleThemeToggle(event) {
 .settings-view {
 	display: grid;
 	width: 100%;
+	min-width: 0;
 	gap: 16px;
 	padding: 16px;
 	border: 1px solid var(--glass-border);
@@ -210,6 +211,7 @@ function handleThemeToggle(event) {
 	box-shadow: var(--shadow);
 	backdrop-filter: blur(22px);
 	box-sizing: border-box;
+	overflow: hidden;
 }
 
 .settings-header h2 {
@@ -218,12 +220,15 @@ function handleThemeToggle(event) {
 
 .settings-card {
 	display: grid;
+	width: 100%;
+	min-width: 0;
 	gap: 12px;
 	padding: 16px;
 	border: 1px solid var(--input-border);
 	border-radius: 20px;
 	background: var(--glass-surface-strong);
 	backdrop-filter: blur(22px);
+	box-sizing: border-box;
 }
 
 .settings-row {
@@ -231,16 +236,36 @@ function handleThemeToggle(event) {
 	align-items: center;
 	justify-content: space-between;
 	gap: 16px;
+	min-width: 0;
 }
 
 .settings-copy {
 	display: grid;
+	min-width: 0;
 	gap: 4px;
+}
+
+.settings-label {
+	font-size: 14px;
+	font-weight: 600;
+	color: var(--text-h);
+}
+
+.settings-help {
+	font-size: 12px;
+	color: var(--text);
+}
+
+.settings-error {
+	margin: 0;
+	font-size: 12px;
+	color: #b91c1c;
 }
 
 .settings-actions {
 	display: flex;
 	justify-content: flex-start;
+	min-width: 0;
 }
 
 .settings-actions button {
@@ -324,38 +349,17 @@ function handleThemeToggle(event) {
 		inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
-.settings-label {
-	font-size: 14px;
-	font-weight: 600;
-	color: var(--text-h);
-}
-
-.settings-help {
-	font-size: 12px;
-	color: var(--text);
-}
-
-.settings-error {
-	margin: 0;
-	font-size: 12px;
-	color: #b91c1c;
-}
-
 .field-group {
 	width: 100%;
+	min-width: 0;
 }
 
 .color-field {
 	display: flex;
 	align-items: center;
 	gap: 12px;
-	padding: 10px 12px;
 	margin-top: 10px;
-	border: 1px solid var(--glass-border);
-	border-radius: 16px;
-	background: var(--input-surface);
-	box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
-	/* width: 100%; */
+	min-width: 0;
 }
 
 .color-picker {
@@ -388,24 +392,63 @@ function handleThemeToggle(event) {
 	border-radius: 999px;
 }
 
+.color-picker:focus-visible {
+	border-color: var(--input-focus-border);
+	box-shadow:
+		inset 0 1px 0 rgba(255, 255, 255, 0.3),
+		0 0 0 4px var(--input-focus-ring);
+}
+
 .color-code-input {
 	flex: 1;
 	min-width: 0;
 	height: 40px;
-	border: 0;
-	padding: 0 0 0 6px;
-	background: transparent;
-	color: var(--text);
+	padding: 0 14px;
+	border: 1px solid var(--input-border);
+	border-radius: 12px;
+	background: color-mix(in srgb, var(--input-surface) 88%, transparent);
+	color: var(--input-text);
 	font: inherit;
+	outline: none;
+	transition:
+		border-color 0.18s ease,
+		background 0.18s ease,
+		box-shadow 0.18s ease,
+		color 0.18s ease;
+}
+
+.color-code-input::placeholder {
+	color: var(--input-placeholder);
+}
+
+.color-code-input:focus-visible {
+	border-color: var(--input-focus-border);
+	background: color-mix(in srgb, var(--input-surface) 96%, transparent);
+	box-shadow: 0 0 0 4px var(--input-focus-ring);
 }
 
 .switch {
 	position: relative;
 	width: 54px;
+	min-width: 54px;
 	height: 32px;
 	display: inline-flex;
 	align-items: center;
 	cursor: pointer;
+}
+
+@media (max-width: 640px) {
+	.settings-card {
+		padding: 14px;
+	}
+
+	.settings-row {
+		align-items: flex-start;
+	}
+
+	.color-field {
+		gap: 10px;
+	}
 }
 
 .switch input {
@@ -442,5 +485,10 @@ function handleThemeToggle(event) {
 .switch input:checked + .switch-track + .switch-thumb {
 	transform: translateX(22px);
 	background: var(--color-text-on-primary, #ffffff);
+}
+
+.switch input:focus-visible + .switch-track {
+	border-color: var(--input-focus-border);
+	box-shadow: 0 0 0 4px var(--input-focus-ring);
 }
 </style>

@@ -2,9 +2,9 @@ import path from "path"
 import { defineConfig } from "vite"
 import vue from "@vitejs/plugin-vue"
 
-export default defineConfig(({ mode }) => ({
+export default defineConfig(({ command, mode }) => ({
 	plugins: [vue()],
-	base: mode === "firebase" ? "/" : "/financas-app/",
+	base: command === "serve" || mode === "firebase" ? "/" : "/financas-app/",
 	define: {
 		__APP_BUILD_ID__: JSON.stringify(new Date().toISOString())
 	},
