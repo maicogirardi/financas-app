@@ -2180,8 +2180,8 @@ function handleMobileEntryDelete(transaction) {
 		</section>
 		<section v-if="false && isUpdateAvailable" class="update-banner">
 			<div class="update-banner-copy">
-				<strong>Nova versÃ£o disponÃ­vel</strong>
-				<span>Atualize o app para carregar as mudanÃ§as mais recentes.</span>
+				<strong>Nova versão disponível</strong>
+				<span>Atualize o app para carregar as mudanças mais recentes.</span>
 			</div>
 			<button class="primary-button" @click="reloadWithNewVersion">Recarregar</button>
 		</section>
