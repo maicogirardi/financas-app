@@ -21,6 +21,7 @@ function getPeriodsCollection() {
 }
 
 export function buildPeriodId(year, month) {
+	// Usa um id previsivel para facilitar filtro e copia entre periodos.
 	return `${year}-${String(month).padStart(2, "0")}`
 }
 
@@ -46,6 +47,7 @@ export function subscribePeriods(callback, onError) {
 	return onSnapshot(
 		periodsCollection,
 		snapshot => {
+			// Normaliza e ordena os periodos para o seletor de mes/ano.
 			const periods = snapshot.docs
 				.map(periodDoc => {
 					const data = periodDoc.data()

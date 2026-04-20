@@ -16,11 +16,13 @@ let unsubscribeWallets: null | (() => void) = null
 
 export function useWalletStore() {
 	function setWallets(wallets: Wallet[]) {
+		// Atualiza o cache local com a ordem vinda do Firestore.
 		state.wallets.splice(0, state.wallets.length, ...wallets)
 		state.isLoaded = true
 	}
 
 	function clearWallets() {
+		// Troca o listener e limpa qualquer estado anterior da lista.
 		if (unsubscribeWallets) {
 			unsubscribeWallets()
 			unsubscribeWallets = null
@@ -34,6 +36,7 @@ export function useWalletStore() {
 	function startWalletsSync() {
 		clearWallets()
 
+		// Mantem as carteiras sincronizadas em tempo real por usuario logado.
 		unsubscribeWallets = subscribeWallets(
 			wallets => {
 				setWallets(wallets)
@@ -46,6 +49,7 @@ export function useWalletStore() {
 	}
 
 	async function createWallet(name: string, initialBalance: number, color: string) {
+		// Nova carteira ja entra com saldo inicial, cor e ordem definidos.
 		await createWalletDoc({
 			name,
 			color,

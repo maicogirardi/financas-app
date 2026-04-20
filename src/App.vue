@@ -95,6 +95,7 @@ const entryAdjustmentDirection = ref("increase")
 const entryFormError = ref("")
 const mobileEntryActionTransactionId = ref("")
 
+// Libera a interface apenas quando auth e snapshots principais ja carregaram.
 const isDataReady = computed(() =>
 	authReady.value &&
 	(!user.value || (
@@ -109,6 +110,7 @@ const appError = computed(() =>
 	walletStore.error || transactionStore.error || categoryStore.error || periodStore.error || ""
 )
 
+// Mantem o filtro preso aos anos que realmente existem nos periodos salvos.
 const availableYears = computed(() => {
 	const years = Array.from(new Set(periodStore.periods.map(period => period.year))).sort((a, b) => b - a)
 	return years.length > 0 ? years : [selectedYear.value]
@@ -129,6 +131,7 @@ const monthOptions = [
 	{ value: 12, label: "Dezembro" }
 ]
 
+// Mostra somente os meses cadastrados para o ano selecionado.
 const availableMonths = computed(() => {
 	const months = Array.from(
 		new Set(
@@ -152,6 +155,7 @@ const yearFilterOptions = computed(() =>
 	}))
 )
 
+// O tipo de lancamento decide quais opcoes extras aparecem no formulario.
 const entryTypeOptions = computed(() => {
 	const options = [
 		{ value: "expense", label: "Despesa" },
@@ -203,6 +207,7 @@ const currencyFormatter = new Intl.NumberFormat("pt-BR", {
 const entryMinDate = computed(() => formatDateValue(new Date(selectedYear.value, selectedMonth.value - 1, 1)))
 const entryMaxDate = computed(() => formatDateValue(new Date(selectedYear.value, selectedMonth.value, 0)))
 
+// Filtra transacoes por periodo mesmo quando a origem ainda nao gravou periodId.
 const filteredTransactions = computed(() =>
 	transactionStore.transactions.filter(transaction => {
 		if (transaction.periodId) {
@@ -214,6 +219,7 @@ const filteredTransactions = computed(() =>
 	})
 )
 
+// Agrupa por categoria e oculta seccoes auxiliares vazias.
 const groupedTransactions = computed(() => {
 	return categoryStore.categories
 		.filter(category =>
@@ -239,6 +245,7 @@ const groupedTransactions = computed(() => {
 		)
 })
 
+// Recalcula os saldos do painel a partir do periodo atualmente selecionado.
 const dashboardWallets = computed(() =>
 	walletStore.wallets.map(wallet => ({
 		...wallet,
@@ -246,6 +253,7 @@ const dashboardWallets = computed(() =>
 	}))
 )
 
+// Soma final usada no card principal do resumo.
 const totalWalletBalance = computed(() =>
 	dashboardWallets.value.reduce((sum, wallet) => sum + Number(wallet.balance || 0), 0)
 )
@@ -315,6 +323,7 @@ function handleAppInstalled() {
 }
 
 onMounted(() => {
+	// A tela so sincroniza dados depois que a camada visual basica esta pronta.
 	applyTheme("light")
 	hasInstalledApp.value = readInstalledAppFlag()
 	isInstallSupported.value = "BeforeInstallPromptEvent" in window || /iphone|ipad|ipod/i.test(window.navigator.userAgent)
@@ -346,6 +355,7 @@ onMounted(() => {
 		}
 
 		if (currentUser) {
+			// Com usuario logado, cada store abre seu listener realtime.
 			unsubscribeThemePreference = subscribeThemePreference(
 				({ theme: nextTheme, primaryColor, selectedYear: storedYear, selectedMonth: storedMonth }) => {
 					applyTheme(nextTheme)
@@ -382,6 +392,7 @@ onMounted(() => {
 })
 
 onBeforeUnmount(() => {
+	// Fecha listeners, observers e caches quando o app sai da tela.
 	window.removeEventListener("keydown", handleModalKeydown)
 	window.removeEventListener("scroll", updateWalletSummaryCompact)
 	window.removeEventListener("resize", handleWalletSummaryLayoutChange)
@@ -411,6 +422,7 @@ watch(
 		hasUser: Boolean(user.value)
 	}),
 	async state => {
+		// Garante que exista um periodo ativo antes de liberar o uso normal do app.
 		if (!state.hasUser || !state.walletsLoaded || !state.periodsLoaded) return
 
 		const currentYear = new Date().getFullYear()
@@ -446,6 +458,7 @@ watch(
 )
 
 watch(selectedYear, year => {
+	// Troca para o primeiro mes disponivel quando o ano atual nao tem selecao valida.
 	const hasSelectedMonth = periodStore.getPeriodByYearMonth(year, selectedMonth.value)
 
 	if (hasSelectedMonth) return
@@ -460,6 +473,7 @@ watch(selectedYear, year => {
 watch(
 	() => [selectedYear.value, selectedMonth.value, Boolean(user.value), hasLoadedUiPreferences.value],
 	async ([year, month, hasUser, preferencesLoaded]) => {
+		// Salva a preferencia do filtro so depois que a UI e a autenticao estiverem prontas.
 		if (!hasUser || !preferencesLoaded) return
 
 		try {
@@ -476,6 +490,7 @@ watch(
 )
 
 watch(entryType, nextType => {
+	// Entrada sempre trava na categoria padrao de entradas; despesa volta para o padrao util.
 	if (nextType === "income") {
 		entryCategoryId.value = getIncomeEntryCategoryId()
 		return
@@ -490,6 +505,7 @@ watch(entryType, nextType => {
 })
 
 watch(currentPage, async () => {
+	// Recalcula o comportamento "compacto" do card do saldo quando a pagina muda.
 	await nextTick()
 	measureWalletSummaryCompactStart()
 	setupWalletSummaryResizeObserver()
@@ -498,6 +514,7 @@ watch(currentPage, async () => {
 })
 
 function teardownWalletSummaryResizeObserver() {
+	// Observador e recriado quando a estrutura do card muda.
 	if (walletSummaryResizeObserver) {
 		walletSummaryResizeObserver.disconnect()
 		walletSummaryResizeObserver = null
@@ -505,6 +522,7 @@ function teardownWalletSummaryResizeObserver() {
 }
 
 function measureWalletSummaryCompactStart() {
+	// Registra o ponto exato em que o card deve entrar no modo compacto.
 	if (currentPage.value !== "dashboard" || !walletSummarySentinelRef.value) {
 		walletSummaryCompactStart.value = 0
 		return
@@ -515,6 +533,7 @@ function measureWalletSummaryCompactStart() {
 }
 
 function syncWalletSummaryReservedHeight() {
+	// Reserva a altura atual para evitar salto visual enquanto o card fixa.
 	if (currentPage.value !== "dashboard" || !walletSummaryCardRef.value) {
 		walletSummaryReservedHeight.value = 0
 		return
@@ -526,6 +545,7 @@ function syncWalletSummaryReservedHeight() {
 }
 
 function setupWalletSummaryResizeObserver() {
+	// Mantem o card do saldo ajustado ao conteudo sem quebrar o sticky.
 	teardownWalletSummaryResizeObserver()
 
 	if (currentPage.value !== "dashboard" || !walletSummaryCardRef.value) {
@@ -550,6 +570,7 @@ function setupWalletSummaryResizeObserver() {
 }
 
 function updateWalletSummaryCompact() {
+	// Entra em modo compacto quando o scroll passa do ponto de referencia.
 	if (currentPage.value !== "dashboard") {
 		isWalletSummaryCompact.value = false
 		return
@@ -566,6 +587,7 @@ function updateWalletSummaryCompact() {
 }
 
 function handleWalletSummaryLayoutChange() {
+	// Recalcula medidas apos resize ou troca de layout/pagina.
 	void nextTick().then(() => {
 		if (!isWalletSummaryCompact.value) {
 			walletSummaryReservedHeight.value = 0
@@ -579,6 +601,7 @@ function handleWalletSummaryLayoutChange() {
 }
 
 function closeAllModals() {
+	// Fecha qualquer fluxo aberto antes de trocar de aba.
 	closeWalletModal()
 	closeAdjustmentModal()
 	closeCategoryModal()
@@ -592,6 +615,7 @@ function closeAllModals() {
 }
 
 function formatDateDisplay(date) {
+	// Formata datas do painel no padrao usado pela interface.
 	const current = new Date(date)
 	const day = `${current.getDate()}`.padStart(2, "0")
 	const month = `${current.getMonth() + 1}`.padStart(2, "0")
@@ -599,6 +623,7 @@ function formatDateDisplay(date) {
 }
 
 function applyTheme(nextTheme) {
+	// Atualiza tema global e sincroniza a cor da barra do navegador.
 	theme.value = nextTheme
 	document.documentElement.setAttribute("data-theme", nextTheme)
 	syncBrowserThemeColor(nextTheme)
@@ -615,6 +640,7 @@ function parseHexColor(value) {
 }
 
 function applyThemeColor(nextColor) {
+	// Reaplica as variaveis globais para o destaque principal do app.
 	themeColor.value = nextColor
 	document.documentElement.style.setProperty("--color-primary", nextColor)
 	document.documentElement.style.setProperty("--accent", nextColor)
@@ -631,6 +657,7 @@ function applyThemeColor(nextColor) {
 }
 
 async function updateTheme(nextTheme) {
+	// Primeiro aplica localmente, depois persiste se o usuario estiver logado.
 	applyTheme(nextTheme)
 
 	if (!user.value) return
@@ -643,6 +670,7 @@ async function updateTheme(nextTheme) {
 }
 
 async function updateThemeColor(nextColor) {
+	// Mesma regra do tema: feedback imediato com persistencia em seguida.
 	applyThemeColor(nextColor)
 
 	if (!user.value) return
@@ -655,6 +683,7 @@ async function updateThemeColor(nextColor) {
 }
 
 async function handleInstallApp() {
+	// Dispara o prompt nativo apenas quando ele estiver realmente disponivel.
 	if (!deferredInstallPrompt || isInstallingApp.value) return
 
 	isInstallingApp.value = true
@@ -674,17 +703,20 @@ async function handleInstallApp() {
 }
 
 function handleTabSelect(tab) {
+	// Troca de area sempre limpa modais pendentes.
 	closeAllModals()
 	currentPage.value = tab
 }
 
 function handleFabClick() {
+	// A FAB do resumo abre direto o formulario de lancamento.
 	if (currentPage.value !== "dashboard" || !selectedPeriod.value || isSubmitting.value) return
 
 	openCreateEntryModal()
 }
 
 function formatDateValue(date) {
+	// Gera o valor esperado pelo input date.
 	const current = new Date(date)
 	const year = current.getFullYear()
 	const month = `${current.getMonth() + 1}`.padStart(2, "0")
@@ -693,10 +725,12 @@ function formatDateValue(date) {
 }
 
 function formatCurrency(value) {
+	// Padroniza todo valor monetario em BRL com duas casas.
 	return currencyFormatter.format(Number(value ?? 0))
 }
 
 function normalizeCurrencyText(value) {
+	// Mantem apenas numeros e uma virgula decimal na area de texto monetaria.
 	const raw = String(value ?? "").replace("R$ ", "")
 	const sanitized = raw.replace(/[^\d,]/g, "")
 	const firstCommaIndex = sanitized.indexOf(",")
@@ -713,6 +747,7 @@ function normalizeCurrencyText(value) {
 }
 
 function parseCurrencyInput(value) {
+	// Converte o texto editado para um numero pronto para persistencia.
 	const normalized = normalizeCurrencyText(value)
 	const [integerPart = "0", decimalPart = ""] = normalized.split(",")
 	const integerValue = Number(integerPart || "0")
@@ -721,12 +756,14 @@ function parseCurrencyInput(value) {
 }
 
 function normalizeCalculatorExpression(value) {
+	// A calculadora usa ponto decimal internamente para simplificar o parser.
 	return String(value ?? "")
 		.replace(/\s+/g, "")
 		.replace(/,/g, ".")
 }
 
 function tokenizeCalculatorExpression(expression) {
+	// Quebra a expressao em tokens sem usar eval.
 	const tokens = []
 	let index = 0
 
@@ -763,6 +800,7 @@ function tokenizeCalculatorExpression(expression) {
 }
 
 function evaluateCalculatorExpression(expression) {
+	// Parser recursivo simples para soma, subtracao, multiplicacao e divisao.
 	const normalized = normalizeCalculatorExpression(expression)
 
 	if (!normalized) {
@@ -773,6 +811,7 @@ function evaluateCalculatorExpression(expression) {
 	let currentIndex = 0
 
 	function parseExpression() {
+		// Resolve o nivel de precedencia mais baixo primeiro.
 		let value = parseTerm()
 
 		while (tokens[currentIndex] === "+" || tokens[currentIndex] === "-") {
@@ -786,6 +825,7 @@ function evaluateCalculatorExpression(expression) {
 	}
 
 	function parseTerm() {
+		// Multiplicacao e divisao sao avaliadas antes da soma/subtracao.
 		let value = parseFactor()
 
 		while (tokens[currentIndex] === "*" || tokens[currentIndex] === "/") {
@@ -809,6 +849,7 @@ function evaluateCalculatorExpression(expression) {
 	}
 
 	function parseFactor() {
+		// Aceita numero, sinal unario e subexpressao entre parenteses.
 		const token = tokens[currentIndex]
 
 		if (token === "+") {
@@ -861,6 +902,7 @@ function evaluateCalculatorExpression(expression) {
 }
 
 function getCurrencyField(field) {
+	// Centraliza o par model/input de cada campo monetario.
 	switch (field) {
 		case "wallet":
 			return { model: walletBalance, input: walletBalanceInput }
@@ -874,6 +916,7 @@ function getCurrencyField(field) {
 }
 
 function syncCurrencyInput(model, input, event) {
+	// Mantem o valor numerico e o campo exibindo sempre o prefixo R$.
 	const target = event?.target instanceof HTMLInputElement ? event.target : null
 	const rawValue = target?.value ?? ""
 	const normalizedInput = normalizeCurrencyText(rawValue)
@@ -889,6 +932,7 @@ function syncCurrencyInput(model, input, event) {
 }
 
 function syncCurrencyFieldInput(field, event) {
+	// Reutiliza a mesma normalizacao para todos os campos monetarios do app.
 	const currencyField = getCurrencyField(field)
 
 	if (!currencyField) return
@@ -902,17 +946,20 @@ function syncCurrencyFieldInput(field, event) {
 }
 
 function setCurrencyInput(model, input, value) {
+	// Sincroniza o estado numerico com a representacao pronta para edicao.
 	model.value = Number(value ?? 0)
 	input.value = formatCurrency(model.value)
 }
 
 function closeCalculator() {
+	// Limpa o estado compartilhado da calculadora ao fechar qualquer campo.
 	activeCalculatorField.value = ""
 	calculatorExpression.value = ""
 	calculatorError.value = ""
 }
 
 function formatCalculatorInitialValue(value) {
+	// Preenche a calculadora com o valor atual do campo em formato editavel.
 	const numericValue = Number(value ?? 0)
 
 	if (!Number.isFinite(numericValue)) return ""
@@ -921,6 +968,7 @@ function formatCalculatorInitialValue(value) {
 }
 
 const calculatorPreviewText = computed(() => {
+	// Mostra feedback imediato sem precisar confirmar o resultado.
 	if (!calculatorExpression.value.trim()) {
 		return "Resultado: R$ 0,00"
 	}
@@ -939,6 +987,7 @@ const calculatorPreviewText = computed(() => {
 })
 
 function toggleCalculator(field) {
+	// Alterna entre o input normal e a calculadora embutida.
 	if (activeCalculatorField.value === field) {
 		closeCalculator()
 		return
@@ -969,6 +1018,7 @@ function toggleCalculator(field) {
 }
 
 function applyCalculatorResult(field) {
+	// Só aplica o valor quando a expressao e valida e nao negativa.
 	const currencyField = getCurrencyField(field)
 
 	if (!currencyField) return
@@ -989,6 +1039,7 @@ function applyCalculatorResult(field) {
 }
 
 function handleCalculatorExpressionKeydown(field, event) {
+	// Enter confirma a conta; Esc fecha sem aplicar.
 	if (event.key === "Enter") {
 		event.preventDefault()
 		event.stopPropagation()
@@ -1004,6 +1055,7 @@ function handleCalculatorExpressionKeydown(field, event) {
 }
 
 function parseDateInput(value) {
+	// Usa meio-dia para evitar deslocamento de fuso na leitura da data.
 	if (!value) return null
 
 	const date = new Date(`${value}T12:00:00`)
@@ -1011,6 +1063,7 @@ function parseDateInput(value) {
 }
 
 function buildDefaultEntryDate() {
+	// Mantem a data inicial dentro do mes selecionado.
 	const now = new Date()
 	const currentDay = now.getDate()
 	const lastDay = new Date(selectedYear.value, selectedMonth.value, 0).getDate()
@@ -1026,6 +1079,7 @@ function buildDefaultEntryDate() {
 }
 
 function getActiveModalActions() {
+	// Identifica qual modal esta aberto para os atalhos globais.
 	if (isWalletModalOpen.value) {
 		return {
 			confirm: addWallet,
@@ -1093,6 +1147,7 @@ function getActiveModalActions() {
 }
 
 function isKeyboardShortcutTargetBlocked() {
+	// Evita atalhos globais quando o foco esta em um campo interativo.
 	const activeElement = document.activeElement
 
 	if (!(activeElement instanceof HTMLElement)) return false
@@ -1110,6 +1165,7 @@ function isKeyboardShortcutTargetBlocked() {
 }
 
 function handleModalKeydown(event) {
+	// Enter confirma, Esc cancela, e o dashboard ainda responde com a FAB.
 	if (isSubmitting.value) return
 
 	const modalActions = getActiveModalActions()
@@ -1145,6 +1201,7 @@ function handleModalKeydown(event) {
 }
 
 function handleModalEnter(action, event) {
+	// Dispara a mesma acao do botao principal do modal.
 	if (isSubmitting.value) return
 
 	if (event?.target instanceof HTMLTextAreaElement) return
@@ -1185,12 +1242,14 @@ function handleModalEnter(action, event) {
 }
 
 function handleBackdropClose(closeAction) {
+	// Fecha modal apenas quando nao ha submissao em andamento.
 	if (isSubmitting.value) return
 
 	closeAction()
 }
 
 function handleCurrencyFocus(model, input, event) {
+	// Se o valor atual e zero, mostra so o prefixo para o usuario digitar.
 	const target = event?.target
 
 	if (model.value === 0) {
@@ -1206,6 +1265,7 @@ function handleCurrencyFocus(model, input, event) {
 }
 
 function handleCurrencyFieldFocus(field, event) {
+	// Aplica o comportamento de foco em qualquer input monetario.
 	const currencyField = getCurrencyField(field)
 
 	if (!currencyField) return
@@ -1214,10 +1274,12 @@ function handleCurrencyFieldFocus(field, event) {
 }
 
 function handleCurrencyBlur(model, input) {
+	// Normaliza o que foi digitado quando o campo perde o foco.
 	setCurrencyInput(model, input, model.value)
 }
 
 function handleCurrencyFieldBlur(field) {
+	// Reusa a normalizacao para wallet, ajuste e lancamento.
 	const currencyField = getCurrencyField(field)
 
 	if (!currencyField) return
@@ -1226,6 +1288,7 @@ function handleCurrencyFieldBlur(field) {
 }
 
 function handleCurrencyKeydown(event) {
+	// Bloqueia caracteres fora do padrao monetario esperado.
 	const allowedKeys = [
 		"Backspace",
 		"Delete",
@@ -1254,6 +1317,7 @@ function handleCurrencyKeydown(event) {
 }
 
 function hasText(value) {
+	// Encapsula a validacao basica de campos textuais.
 	return String(value ?? "").trim().length > 0
 }
 
@@ -1310,6 +1374,7 @@ setCurrencyInput(adjustmentBalance, adjustmentBalanceInput, 0)
 setCurrencyInput(entryAmount, entryAmountInput, 0)
 
 function getPreferredEntryCategoryId() {
+	// Despesa começa na categoria mais util ou na primeira disponivel.
 	return (
 		categoryStore.entryCategories.find(category => category.name === "Despesas Fixas")?.id ||
 		categoryStore.entryCategories[0]?.id ||
@@ -1318,14 +1383,17 @@ function getPreferredEntryCategoryId() {
 }
 
 function getIncomeEntryCategoryId() {
+	// Entrada sempre aponta para a categoria padrao de recebimento.
 	return categoryStore.entryCategories.find(category => category.name === "Entradas")?.id || ""
 }
 
 function getSelectedCategory() {
+	// Resolve a categoria escolhida para reaproveitar nome e id no payload.
 	return categoryStore.entryCategories.find(category => category.id === entryCategoryId.value)
 }
 
 function isDateInSelectedPeriod(date) {
+	// A entrada precisa cair dentro do mes e ano hoje selecionados.
 	return (
 		date.getFullYear() === selectedYear.value &&
 		date.getMonth() + 1 === selectedMonth.value
@@ -1333,22 +1401,26 @@ function isDateInSelectedPeriod(date) {
 }
 
 function getOpeningBalance(wallet) {
+	// Usa o saldo de abertura do periodo quando ele existe.
 	return selectedPeriod.value?.openingBalances?.[wallet.id] ?? wallet.initialBalance
 }
 
 function buildNextPeriodDate(year, month) {
+	// Avanca um mes respeitando a troca de ano em dezembro.
 	return month === 12
 		? { year: year + 1, month: 1 }
 		: { year, month: month + 1 }
 }
 
 function buildPreviousPeriodDate(year, month) {
+	// Volta um mes respeitando a troca de ano em janeiro.
 	return month === 1
 		? { year: year - 1, month: 12 }
 		: { year, month: month - 1 }
 }
 
 function buildClonedDateForNextPeriod(date, nextYear, nextMonth) {
+	// Ajusta o dia para o ultimo valido do mes clonado.
 	const original = new Date(date)
 	const day = original.getDate()
 	const lastDay = new Date(nextYear, nextMonth, 0).getDate()
@@ -1356,6 +1428,7 @@ function buildClonedDateForNextPeriod(date, nextYear, nextMonth) {
 }
 
 function getWalletBalanceForPeriod(wallet) {
+	// Calcula o saldo do resumo a partir do periodo selecionado e das transacoes pagas.
 	const openingBalance = getOpeningBalance(wallet)
 
 	return transactionStore.transactions.reduce((balance, transaction) => {
@@ -1399,6 +1472,7 @@ function getWalletBalanceForPeriod(wallet) {
 }
 
 function getWalletBalanceForPeriodId(wallet, periodId) {
+	// Recalcula o saldo de uma carteira para qualquer periodo salvo.
 	const period = periodStore.getPeriodById(periodId)
 	const openingBalance = period?.openingBalances?.[wallet.id] ?? wallet.initialBalance
 
@@ -1439,6 +1513,7 @@ function getWalletBalanceForPeriodId(wallet, periodId) {
 }
 
 function getTransactionsForPeriod(periodId) {
+	// Reaproveita lancamentos do periodo atual ao criar o proximo.
 	return transactionStore.transactions.filter(transaction => {
 		if (transaction.periodId) {
 			return transaction.periodId === periodId
@@ -1450,14 +1525,17 @@ function getTransactionsForPeriod(periodId) {
 }
 
 function getWalletName(walletId) {
+	// Mostra um rascunho simples quando a carteira ainda nao existe no cache.
 	return walletStore.getWallet(walletId)?.name ?? "-"
 }
 
 function getWalletColor(walletId) {
+	// Cai no tema atual quando a carteira nao tem cor definida.
 	return walletStore.getWallet(walletId)?.color || "var(--color-primary)"
 }
 
 function getTransactionWallets(transaction) {
+	// Cada tipo de transacao aponta para uma ou mais carteiras envolvidas.
 	if (transaction.type === "income") {
 		return [{ id: transaction.walletTo, name: getWalletName(transaction.walletTo), color: getWalletColor(transaction.walletTo) }]
 	}
@@ -1478,6 +1556,7 @@ function getTransactionWallets(transaction) {
 }
 
 function getDefaultTransactionSort(sortKey = "description") {
+	// Define a ordenacao padrao usada quando a coluna ainda nao foi ativada.
 	return {
 		key: sortKey,
 		direction: "asc"
@@ -1485,6 +1564,7 @@ function getDefaultTransactionSort(sortKey = "description") {
 }
 
 function getTransactionSortState(categoryId) {
+	// Guarda a ordenacao por categoria sem perder o estado de outras secoes.
 	const currentState = transactionSortState.value[categoryId]
 
 	if (currentState) {
@@ -1495,6 +1575,7 @@ function getTransactionSortState(categoryId) {
 }
 
 function toggleTransactionSort(categoryId, sortKey) {
+	// Clicar na mesma coluna alterna a direcao, trocar de coluna reseta o estado.
 	const currentState = getTransactionSortState(categoryId)
 
 	transactionSortState.value = {
@@ -1509,20 +1590,24 @@ function toggleTransactionSort(categoryId, sortKey) {
 }
 
 function isTransactionSortActive(categoryId, sortKey) {
+	// Usado pela UI para destacar a coluna atualmente ativa.
 	return getTransactionSortState(categoryId).key === sortKey
 }
 
 function getTransactionSortDirection(categoryId, sortKey) {
+	// Mantem a seta coerente com a coluna e a direcao selecionadas.
 	return isTransactionSortActive(categoryId, sortKey)
 		? getTransactionSortState(categoryId).direction
 		: "asc"
 }
 
 function getTransactionSortMultiplier(categoryId) {
+	// Transforma asc/desc em fator numerico para simplificar comparacoes.
 	return getTransactionSortState(categoryId).direction === "asc" ? 1 : -1
 }
 
 function compareTransactionsForSummary(left, right, categoryId) {
+	// Ordenacao customizada do resumo por coluna ativa e fallback estavel.
 	const multiplier = getTransactionSortMultiplier(categoryId)
 	const activeSort = getTransactionSortState(categoryId).key
 
@@ -1553,6 +1638,7 @@ function compareTransactionsForSummary(left, right, categoryId) {
 }
 
 function finalizeTransactionComparison(comparison, left, right, multiplier) {
+	// Garante desempate consistente quando os campos principais sao iguais.
 	if (comparison !== 0) {
 		return comparison * multiplier
 	}
@@ -1567,12 +1653,14 @@ function finalizeTransactionComparison(comparison, left, right, multiplier) {
 }
 
 function getPrimaryWalletLabel(transaction) {
+	// Pega o primeiro nome de carteira como rascunho para a comparacao.
 	return getTransactionWallets(transaction)
 		.map(wallet => wallet.name || "")
 		.join(" ")
 }
 
 function getComparableTime(value) {
+	// Normaliza Date ou string para timestamp comparavel.
 	if (value instanceof Date) {
 		return value.getTime()
 	}
@@ -1582,6 +1670,7 @@ function getComparableTime(value) {
 }
 
 function handleCategoryDragStart(categoryId, event) {
+	// Guarda a categoria arrastada para a reordenaçao manual.
 	draggedCategoryId.value = categoryId
 
 	if (event?.dataTransfer) {
@@ -1591,6 +1680,7 @@ function handleCategoryDragStart(categoryId, event) {
 }
 
 function handleCategoryDragOver(categoryId, event) {
+	// Permite soltar apenas em alvos validos e diferentes da origem.
 	if (!draggedCategoryId.value || draggedCategoryId.value === categoryId) return
 
 	event.preventDefault()
@@ -1602,6 +1692,7 @@ function handleCategoryDragOver(categoryId, event) {
 }
 
 async function handleCategoryDrop(targetCategoryId) {
+	// Reordena a lista visivel sem mexer nas categorias de sistema.
 	if (!draggedCategoryId.value || draggedCategoryId.value === targetCategoryId) {
 		dragOverCategoryId.value = ""
 		return
@@ -1632,11 +1723,13 @@ async function handleCategoryDrop(targetCategoryId) {
 }
 
 function handleCategoryDragEnd() {
+	// Limpa o estado visual do arraste independentemente do resultado.
 	draggedCategoryId.value = ""
 	dragOverCategoryId.value = ""
 }
 
 function canMoveCategory(categoryId, direction) {
+	// Evita acao invalida quando a categoria ja esta no limite da lista.
 	const orderedIds = categoryStore.manageableCategories.map(category => category.id)
 	const currentIndex = orderedIds.findIndex(id => id === categoryId)
 
@@ -1646,6 +1739,7 @@ function canMoveCategory(categoryId, direction) {
 }
 
 async function moveCategory(categoryId, direction) {
+	// Usa a store para gravar a nova ordem no Firestore.
 	if (!canMoveCategory(categoryId, direction)) return
 
 	isSubmitting.value = true
@@ -1658,6 +1752,7 @@ async function moveCategory(categoryId, direction) {
 }
 
 async function handleLogin() {
+	// Login e feito com feedback de submissao para desabilitar interacoes repetidas.
 	isSubmitting.value = true
 	authError.value = ""
 
@@ -1672,6 +1767,7 @@ async function handleLogin() {
 }
 
 async function handleLogout() {
+	// Logout reaproveita o mesmo bloqueio visual de submissao.
 	isSubmitting.value = true
 	authError.value = ""
 
@@ -1683,6 +1779,7 @@ async function handleLogout() {
 }
 
 function getAuthErrorMessage(error) {
+	// Converte erros do Firebase Auth em mensagens mais claras para o usuario.
 	const code = String(error?.code || "")
 
 	if (code === "auth/unauthorized-domain") {
@@ -1701,11 +1798,13 @@ function getAuthErrorMessage(error) {
 }
 
 function handleAppUpdateAvailable(event) {
+	// O service worker avisa quando ha uma versao nova pronta para recarregar.
 	triggerAppUpdate = typeof event.detail?.update === "function" ? event.detail.update : null
 	isUpdateAvailable.value = true
 }
 
 function reloadWithNewVersion() {
+	// Tenta usar o updater do SW antes de cair em reload simples.
 	if (!triggerAppUpdate) {
 		window.location.reload()
 		return
@@ -1715,6 +1814,7 @@ function reloadWithNewVersion() {
 }
 
 function openPeriodModal() {
+	// Abre o formulario ja apontando para o proximo periodo esperado.
 	const nextPeriod = selectedPeriod.value
 		? buildNextPeriodDate(selectedYear.value, selectedMonth.value)
 		: { year: selectedYear.value, month: selectedMonth.value }
@@ -1725,10 +1825,12 @@ function openPeriodModal() {
 }
 
 function closePeriodModal() {
+	// Fecha o modal e deixa os campos prontos para a proxima abertura.
 	isPeriodModalOpen.value = false
 }
 
 async function savePeriod() {
+	// Cria o novo periodo clonando saldos e, se houver base, os lancamentos anteriores.
 	const existingPeriod = periodStore.getPeriodByYearMonth(periodModalYear.value, periodModalMonth.value)
 
 	if (existingPeriod) {
@@ -1758,6 +1860,7 @@ async function savePeriod() {
 		await periodStore.ensurePeriod(periodModalYear.value, periodModalMonth.value, openingBalances)
 
 		if (sourcePeriod) {
+			// Lancamentos clonados entram como nao pagos; ajustes nao sao copiados.
 			for (const transaction of getTransactionsForPeriod(sourcePeriod.id)) {
 				if (transaction.type === "adjustment") continue
 
@@ -1785,16 +1888,19 @@ async function savePeriod() {
 }
 
 function openDeletePeriodModal() {
+	// Remove apenas o periodo atualmente selecionado.
 	if (!selectedPeriod.value) return
 
 	deletePeriodId.value = selectedPeriod.value.id
 }
 
 function closeDeletePeriodModal() {
+	// Limpa o estado do modal de exclusao de periodo.
 	deletePeriodId.value = ""
 }
 
 async function confirmDeletePeriod() {
+	// Apaga o periodo e tambem os lancamentos vinculados a ele.
 	if (!deletePeriodId.value) return
 
 	const periodToDelete = periodStore.getPeriodById(deletePeriodId.value)
@@ -1825,6 +1931,7 @@ async function confirmDeletePeriod() {
 }
 
 async function addWallet() {
+	// Mantem a mesma rotina de validacao para criar e editar carteira.
 	const trimmedName = walletName.value.trim()
 
 	if (!trimmedName) return
@@ -1850,6 +1957,7 @@ async function addWallet() {
 }
 
 function openWalletModal(wallet = null) {
+	// Preenche o modal com os dados existentes quando estiver editando.
 	isWalletModalOpen.value = true
 	editingWalletId.value = wallet?.id ?? ""
 	walletName.value = wallet?.name ?? ""
@@ -1858,6 +1966,7 @@ function openWalletModal(wallet = null) {
 }
 
 function closeWalletModal() {
+	// Restaura o formulario de carteira para o estado inicial.
 	isWalletModalOpen.value = false
 	editingWalletId.value = ""
 	walletName.value = ""
@@ -1867,6 +1976,7 @@ function closeWalletModal() {
 }
 
 function openAdjustmentModal(wallet) {
+	// Calcula o saldo atual da carteira antes de pedir a correcao manual.
 	adjustingWalletId.value = wallet.id
 	closeCalculator()
 	setCurrencyInput(adjustmentBalance, adjustmentBalanceInput, getWalletBalanceForPeriod(wallet))
@@ -1874,6 +1984,7 @@ function openAdjustmentModal(wallet) {
 }
 
 function closeAdjustmentModal() {
+	// Limpa saldo e descricao quando o ajuste e encerrado.
 	adjustingWalletId.value = ""
 	closeCalculator()
 	setCurrencyInput(adjustmentBalance, adjustmentBalanceInput, 0)
@@ -1881,6 +1992,7 @@ function closeAdjustmentModal() {
 }
 
 async function saveAdjustment() {
+	// O ajuste usa a diferenca entre saldo atual e novo saldo informado.
 	const wallet = walletStore.getWallet(adjustingWalletId.value)
 
 	if (!wallet) return
@@ -1904,14 +2016,17 @@ async function saveAdjustment() {
 }
 
 function openDeleteWalletModal(wallet) {
+	// Remove carteira somente depois de passar pela confirmacao.
 	deleteWalletId.value = wallet.id
 }
 
 function closeDeleteWalletModal() {
+	// Libera o estado da confirmacao de exclusao.
 	deleteWalletId.value = ""
 }
 
 async function confirmDeleteWallet() {
+	// Exclui a carteira e limpa tambem as transacoes relacionadas.
 	if (!deleteWalletId.value) return
 
 	isSubmitting.value = true
@@ -1926,18 +2041,21 @@ async function confirmDeleteWallet() {
 }
 
 function openCategoryModal(category = null) {
+	// Abre o mesmo formulario para criacao e edicao de categoria.
 	isCategoryModalOpen.value = true
 	editingCategoryId.value = category?.id ?? ""
 	categoryName.value = category?.name ?? ""
 }
 
 function closeCategoryModal() {
+	// Zera o estado do modal de categoria.
 	isCategoryModalOpen.value = false
 	editingCategoryId.value = ""
 	categoryName.value = ""
 }
 
 async function saveCategory() {
+	// Aplica a validacao minima antes de gravar no Firestore.
 	const trimmedName = categoryName.value.trim()
 
 	if (!trimmedName) return
@@ -1958,14 +2076,17 @@ async function saveCategory() {
 }
 
 function openDeleteCategoryModal(category) {
+	// Guarda o id da categoria antes de mostrar a confirmacao.
 	deleteCategoryId.value = category.id
 }
 
 function closeDeleteCategoryModal() {
+	// Fecha a confirmacao de exclusao de categoria.
 	deleteCategoryId.value = ""
 }
 
 async function confirmDeleteCategory() {
+	// Remove somente a categoria selecionada; a limpeza de lancamentos ocorre na store.
 	if (!deleteCategoryId.value) return
 
 	isSubmitting.value = true
@@ -1979,6 +2100,7 @@ async function confirmDeleteCategory() {
 }
 
 function resetEntryForm() {
+	// Monta o formulario com defaults coerentes com o periodo e o tipo de lancamento.
 	editingTransactionId.value = ""
 	entryDescription.value = ""
 	entryType.value = "expense"
@@ -1993,11 +2115,13 @@ function resetEntryForm() {
 }
 
 function openCreateEntryModal() {
+	// Novo lancamento sempre comeca a partir dos defaults do periodo ativo.
 	resetEntryForm()
 	isEntryModalOpen.value = true
 }
 
 function openEditEntryModal(transaction) {
+	// Reaproveita os dados do lancamento para editar sem perder contexto.
 	isEntryModalOpen.value = true
 	entryFormError.value = ""
 	editingTransactionId.value = transaction.id
@@ -2015,11 +2139,13 @@ function openEditEntryModal(transaction) {
 }
 
 function closeEntryModal() {
+	// Fecha e devolve o formulario ao estado padrao.
 	isEntryModalOpen.value = false
 	resetEntryForm()
 }
 
 async function saveEntry() {
+	// Monta o payload final conforme o tipo selecionado e valida as regras do periodo.
 	const selectedCategory = getSelectedCategory()
 	const existingTransaction = editingTransactionId.value
 		? transactionStore.transactions.find(transaction => transaction.id === editingTransactionId.value)
@@ -2044,6 +2170,7 @@ async function saveEntry() {
 	if (entryType.value === "transfer" && entryWalletId.value === entryTargetWalletId.value) return
 
 	const baseData = {
+		// Tipo, categoria e carteiras variam conforme a operacao escolhida.
 		type: entryType.value,
 		periodId: selectedPeriodId.value,
 		amount: entryAmount.value,
@@ -2111,14 +2238,17 @@ async function saveEntry() {
 }
 
 function openDeleteTransactionModal(transaction) {
+	// Armazena o lancamento antes de abrir a confirmacao de exclusao.
 	deleteTransactionId.value = transaction.id
 }
 
 function closeDeleteTransactionModal() {
+	// Limpa o id quando o modal de exclusao fecha.
 	deleteTransactionId.value = ""
 }
 
 async function confirmDeleteTransaction() {
+	// Exclui o lancamento selecionado e encerra a confirmacao.
 	if (!deleteTransactionId.value) return
 
 	isSubmitting.value = true
@@ -2132,6 +2262,7 @@ async function confirmDeleteTransaction() {
 }
 
 async function toggleTransactionPaid(transaction) {
+	// Checkbox de pago atualiza apenas o campo paid da transacao.
 	isSubmitting.value = true
 
 	try {
@@ -2144,11 +2275,13 @@ async function toggleTransactionPaid(transaction) {
 }
 
 function isMobileViewport() {
+	// Em telas pequenas, a linha inteira vira alvo de interacao.
 	if (typeof window === "undefined") return false
 	return window.innerWidth <= 480
 }
 
 async function handlePaidFieldClick(transaction, event) {
+	// No mobile, tocar fora do checkbox alterna o estado de pago.
 	if (!isMobileViewport() || isSubmitting.value) return
 
 	const target = event?.target
@@ -2160,18 +2293,22 @@ async function handlePaidFieldClick(transaction, event) {
 }
 
 function openMobileEntryActionModal(transaction) {
+	// Toca na linha abre uma acao contextual simples em telas pequenas.
 	mobileEntryActionTransactionId.value = transaction?.id || ""
 }
 
 function closeMobileEntryActionModal() {
+	// Fecha a acao contextual do mobile.
 	mobileEntryActionTransactionId.value = ""
 }
 
 function getTransactionById(transactionId) {
+	// Resolve a transacao selecionada dentro do cache realtime.
 	return transactionStore.transactions.find(transaction => transaction.id === transactionId) || null
 }
 
 function handleEntryRowClick(transaction, event) {
+	// Evita abrir acao contextual quando o clique ja foi em controles internos.
 	if (!isMobileViewport() || isSubmitting.value) return
 
 	const target = event?.target
@@ -2183,12 +2320,14 @@ function handleEntryRowClick(transaction, event) {
 }
 
 function handleMobileEntryEdit(transaction) {
+	// Edita o lancamento selecionado a partir da acao contextual.
 	if (!transaction) return
 	closeMobileEntryActionModal()
 	openEditEntryModal(transaction)
 }
 
 function handleMobileEntryDelete(transaction) {
+	// Exclui o lancamento selecionado a partir da acao contextual.
 	if (!transaction) return
 	closeMobileEntryActionModal()
 	openDeleteTransactionModal(transaction)

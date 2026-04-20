@@ -23,6 +23,7 @@ function getCategoriesCollection() {
 }
 
 export async function createCategoryDoc(data) {
+	// Categorias seguem o mesmo escopo autenticado das demais colecoes.
 	const categoriesCollection = getCategoriesCollection()
 
 	await addDoc(categoriesCollection, {
@@ -63,6 +64,7 @@ export function subscribeCategories(callback, onError) {
 	return onSnapshot(
 		categoriesQuery,
 		snapshot => {
+			// Converte o snapshot em um modelo simples para a store e a UI.
 			const categories = snapshot.docs.map(categoryDoc => {
 				const data = categoryDoc.data()
 

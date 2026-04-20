@@ -21,17 +21,20 @@ function getThemeDocRef() {
 }
 
 function normalizeColor(value) {
+	// Evita salvar cores invalidas na preferencia de interface.
 	if (typeof value !== "string") return DEFAULT_THEME_COLOR
 	const normalized = value.trim()
 	return /^#[0-9A-Fa-f]{6}$/.test(normalized) ? normalized : DEFAULT_THEME_COLOR
 }
 
 function normalizeStoredYear(value) {
+	// Mantem o ano salvo apenas quando ele parece um valor real de filtro.
 	const normalized = Number(value)
 	return Number.isInteger(normalized) && normalized >= 2000 ? normalized : null
 }
 
 function normalizeStoredMonth(value) {
+	// Mes fora do intervalo nao e reaproveitado na restauracao de UI.
 	const normalized = Number(value)
 	return Number.isInteger(normalized) && normalized >= 1 && normalized <= 12 ? normalized : null
 }
@@ -42,6 +45,7 @@ export function subscribeThemePreference(callback, onError) {
 	return onSnapshot(
 		themeDocRef,
 		snapshot => {
+			// Restitui tema, cor e periodo salvo em um pacote unico de preferencia.
 			const data = snapshot.data() || {}
 			const theme = data.theme === "dark" ? "dark" : DEFAULT_THEME
 			const primaryColor = normalizeColor(data.primaryColor)
@@ -75,6 +79,7 @@ export async function saveThemePreference(preferences) {
 	await setDoc(
 		themeDocRef,
 		{
+			// Persistencia parcial para nao sobrescrever campos nao enviados.
 			...payload,
 			updatedAt: serverTimestamp()
 		},

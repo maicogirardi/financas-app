@@ -22,6 +22,7 @@ function getWalletsCollection() {
 }
 
 export async function createWalletDoc(data) {
+	// Carteiras sao salvas no escopo do usuario autenticado.
 	const walletsCollection = getWalletsCollection()
 
 	await addDoc(walletsCollection, {
@@ -49,6 +50,7 @@ export function subscribeWallets(callback, onError) {
 	return onSnapshot(
 		walletsQuery,
 		snapshot => {
+			// Normaliza valores ausentes para manter a UI previsivel.
 			const wallets = snapshot.docs.map(walletDoc => {
 				const data = walletDoc.data()
 

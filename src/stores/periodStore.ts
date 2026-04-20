@@ -17,6 +17,7 @@ let unsubscribePeriods: null | (() => void) = null
 
 export function usePeriodStore() {
 	function upsertLocalPeriod(period: Period) {
+		// Mantem um cache ordenado para refletir o snapshot do Firestore.
 		const existingIndex = state.periods.findIndex(item => item.id === period.id)
 
 		if (existingIndex >= 0) {
@@ -35,6 +36,7 @@ export function usePeriodStore() {
 	}
 
 	function setPeriods(periods: Period[]) {
+		// O snapshot pode chegar em blocos; cada periodo e mesclado no cache.
 		periods.forEach(period => {
 			upsertLocalPeriod(period)
 		})
@@ -53,17 +55,14 @@ export function usePeriodStore() {
 	}
 
 	function startPeriodsSync() {
-		console.log("startPeriodsSync called")
-
 		clearPeriods()
 
+		// Periodos dirigem o filtro de mes, entao a UI espera esse listener abrir cedo.
 		unsubscribePeriods = subscribePeriods(
 			periods => {
-				console.log("periods received", periods)
 				setPeriods(periods)
 			},
 			error => {
-				console.error("period sync error", error)
 				state.error = error.message
 				state.isLoaded = true
 			}
@@ -75,6 +74,7 @@ export function usePeriodStore() {
 			state.error = ""
 			const id = buildPeriodId(year, month)
 
+			// Cria ou atualiza o documento do periodo sem perder os saldos de abertura.
 			await upsertPeriodDoc(id, {
 				year,
 				month,
@@ -82,6 +82,7 @@ export function usePeriodStore() {
 				createdAt: new Date()
 			})
 
+			// Atualiza o cache local imediatamente para nao depender do round-trip do snapshot.
 			upsertLocalPeriod({
 				id,
 				year,
@@ -100,6 +101,7 @@ export function usePeriodStore() {
 	async function deletePeriod(id: string) {
 		try {
 			state.error = ""
+			// Remove o periodo do Firestore e do cache local na mesma acao.
 			await deletePeriodDoc(id)
 			const existingIndex = state.periods.findIndex(period => period.id === id)
 

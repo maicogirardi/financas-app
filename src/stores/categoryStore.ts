@@ -16,6 +16,7 @@ const DEFAULT_CATEGORY_NAMES = [
 	"Cart\u00f5es de Cr\u00e9dito"
 ]
 
+// Categorias internas que o usuario nao deve editar como categorias normais.
 export const TRANSFER_CATEGORY_ID = "system-transfer"
 export const TRANSFER_CATEGORY_NAME = "Transferencias"
 export const TRANSFER_CATEGORY_LABEL = "Transfer\u00eancias"
@@ -32,6 +33,7 @@ let unsubscribeCategories: null | (() => void) = null
 
 export function useCategoryStore() {
 	function isTransferCategory(category: Category) {
+		// Garante que transferencias fiquem fora da manutencao manual.
 		return (
 			category.id === TRANSFER_CATEGORY_ID ||
 			category.name === TRANSFER_CATEGORY_NAME ||
@@ -40,6 +42,7 @@ export function useCategoryStore() {
 	}
 
 	function setCategories(categories: Category[]) {
+		// Quando a colecao vem vazia, o fluxo repoe as categorias base.
 		state.categories.splice(0, state.categories.length, ...categories)
 		state.isLoaded = true
 
@@ -62,6 +65,7 @@ export function useCategoryStore() {
 	function startCategoriesSync() {
 		clearCategories()
 
+		// A UI depende do snapshot inicial para liberar as telas de lancamento.
 		unsubscribeCategories = subscribeCategories(
 			categories => {
 				setCategories(categories)
@@ -94,6 +98,7 @@ export function useCategoryStore() {
 
 		try {
 			state.error = ""
+			// Atualiza lancamentos antigos para manter o nome da categoria consistente.
 			await updateCategoryDoc(id, { name })
 			await updateTransactionsCategoryDocs(id, category.name, name)
 		} catch (error) {
@@ -113,6 +118,7 @@ export function useCategoryStore() {
 	}
 
 	async function moveCategory(id: string, direction: "up" | "down") {
+		// Reordena somente categorias visiveis e nao-sistema.
 		const categories = state.categories.filter(category => !category.hidden && !isTransferCategory(category))
 		const currentIndex = categories.findIndex(category => category.id === id)
 
@@ -144,6 +150,7 @@ export function useCategoryStore() {
 		try {
 			state.error = ""
 
+			// Replica a nova ordem tanto no cache local quanto no Firestore.
 			for (const category of state.categories) {
 				const nextOrder = categoryIds.findIndex(id => id === category.id)
 
@@ -169,6 +176,7 @@ export function useCategoryStore() {
 		const visibleCount = state.categories.filter(category => !category.hidden).length
 
 		if (visibleCount === 0) {
+			// Cria as categorias padrao apenas quando o usuario ainda nao possui nenhuma visivel.
 			for (let index = 0; index < DEFAULT_CATEGORY_NAMES.length; index += 1) {
 				const name = DEFAULT_CATEGORY_NAMES[index]
 
@@ -180,6 +188,7 @@ export function useCategoryStore() {
 			}
 		}
 
+		// As categorias internas ficam escondidas, mas continuam disponiveis nas transacoes.
 		await ensureCategoryDoc(TRANSFER_CATEGORY_ID, {
 			name: TRANSFER_CATEGORY_LABEL,
 			order: DEFAULT_CATEGORY_NAMES.length,

@@ -14,12 +14,14 @@ import {
 import { auth, db } from "@/firebase"
 
 function removeUndefinedFields(data) {
+	// Firestore ignora melhor payloads sem chaves vazias.
 	return Object.fromEntries(
 		Object.entries(data).filter(([, value]) => value !== undefined)
 	)
 }
 
 function prepareUpdateFields(data) {
+	// Mantem updates parciais capazes de remover campos antigos.
 	return Object.fromEntries(
 		Object.entries(data).map(([key, value]) => [
 			key,
@@ -39,6 +41,7 @@ function getTransactionsCollection() {
 }
 
 export async function createTransactionDoc(data) {
+	// Transacoes sempre pertencem ao usuario autenticado atual.
 	const transactionsCollection = getTransactionsCollection()
 
 	await addDoc(transactionsCollection, {
@@ -61,6 +64,7 @@ export async function deleteTransactionDoc(id) {
 }
 
 export async function updateTransactionsCategoryDocs(categoryId, oldName, newName) {
+	// Atualiza documentos antigos para manter o nome de categoria em sincronia.
 	const transactionsCollection = getTransactionsCollection()
 	const snapshot = await getDocs(transactionsCollection)
 
@@ -80,6 +84,7 @@ export async function updateTransactionsCategoryDocs(categoryId, oldName, newNam
 }
 
 export async function deleteTransactionsByWalletDoc(walletId) {
+	// A exclusao de carteira limpa qualquer lancamento que ainda a referencie.
 	const transactionsCollection = getTransactionsCollection()
 	const snapshot = await getDocs(transactionsCollection)
 
@@ -96,6 +101,7 @@ export async function deleteTransactionsByWalletDoc(walletId) {
 }
 
 export async function deleteTransactionsByPeriodDoc(periodId) {
+	// Periodo removido nao deve deixar lancamentos orfaos.
 	const transactionsCollection = getTransactionsCollection()
 	const snapshot = await getDocs(transactionsCollection)
 
@@ -118,6 +124,7 @@ export function subscribeTransactions(callback, onError) {
 	return onSnapshot(
 		transactionsQuery,
 		snapshot => {
+			// Normaliza os campos para a store trabalhar sempre com Dates e numbers.
 			const transactions = snapshot.docs.map(transactionDoc => {
 				const data = transactionDoc.data()
 

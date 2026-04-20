@@ -24,11 +24,13 @@ let unsubscribeTransactions: null | (() => void) = null
 
 export function useTransactionStore() {
 	function setTransactions(transactions: Transaction[]) {
+		// Atualiza o cache local com o snapshot mais recente do Firestore.
 		state.transactions.splice(0, state.transactions.length, ...transactions)
 		state.isLoaded = true
 	}
 
 	function clearTransactions() {
+		// Encerra listeners antigos antes de abrir uma nova sincronizacao.
 		if (unsubscribeTransactions) {
 			unsubscribeTransactions()
 			unsubscribeTransactions = null
@@ -42,6 +44,7 @@ export function useTransactionStore() {
 	function startTransactionsSync() {
 		clearTransactions()
 
+		// Mantem a lista sempre ordenada pela ordem de criacao no backend.
 		unsubscribeTransactions = subscribeTransactions(
 			transactions => {
 				setTransactions(transactions)
@@ -74,6 +77,7 @@ export function useTransactionStore() {
 
 		if (amount === 0) return
 
+		// Ajuste vira uma transacao comum para registrar a diferenca de saldo.
 		await createTransaction({
 			type: "adjustment",
 			periodId,
@@ -112,6 +116,7 @@ export function useTransactionStore() {
 		const trimmedDescription = description?.trim() || undefined
 
 		if (type === "income") {
+			// Entrada credita a carteira de destino.
 			await createTransaction({
 				type,
 				periodId,
@@ -128,6 +133,7 @@ export function useTransactionStore() {
 		}
 
 		if (type === "expense") {
+			// Saida debita a carteira de origem.
 			await createTransaction({
 				type,
 				periodId,
@@ -143,6 +149,7 @@ export function useTransactionStore() {
 			return
 		}
 
+		// Transferencia move valor entre duas carteiras e ja nasce paga.
 		await createTransaction({
 			type,
 			periodId,
@@ -178,6 +185,7 @@ export function useTransactionStore() {
 	}
 
 	function getWalletBalance(walletId: string, initialBalance = 0) {
+		// Saldo do resumo considera apenas transacoes pagas.
 		return state.transactions.reduce((balance, transaction) => {
 			if (!transaction.paid) {
 				return balance
