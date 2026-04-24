@@ -32,6 +32,7 @@ Firebase Hosting:
 
 * `npm run build:firebase`
 * `npm run deploy:firebase`
+* `firebase deploy --only firestore:rules`
 * alternativa em PowerShell: `powershell -ExecutionPolicy Bypass -File scripts/build-firebase.ps1`
 * alternativa em PowerShell: `powershell -ExecutionPolicy Bypass -File scripts/deploy-firebase.ps1`
 

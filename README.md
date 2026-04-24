@@ -63,6 +63,7 @@ Fluxo atual de deploy duplo:
 * `npm run deploy` publica no GitHub Pages
 * `npm run build:firebase` gera a versao para Firebase Hosting usando o modo `firebase` do Vite com base `/`
 * `npm run deploy:firebase` executa o build do Firebase e depois chama `firebase-tools deploy --only hosting`
+* `firebase deploy --only firestore:rules` publica apenas as regras de seguranca do Firestore
 
 Observacao:
 
@@ -74,6 +75,7 @@ Observacao:
 Arquivos de configuracao:
 
 * `firebase.json`
+* `firestore.rules`
 * `.firebaserc`
 * `vite.config.js`
 * `scripts/build-firebase.ps1`

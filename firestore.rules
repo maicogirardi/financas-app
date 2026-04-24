@@ -1,0 +1,158 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function validHexColor(value) {
+      return value is string && value.matches('^#[0-9A-Fa-f]{6}$');
+    }
+
+    function validWalletDoc() {
+      return request.resource.data.keys().hasOnly([
+        'name',
+        'color',
+        'initialBalance',
+        'order',
+        'archived',
+        'createdAt'
+      ])
+      && request.resource.data.name is string
+      && request.resource.data.name.size() > 0
+      && request.resource.data.name.size() <= 60
+      && request.resource.data.initialBalance is number
+      && request.resource.data.order is number
+      && request.resource.data.archived is bool
+      && validHexColor(request.resource.data.color)
+      && request.resource.data.createdAt is timestamp;
+    }
+
+    function validCategoryDoc() {
+      return request.resource.data.keys().hasOnly([
+        'name',
+        'order',
+        'hidden',
+        'createdAt'
+      ])
+      && request.resource.data.name is string
+      && request.resource.data.name.size() > 0
+      && request.resource.data.name.size() <= 60
+      && request.resource.data.order is number
+      && request.resource.data.hidden is bool
+      && request.resource.data.createdAt is timestamp;
+    }
+
+    function validPeriodDoc() {
+      return request.resource.data.keys().hasOnly([
+        'year',
+        'month',
+        'openingBalances',
+        'createdAt'
+      ])
+      && request.resource.data.year is number
+      && request.resource.data.year >= 2000
+      && request.resource.data.year <= 2100
+      && request.resource.data.month is number
+      && request.resource.data.month >= 1
+      && request.resource.data.month <= 12
+      && request.resource.data.openingBalances is map
+      && request.resource.data.createdAt is timestamp;
+    }
+
+    function validTransactionDoc() {
+      return request.resource.data.keys().hasOnly([
+        'type',
+        'periodId',
+        'amount',
+        'walletFrom',
+        'walletTo',
+        'category',
+        'categoryId',
+        'tag',
+        'description',
+        'date',
+        'paid',
+        'createdAt'
+      ])
+      && request.resource.data.type is string
+      && request.resource.data.periodId is string
+      && request.resource.data.amount is number
+      && request.resource.data.walletFrom is string
+      && (!('walletTo' in request.resource.data) || request.resource.data.walletTo is string)
+      && (!('category' in request.resource.data) || request.resource.data.category is string)
+      && (!('categoryId' in request.resource.data) || request.resource.data.categoryId is string)
+      && (!('tag' in request.resource.data) || request.resource.data.tag is string)
+      && request.resource.data.description is string
+      && request.resource.data.description.size() > 0
+      && request.resource.data.description.size() <= 160
+      && request.resource.data.date is timestamp
+      && request.resource.data.paid is bool
+      && request.resource.data.createdAt is timestamp;
+    }
+
+    function validUiPreferenceDoc() {
+      return request.resource.data.keys().hasOnly([
+        'theme',
+        'primaryColor',
+        'selectedYear',
+        'selectedMonth',
+        'updatedAt'
+      ])
+      && (!('theme' in request.resource.data)
+        || request.resource.data.theme in ['light', 'dark'])
+      && (!('primaryColor' in request.resource.data)
+        || validHexColor(request.resource.data.primaryColor))
+      && (!('selectedYear' in request.resource.data)
+        || request.resource.data.selectedYear == null
+        || request.resource.data.selectedYear is number)
+      && (!('selectedMonth' in request.resource.data)
+        || request.resource.data.selectedMonth == null
+        || (
+          request.resource.data.selectedMonth is number
+          && request.resource.data.selectedMonth >= 1
+          && request.resource.data.selectedMonth <= 12
+        ))
+      && request.resource.data.updatedAt is timestamp;
+    }
+
+    match /users/{userId} {
+      allow read, write: if isOwner(userId);
+
+      match /wallets/{walletId} {
+        allow read, delete: if isOwner(userId);
+        allow create, update: if isOwner(userId) && validWalletDoc();
+      }
+
+      match /categories/{categoryId} {
+        allow read, delete: if isOwner(userId);
+        allow create, update: if isOwner(userId) && validCategoryDoc();
+      }
+
+      match /periods/{periodId} {
+        allow read, delete: if isOwner(userId);
+        allow create, update: if isOwner(userId) && validPeriodDoc();
+      }
+
+      match /transactions/{transactionId} {
+        allow read, delete: if isOwner(userId);
+        allow create, update: if isOwner(userId) && validTransactionDoc();
+      }
+
+      // Compatibilidade com estrutura antiga, ainda usada por historico.
+      match /expenses/{expenseId} {
+        allow read, write: if isOwner(userId);
+      }
+
+      match /preferences/ui {
+        allow read: if isOwner(userId);
+        allow create, update: if isOwner(userId) && validUiPreferenceDoc();
+        allow delete: if false;
+      }
+    }
+  }
+}
